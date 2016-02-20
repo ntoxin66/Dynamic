@@ -5,40 +5,40 @@
 
 #define MAX_FIELDNAME_SIZE				64
 
-enum Dynamic_FieldType
+enum Dynamic_MemberType
 {
-	DynamicType_Int,
-	DynamicType_Float,
-	DynamicType_String,
-	DynamicType_Unknown
+	DynamicType_Int = 0,
+	DynamicType_Float = 1,
+	DynamicType_String = 2,
+	DynamicType_Unknown = 3
 }
 
 typeset DynamicHookCB
 {
-	function void (int index, const char[] fieldnname, Dynamic_FieldType type);
+	function void (int index, const char[] fieldnname, Dynamic_MemberType type);
 }
 
-native int Dynamic_Initialise(int maxstringsize=64);
+native int Dynamic_Initialise(int blocksize=64, int startsize=0);
 native bool Dynamic_Dispose(int index);
-native int Dynamic_GetInt(int index, const char[] fieldname, int defaultvalue=-1);
-native bool Dynamic_SetInt(int index, const char[] fieldname, int value);
-native float Dynamic_GetFloat(int index, const char[] fieldname, float defaultvalue=-1.0);
-native bool Dynamic_SetFloat(int index, const char[] fieldname, float value);
-native float Dynamic_GetString(int index, const char[] fieldname, char[] buffer, int size);
-native bool Dynamic_SetString(int index, const char[] fieldname, const char[] value);
+native int Dynamic_GetInt(int index, const char[] membername, int defaultvalue=-1);
+native bool Dynamic_SetInt(int index, const char[] membername, int value);
+native float Dynamic_GetFloat(int index, const char[] membername, float defaultvalue=-1.0);
+native bool Dynamic_SetFloat(int index, const char[] membername, float value);
+native float Dynamic_GetString(int index, const char[] membername, char[] buffer, int size);
+native bool Dynamic_SetString(int index, const char[] membername, const char[] value, int length=0);
 native int Dynamic_GetCollectionSize();
-native bool Dynamic_GetFieldCount(int index);
+native bool Dynamic_GetMemberCount(int index);
 native bool Dynamic_IsValidCollectionIndex(int index, bool throwerror=false);
 native bool Dynamic_HookChanges(int index, DynamicHookCB callback);
 native bool Dynamic_UnHookChanges(int index, DynamicHookCB callback);
-native Dynamic_FieldType Dynamic_GetFieldType(int index, const char[] fieldname);
-native Dynamic_FieldType Dynamic_GetFieldName(int index, int field, char[] buffer, int size);
+native Dynamic_MemberType Dynamic_GetMemberType(int index, const char[] membername);
+native Dynamic_MemberType Dynamic_GetMemberName(int index, int member, char[] buffer, int size);
 
 methodmap Dynamic
 {
-	public Dynamic(int maxstringsize=64)
+	public Dynamic(int blocksize=64, int startsize=0)
 	{
-		return view_as<Dynamic>(Dynamic_Initialise(maxstringsize));
+		return view_as<Dynamic>(Dynamic_Initialise(blocksize, startsize));
 	}
 	
 	property int IsValid
@@ -53,7 +53,7 @@ methodmap Dynamic
 	{
 		public get()
 		{
-			return Dynamic_GetFieldCount(view_as<int>(this));
+			return Dynamic_GetMemberCount(view_as<int>(this));
 		}
 	}
 	
@@ -62,34 +62,34 @@ methodmap Dynamic
 		Dynamic_Dispose(view_as<int>(this));
 	}
 	
-	public int GetInt(const char[] fieldname, int defaultvalue=-1)
+	public int GetInt(const char[] membername, int defaultvalue=-1)
 	{
-		return Dynamic_GetInt(view_as<int>(this), fieldname, defaultvalue);
+		return Dynamic_GetInt(view_as<int>(this), membername, defaultvalue);
 	}
 	
-	public void SetInt(const char[] fieldname, int value)
+	public void SetInt(const char[] membername, int value)
 	{
-		Dynamic_SetInt(view_as<int>(this), fieldname, value);
+		Dynamic_SetInt(view_as<int>(this), membername, value);
 	}
 	
-	public float GetFloat(const char[] fieldname, float defaultvalue=-1.0)
+	public float GetFloat(const char[] membername, float defaultvalue=-1.0)
 	{
-		return Dynamic_GetFloat(view_as<int>(this), fieldname, defaultvalue);
+		return Dynamic_GetFloat(view_as<int>(this), membername, defaultvalue);
 	}
 	
-	public void SetFloat(const char[] fieldname, float value)
+	public void SetFloat(const char[] membername, float value)
 	{
-		Dynamic_SetFloat(view_as<int>(this), fieldname, value);
+		Dynamic_SetFloat(view_as<int>(this), membername, value);
 	}
 	
-	public bool GetString(const char[] fieldname, char[] buffer, int size)
+	public bool GetString(const char[] membername, char[] buffer, int length)
 	{
-		return view_as<bool>(Dynamic_GetString(view_as<int>(this), fieldname, buffer, size));
+		return view_as<bool>(Dynamic_GetString(view_as<int>(this), membername, buffer, length));
 	}
 	
-	public void SetString(const char[] fieldname, const char[] value)
+	public void SetString(const char[] membername, const char[] value, int length=0)
 	{
-		Dynamic_SetString(view_as<int>(this), fieldname, value);
+		Dynamic_SetString(view_as<int>(this), membername, value, length);
 	}
 	
 	public void HookChanges(DynamicHookCB callback)
@@ -102,14 +102,14 @@ methodmap Dynamic
 		Dynamic_UnHookChanges(view_as<int>(this), callback);	
 	}
 
-	public Dynamic_FieldType GetFieldType(const char[] fieldname)
+	public Dynamic_MemberType GetFieldType(const char[] membername)
 	{
-		return Dynamic_GetFieldType(view_as<int>(this), fieldname);
+		return Dynamic_GetMemberType(view_as<int>(this), membername);
 	}
 	
-	public Dynamic_FieldType GetFieldName(int field, char[] buffer, int size)
+	public Dynamic_MemberType GetFieldName(int member, char[] buffer, int size)
 	{
-		return Dynamic_GetFieldName(view_as<int>(this), field, buffer, size);
+		return Dynamic_GetMemberName(view_as<int>(this), member, buffer, size);
 	}
 }
 
@@ -125,12 +125,12 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_GetString");
 	MarkNativeAsOptional("Dynamic_SetString");
 	MarkNativeAsOptional("Dynamic_GetCollectionSize");
-	MarkNativeAsOptional("Dynamic_GetFieldCount");
+	MarkNativeAsOptional("Dynamic_GetMemberCount");
 	MarkNativeAsOptional("Dynamic_IsValidCollectionIndex");
 	MarkNativeAsOptional("Dynamic_HookChanges");
 	MarkNativeAsOptional("Dynamic_UnHookChanges");
-	MarkNativeAsOptional("Dynamic_GetFieldType");
-	MarkNativeAsOptional("Dynamic_GetFieldName");
+	MarkNativeAsOptional("Dynamic_GetMemberType");
+	MarkNativeAsOptional("Dynamic_GetMemberName");
 }
 #endif
 
