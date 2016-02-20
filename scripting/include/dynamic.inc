@@ -31,8 +31,9 @@ native bool Dynamic_GetMemberCount(int index);
 native bool Dynamic_IsValidCollectionIndex(int index, bool throwerror=false);
 native bool Dynamic_HookChanges(int index, DynamicHookCB callback);
 native bool Dynamic_UnHookChanges(int index, DynamicHookCB callback);
-native Dynamic_MemberType Dynamic_GetMemberType(int index, const char[] membername);
-native Dynamic_MemberType Dynamic_GetMemberName(int index, int member, char[] buffer, int size);
+native int Dynamic_GetMemberOffset(int index, const char[] membername);
+native Dynamic_MemberType Dynamic_GetMemberType(int index, int offset);
+native Dynamic_MemberType Dynamic_GetMemberName(int index, int offset, char[] buffer, int size);
 
 methodmap Dynamic
 {
@@ -101,15 +102,20 @@ methodmap Dynamic
 	{
 		Dynamic_UnHookChanges(view_as<int>(this), callback);	
 	}
-
-	public Dynamic_MemberType GetFieldType(const char[] membername)
+	
+	public int GetMemberOffset(const char[] membername)
 	{
-		return Dynamic_GetMemberType(view_as<int>(this), membername);
+		return Dynamic_GetMemberOffset(view_as<int>(this), membername);
+	}
+
+	public Dynamic_MemberType GetMemberType(int offset)
+	{
+		return Dynamic_GetMemberType(view_as<int>(this), offset);
 	}
 	
-	public Dynamic_MemberType GetFieldName(int member, char[] buffer, int size)
+	public Dynamic_MemberType GetMemberName(int offset, char[] buffer, int length)
 	{
-		return Dynamic_GetMemberName(view_as<int>(this), member, buffer, size);
+		return Dynamic_GetMemberName(view_as<int>(this), offset, buffer, length);
 	}
 }
 
@@ -129,6 +135,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_IsValidCollectionIndex");
 	MarkNativeAsOptional("Dynamic_HookChanges");
 	MarkNativeAsOptional("Dynamic_UnHookChanges");
+	MarkNativeAsOptional("Dynamic_GetMemberOffset");
 	MarkNativeAsOptional("Dynamic_GetMemberType");
 	MarkNativeAsOptional("Dynamic_GetMemberName");
 }
