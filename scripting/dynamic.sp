@@ -456,7 +456,7 @@ public int Native_Dynamic_SetInt(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -465,7 +465,7 @@ public int Native_Dynamic_SetInt(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Int))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	
@@ -474,13 +474,13 @@ public int Native_Dynamic_SetInt(Handle plugin, int params)
 	{
 		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
 		CallOnChangedForward(index, offset, membername, DynamicType_Int);
-		return 1;
+		return offset;
 	}
 	else if (type == DynamicType_Float)
 	{
 		SetMemberDataFloat(array, position, offset, blocksize, float(GetNativeCell(3)));
 		CallOnChangedForward(index, offset, membername, DynamicType_Float);
-		return 1;
+		return offset;
 	}
 	else if (type == DynamicType_String)
 	{
@@ -489,12 +489,12 @@ public int Native_Dynamic_SetInt(Handle plugin, int params)
 		IntToString(GetNativeCell(3), buffer, length);
 		SetMemberDataString(array, position, offset, blocksize, buffer);
 		CallOnChangedForward(index, offset, membername, DynamicType_String);
-		return 1;
+		return offset;
 	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	}
 }
 
@@ -619,7 +619,7 @@ public int Native_Dynamic_SetFloat(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -628,20 +628,20 @@ public int Native_Dynamic_SetFloat(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Float))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
 	if (type == DynamicType_Float)
 	{
 		SetMemberDataFloat(data, position, offset, blocksize, GetNativeCell(3));
 		CallOnChangedForward(index, offset, membername, DynamicType_Float);
-		return 1;
+		return offset;
 	}
 	else if (type == DynamicType_Int)
 	{
 		SetMemberDataInt(data, position, offset, blocksize, RoundToFloor(GetNativeCell(3)));
 		CallOnChangedForward(index, offset, membername, DynamicType_Int);
-		return 1;
+		return offset;
 	}
 	else if (type == DynamicType_String)
 	{
@@ -650,12 +650,12 @@ public int Native_Dynamic_SetFloat(Handle plugin, int params)
 		FloatToString(GetNativeCell(3), buffer, length);
 		SetMemberDataString(data, position, offset, blocksize, buffer);
 		CallOnChangedForward(index, offset, membername, DynamicType_String);
-		return 1;
+		return offset;
 	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	}
 }
 
@@ -799,7 +799,7 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -815,7 +815,7 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(data, index, membername, true, position, offset, blocksize, DynamicType_String, length))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
 	if (type == DynamicType_String)
@@ -825,7 +825,7 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 		GetNativeString(3, buffer, length);
 		SetMemberDataString(data, position, offset, blocksize, buffer);
 		CallOnChangedForward(index, offset, membername, DynamicType_String);
-		return 1;
+		return offset;
 	}
 	else if (type == DynamicType_Int)
 	{
@@ -835,7 +835,7 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 		GetNativeString(3, buffer, length);
 		SetMemberDataInt(data, position, offset, blocksize, StringToInt(buffer));
 		CallOnChangedForward(index, offset, membername, DynamicType_Int);
-		return 1;
+		return offset;
 	}
 	else if (type == DynamicType_Float)
 	{
@@ -845,12 +845,12 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 		GetNativeString(3, buffer, length);
 		SetMemberDataFloat(data, position, offset, blocksize, StringToFloat(buffer));
 		CallOnChangedForward(index, offset, membername, DynamicType_Float);
-		return 1;
+		return offset;
 	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	}
 }
 
@@ -1041,7 +1041,7 @@ public int Native_Dynamic_SetObject(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -1050,19 +1050,19 @@ public int Native_Dynamic_SetObject(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Object))
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Object)
 	{
 		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
 		CallOnChangedForward(index, offset, membername, DynamicType_Object);
-		return 1;
+		return offset;
 	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return 0;
+		return INVALID_DYNAMIC_OFFSET;
 	}
 }
 

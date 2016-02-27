@@ -40,24 +40,24 @@ native bool Dynamic_HookChanges(Dynamic obj, DynamicHookCB callback);
 native bool Dynamic_UnHookChanges(Dynamic obj, DynamicHookCB callback);
 
 native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue=-1);
-native bool Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
+native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
 native int Dynamic_GetIntByOffset(Dynamic obj, int offset, int defaultvalue=-1);
 native bool Dynamic_SetIntByOffset(Dynamic obj, int offset, int value);
 
 native float Dynamic_GetFloat(Dynamic obj, const char[] membername, float defaultvalue=-1.0);
-native bool Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
+native int Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
 native float Dynamic_GetFloatByOffset(Dynamic obj, int offset, float defaultvalue=-1.0);
 native bool Dynamic_SetFloatByOffset(Dynamic obj, int offset, float value);
 
 native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int size);
-native bool Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
+native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
 native int Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int size);
 native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
 native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
 native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
 
 native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
-native bool Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
+native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
 native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
 
@@ -94,9 +94,9 @@ methodmap Dynamic
 		return Dynamic_GetInt(this, membername, defaultvalue);
 	}
 	
-	public void SetInt(const char[] membername, int value)
+	public int SetInt(const char[] membername, int value)
 	{
-		Dynamic_SetInt(this, membername, value);
+		return Dynamic_SetInt(this, membername, value);
 	}
 	
 	public int GetIntByOffset(int offset, int defaultvalue=-1)
@@ -114,9 +114,9 @@ methodmap Dynamic
 		return Dynamic_GetFloat(this, membername, defaultvalue);
 	}
 	
-	public void SetFloat(const char[] membername, float value)
+	public int SetFloat(const char[] membername, float value)
 	{
-		Dynamic_SetFloat(this, membername, value);
+		return Dynamic_SetFloat(this, membername, value);
 	}
 	
 	public float GetFloatByOffset(int offset, float defaultvalue=-1.0)
@@ -134,9 +134,9 @@ methodmap Dynamic
 		return Dynamic_GetString(this, membername, buffer, length);
 	}
 	
-	public void SetString(const char[] membername, const char[] value, int length=0)
+	public int SetString(const char[] membername, const char[] value, int length=0)
 	{
-		Dynamic_SetString(this, membername, value, length);
+		return Dynamic_SetString(this, membername, value, length);
 	}
 	
 	public int GetStringByOffset(int offset, char[] buffer, int length)
@@ -164,9 +164,9 @@ methodmap Dynamic
 		return Dynamic_GetObject(this, membername);
 	}
 	
-	public void SetObject(const char[] membername, Dynamic value)
+	public int SetObject(const char[] membername, Dynamic value)
 	{
-		Dynamic_SetObject(this, membername, value);
+		return Dynamic_SetObject(this, membername, value);
 	}
 	
 	public Dynamic GetObjectByOffset(int offset)
