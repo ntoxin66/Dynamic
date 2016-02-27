@@ -49,7 +49,7 @@ native bool Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
 native float Dynamic_GetFloatByOffset(Dynamic obj, int offset, float defaultvalue=-1.0);
 native bool Dynamic_SetFloatByOffset(Dynamic obj, int offset, float value);
 
-native int Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int size);
+native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int size);
 native bool Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
 native int Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int size);
 native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
@@ -131,7 +131,7 @@ methodmap Dynamic
 	
 	public bool GetString(const char[] membername, char[] buffer, int length)
 	{
-		return view_as<bool>(Dynamic_GetString(this, membername, buffer, length));
+		return Dynamic_GetString(this, membername, buffer, length);
 	}
 	
 	public void SetString(const char[] membername, const char[] value, int length=0)

@@ -1,4 +1,5 @@
 #include <dynamic>
+#include <dynamic-example>
 #pragma newdecls required
 #pragma semicolon 1
 
@@ -91,6 +92,19 @@ public void OnPluginStart()
 	// You MUST! dispose your dynamic objects when your done.
 	someobj.Dispose();
 	anotherobj.Dispose();
+	
+	// You can also use Dynamic to back Methodmap properties. This is another step
+	// towards pawn feeling a bit more OO
+	// -> Find the methodmap in 'include/dynamic-example.sp'
+	PrintToServer("MYCLASS VALUES");
+	MyClass myclass = MyClass();
+	myclass.SomeInt = 66;
+	myclass.SomeFloat = 58.5;
+	myclass.SetSomeString("hello from toxin!");
+	PrintToServer("myclass.SomeInt = %d;", myclass.SomeInt);
+	PrintToServer("myclass.SomeFloat = %f;", myclass.SomeFloat);
+	myclass.GetSomeString(somestring, sizeof(somestring));
+	PrintToServer("myclass.SomeFloat = %s;", somestring);
 }
 
 public void OnDynamicMemberChanged(Dynamic obj, int offset, const char[] member, Dynamic_MemberType type)
