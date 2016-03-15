@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.5",
+	version = "0.0.6",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -260,7 +260,7 @@ stock bool RecalculateOffset(Handle array, int &position, int &offset, int block
 	return true;
 }
 
-stock bool ValidateOffset(Handle array, int position, int offset, int blocksize, bool aschar=false)
+stock bool ValidateOffset(Handle array, int &position, int &offset, int blocksize, bool aschar=false)
 {
 	if (aschar)
 		blocksize *= 4;
@@ -276,9 +276,11 @@ stock bool ValidateOffset(Handle array, int position, int offset, int blocksize,
 		position++;
 	}
 
-	int size = GetArraySize(array);
+	// This safeguard was removed as it was reducing performance
+	// Invalid offset positions will now cause array index errors
+	/*int size = GetArraySize(array);
 	if (size <= position)
-		return false;
+		return false;*/
 
 	return true;
 }

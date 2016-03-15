@@ -4,7 +4,7 @@
 #pragma semicolon 1
 
 public void OnPluginStart()
-{
+{	
 	// Creating dynamic objects is straight foward
 	Dynamic someobj = Dynamic();
 	
@@ -105,6 +105,7 @@ public void OnPluginStart()
 	PrintToServer("myclass.SomeFloat = %f;", myclass.SomeFloat);
 	myclass.GetSomeString(somestring, sizeof(somestring));
 	PrintToServer("myclass.SomeFloat = %s;", somestring);
+	myclass.Dispose();
 }
 
 public void OnDynamicMemberChanged(Dynamic obj, int offset, const char[] member, Dynamic_MemberType type)

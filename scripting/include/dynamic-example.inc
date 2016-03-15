@@ -46,7 +46,7 @@ methodmap MyClass < Dynamic
 				offset = this.GetMemberOffset("SomeInt");
 				if (offset == INVALID_DYNAMIC_OFFSET)
 				{
-					this.SetInt("SomeInt", value);
+					offset = this.SetInt("SomeInt", value);
 					return;
 				}
 			}
@@ -75,7 +75,7 @@ methodmap MyClass < Dynamic
 				offset = this.GetMemberOffset("SomeFloat");
 				if (offset == INVALID_DYNAMIC_OFFSET)
 				{
-					this.SetFloat("SomeFloat", value);
+					offset = this.SetFloat("SomeFloat", value);
 					return;
 				}
 			}
@@ -104,7 +104,7 @@ methodmap MyClass < Dynamic
 			offset = this.GetMemberOffset("SomeString");
 			if (offset == INVALID_DYNAMIC_OFFSET)
 			{
-				this.SetString("SomeString", buffer);
+				offset = this.SetString("SomeString", buffer);
 				return;
 			}
 		}
