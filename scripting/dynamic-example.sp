@@ -8,9 +8,10 @@ public void OnPluginStart()
 	// Creating dynamic objects is straight foward
 	Dynamic someobj = Dynamic();
 	
-	// Setting integers and floats also
+	// Setting integers, floats and booleans also
 	someobj.SetInt("someint", 1);
 	someobj.SetFloat("somefloat", 512.7);
+	someobj.SetBool("somebool", true);
 	
 	// When dealing with strings...
 	// you want to set an appropriate length if the value will change
@@ -19,13 +20,15 @@ public void OnPluginStart()
 	// If the value of a string will never change you might as well
 	someobj.SetString("our_planets_name", "Earth");
 	
-	// Getting integers and floats is also straight foward
+	// Getting integers, floats and booleans is also straight foward
 	int someint = someobj.GetInt("someint");
 	float somefloat = someobj.GetFloat("somefloat");
+	bool somebool = someobj.GetBool("somebool");
 	
 	// You can also include default values in case a member doesn't exist
 	someint = someobj.GetInt("someint1", -1);
 	somefloat = someobj.GetFloat("somefloat2", 7.25);
+	somebool = someobj.GetBool("somebool2", false);
 	
 	// And the normal "extra" stuff to get a string in sourcespawn
 	char somestring[64];
@@ -40,10 +43,12 @@ public void OnPluginStart()
 	someint = someobj.GetInt("somefloat"); // rounds to floor
 	somefloat = someobj.GetFloat("someint");
 	someobj.GetString("somefloat", somestring, sizeof(somestring));
+	someobj.GetString("somebool", somestring, sizeof(somestring));
 	
 	// You can even set dynamic objects within themselves
 	Dynamic anotherobj = Dynamic();
 	anotherobj.SetInt("someint", 128);
+	someobj.SetObject("anotherobj", anotherobj);
 
 	// Sometimes you might want to iterate through members to accomplish stuff
 	int count = someobj.MemberCount;
@@ -62,12 +67,17 @@ public void OnPluginStart()
 			{
 				someint = someobj.GetIntByOffset(memberoffset);
 				PrintToServer("[%d] <int>someobj.%s = %d", memberoffset, membername, someint);
-			}		
+			}
+			case DynamicType_Bool:
+			{
+				somebool = someobj.GetBoolByOffset(memberoffset);
+				PrintToServer("[%d] <bool>someobj.%s = %d", memberoffset, membername, somebool);
+			}
 			case DynamicType_Float:
 			{
 				somefloat = someobj.GetFloatByOffset(memberoffset);
 				PrintToServer("[%d] <float>someobj.%s = %f", memberoffset, membername, somefloat);
-			}				
+			}
 			case DynamicType_String:
 			{
 				someobj.GetStringByOffset(memberoffset, somestring, sizeof(somestring));
