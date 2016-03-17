@@ -13,7 +13,8 @@ enum Dynamic_MemberType
 	DynamicType_Float = 1,
 	DynamicType_String = 2,
 	DynamicType_Object = 3,
-	DynamicType_Unknown = 4
+	DynamicType_Bool = 4,
+	DynamicType_Unknown = 5
 }
 
 typeset DynamicHookCB
@@ -60,6 +61,11 @@ native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
 native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
 native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
+
+native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultvalue=false);
+native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
+native bool Dynamic_GetBoolByOffset(Dynamic obj, int offset, bool defaultvalue=false);
+native bool Dynamic_SetBoolByOffset(Dynamic obj, int offset, bool value);
 
 methodmap Dynamic
 {
@@ -179,6 +185,26 @@ methodmap Dynamic
 		Dynamic_SetObjectByOffset(this, offset, value);
 	}
 	
+	public bool GetBool(const char[] membername)
+	{
+		return Dynamic_GetBool(this, membername);
+	}
+	
+	public int SetBool(const char[] membername, bool value)
+	{
+		return Dynamic_SetBool(this, membername, value);
+	}
+	
+	public bool GetBoolByOffset(int offset)
+	{
+		return Dynamic_GetBoolByOffset(this, offset);
+	}
+	
+	public void SetBoolByOffset(int offset, bool value)
+	{
+		Dynamic_SetBoolByOffset(this, offset, value);
+	}
+	
 	public void HookChanges(DynamicHookCB callback)
 	{
 		Dynamic_HookChanges(this, callback);	
@@ -243,6 +269,10 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetObject");
 	MarkNativeAsOptional("Dynamic_GetObjectByOffset");
 	MarkNativeAsOptional("Dynamic_SetObjectByOffset");
+	MarkNativeAsOptional("Dynamic_GetBool");
+	MarkNativeAsOptional("Dynamic_SetBool");
+	MarkNativeAsOptional("Dynamic_GetBoolByOffset");
+	MarkNativeAsOptional("Dynamic_SetBoolByOffset");
 	MarkNativeAsOptional("Dynamic_GetCollectionSize");
 	MarkNativeAsOptional("Dynamic_GetMemberCount");
 	MarkNativeAsOptional("Dynamic_IsValid");

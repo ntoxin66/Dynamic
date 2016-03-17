@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.6",
+	version = "0.0.7",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -51,6 +51,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_SetObject", Native_Dynamic_SetObject);
 	CreateNative("Dynamic_GetObjectByOffset", Native_Dynamic_GetObjectByOffset);
 	CreateNative("Dynamic_SetObjectByOffset", Native_Dynamic_SetObjectByOffset);
+	CreateNative("Dynamic_GetBool", Native_Dynamic_GetBool);
+	CreateNative("Dynamic_SetBool", Native_Dynamic_SetBool);
+	CreateNative("Dynamic_GetBoolByOffset", Native_Dynamic_GetBoolByOffset);
+	CreateNative("Dynamic_SetBoolByOffset", Native_Dynamic_SetBoolByOffset);
 	CreateNative("Dynamic_GetCollectionSize", Native_Dynamic_GetCollectionSize);
 	CreateNative("Dynamic_GetMemberCount", Native_Dynamic_GetMemberCount);
 	CreateNative("Dynamic_IsValid", Native_Dynamic_IsValid);
@@ -275,13 +279,13 @@ stock bool ValidateOffset(Handle array, int &position, int &offset, int blocksiz
 		offset-=blocksize;
 		position++;
 	}
-
+	
 	// This safeguard was removed as it was reducing performance
 	// Invalid offset positions will now cause array index errors
 	/*int size = GetArraySize(array);
 	if (size <= position)
 		return false;*/
-
+	
 	return true;
 }
 
@@ -296,14 +300,12 @@ stock Dynamic_MemberType GetMemberType(Handle array, int position, int offset, i
 	RecalculateOffset(array, position, offset, blocksize);
 	
 	int type = GetArrayCell(array, position, offset);
-	//LogMessage("GetMemberType(position=%d, offset=%d, blocksize=%d)=%d", position, offset, blocksize, type);
 	return view_as<Dynamic_MemberType>(type);
 }
 
 stock void SetMemberType(Handle array, int position, int offset, int blocksize, Dynamic_MemberType type)
 {
 	RecalculateOffset(array, position, offset, blocksize);
-	//LogMessage("SetMemberType(position=%d, offset=%d, blocksize=%d, type=%d)", position, offset, blocksize, view_as<int>(type));
 	SetArrayCell(array, position, type, offset);
 }
 
@@ -311,7 +313,6 @@ stock int GetMemberStringLength(Handle array, int position, int offset, int bloc
 {
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
-	//LogMessage("GetMemberStringLength(position=%d, offset=%d, blocksize=%d)=%d", position, offset, blocksize, GetArrayCell(array, position, offset));
 	return GetArrayCell(array, position, offset);
 }
 
@@ -319,7 +320,6 @@ stock void SetMemberStringLength(Handle array, int position, int offset, int blo
 {
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
-	//LogMessage("SetMemberStringLength(position=%d, offset=%d, blocksize=%d, length=%d)", position, offset, blocksize, length);
 	SetArrayCell(array, position, length, offset);
 }
 
@@ -327,7 +327,6 @@ stock int GetMemberDataInt(Handle array, int position, int offset, int blocksize
 {
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
-	//LogMessage("GetMemberDataInt(position=%d, offset=%d, blocksize=%d)=%d", position, offset, blocksize, GetArrayCell(array, position, offset));
 	return GetArrayCell(array, position, offset);
 }
 
@@ -336,14 +335,12 @@ stock void SetMemberDataInt(Handle array, int position, int offset, int blocksiz
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
 	SetArrayCell(array, position, value, offset);
-	//LogMessage("SetMemberDataInt(position=%d, offset=%d, blocksize=%d, value=%d)", position, offset, blocksize, value);
 }
 
 stock float GetMemberDataFloat(Handle array, int position, int offset, int blocksize)
 {
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
-	//LogMessage("GetMemberDataFloat(position=%d, offset=%d, blocksize=%d)=%f", position, offset, blocksize, GetArrayCell(array, position, offset));
 	return GetArrayCell(array, position, offset);
 }
 
@@ -352,7 +349,6 @@ stock void SetMemberDataFloat(Handle array, int position, int offset, int blocks
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
 	SetArrayCell(array, position, value, offset);
-	//LogMessage("SetMemberDataFloat(position=%d, offset=%d, blocksize=%d, value=%f)", position, offset, blocksize, value);
 }
 
 stock void GetMemberDataString(Handle array, int position, int offset, int blocksize, char[] buffer, int length)
@@ -360,7 +356,6 @@ stock void GetMemberDataString(Handle array, int position, int offset, int block
 	offset+=2;
 	RecalculateOffset(array, position, offset, blocksize, true);
 	
-	//LogMessage("GetMemberDataString(position=%d, offset=%d, blocksize=%d)", position, offset, blocksize, buffer);
 	offset*=4;
 	
 	int i; char letter;
@@ -368,7 +363,6 @@ stock void GetMemberDataString(Handle array, int position, int offset, int block
 	{
 		letter = view_as<char>(GetArrayCell(array, position, offset, true));
 		buffer[i] = letter;
-		//LogMessage("-> setting [%d] = %d", i, letter);
 		if (letter == 0)
 			return;
 			
@@ -385,8 +379,6 @@ stock void SetMemberDataString(Handle array, int position, int offset, int block
 	
 	offset+=2;
 	RecalculateOffset(array, position, offset, blocksize);
-	
-	//LogMessage("SetMemberDataString(position=%d, offset=%d, blocksize=%d, value='%s', length=%d)", position, offset, blocksize, buffer, length);
 	offset*=4;
 	
 	int i;
@@ -394,7 +386,6 @@ stock void SetMemberDataString(Handle array, int position, int offset, int block
 	for (i=0; i < length; i++)
 	{
 		letter = buffer[i];
-		//LogMessage("-> [%d, %d] = setting [%d] = %d", position, offset, i, letter);
 		SetArrayCell(array, position, letter, offset, true);
 		if (letter == 0)
 			return;
@@ -406,7 +397,6 @@ stock void SetMemberDataString(Handle array, int position, int offset, int block
 	offset--;
 	RecalculateOffset(array, position, offset, blocksize, false, true);
 	SetArrayCell(array, position, 0, offset, true);
-	//LogMessage("-> [%d, %d] = setting [%d] = %d", position, offset, i-1, 0);
 }
 
 stock int GetMemberCount(int index)
@@ -414,7 +404,6 @@ stock int GetMemberCount(int index)
 	return GetTrieSize(GetArrayCell(s_Collection, index, Dynamic_Offsets));
 }
 
-// native int Dynamic_GetInt(int index, const char[] membername, int defaultvalue=-1);
 public int Native_Dynamic_GetInt(Handle plugin, int params)
 {
 	// Get and validate index
@@ -432,7 +421,7 @@ public int Native_Dynamic_GetInt(Handle plugin, int params)
 		return GetNativeCell(3);
 		
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
-	if (type == DynamicType_Int)
+	if (type == DynamicType_Int || type == DynamicType_Bool)
 		return GetMemberDataInt(array, position, offset, blocksize);
 	else if (type == DynamicType_Float)
 		return RoundToFloor(GetMemberDataFloat(array, position, offset, blocksize));
@@ -452,7 +441,6 @@ public int Native_Dynamic_GetInt(Handle plugin, int params)
 	}
 }
 
-// native bool Dynamic_SetInt(int index, const char[] membername, int value);
 public int Native_Dynamic_SetInt(Handle plugin, int params)
 {
 	// Get and validate index
@@ -483,6 +471,12 @@ public int Native_Dynamic_SetInt(Handle plugin, int params)
 		SetMemberDataFloat(array, position, offset, blocksize, float(GetNativeCell(3)));
 		CallOnChangedForward(index, offset, membername, DynamicType_Float);
 		return offset;
+	}
+	else if (type == DynamicType_Bool)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Bool);
+		return 1;
 	}
 	else if (type == DynamicType_String)
 	{
@@ -516,7 +510,7 @@ public int Native_Dynamic_GetIntByOffset(Handle plugin, int params)
 		return GetNativeCell(3);
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
-	if (type == DynamicType_Int)
+	if (type == DynamicType_Int || type == DynamicType_Bool)
 		return GetMemberDataInt(array, position, offset, blocksize);
 	else if (type == DynamicType_Float)
 		return RoundToFloor(GetMemberDataFloat(array, position, offset, blocksize));
@@ -565,6 +559,12 @@ public int Native_Dynamic_SetIntByOffset(Handle plugin, int params)
 		CallOnChangedForwardByOffset(index, offset, DynamicType_Float);
 		return 1;
 	}
+	else if (type == DynamicType_Bool)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Bool);
+		return 1;
+	}
 	else if (type == DynamicType_String)
 	{
 		int length = GetMemberStringLength(array, position, offset, blocksize);
@@ -600,7 +600,7 @@ public int Native_Dynamic_GetFloat(Handle plugin, int params)
 	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
 	if (type == DynamicType_Float)
 		return view_as<int>(GetMemberDataFloat(data, position, offset, blocksize));
-	else if (type == DynamicType_Int)
+	else if (type == DynamicType_Int || type == DynamicType_Bool)
 		return view_as<int>(float(GetMemberDataInt(data, position, offset, blocksize)));
 	else if (type == DynamicType_String)
 	{
@@ -645,6 +645,12 @@ public int Native_Dynamic_SetFloat(Handle plugin, int params)
 		CallOnChangedForward(index, offset, membername, DynamicType_Int);
 		return offset;
 	}
+	else if (type == DynamicType_Bool)
+	{
+		SetMemberDataInt(data, position, offset, blocksize, RoundToFloor(GetNativeCell(3)));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Bool);
+		return 1;
+	}
 	else if (type == DynamicType_String)
 	{
 		int length = GetMemberStringLength(data, position, offset, blocksize);
@@ -679,7 +685,7 @@ public int Native_Dynamic_GetFloatByOffset(Handle plugin, int params)
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Float)
 		return view_as<int>(GetMemberDataFloat(array, position, offset, blocksize));
-	else if (type == DynamicType_Int)
+	else if (type == DynamicType_Int || type == DynamicType_Bool)
 		return view_as<int>(float(GetMemberDataInt(array, position, offset, blocksize)));
 	else if (type == DynamicType_String)
 	{
@@ -721,6 +727,12 @@ public int Native_Dynamic_SetFloatByOffset(Handle plugin, int params)
 	{
 		SetMemberDataInt(array, position, offset, blocksize, RoundToFloor(GetNativeCell(3)));
 		CallOnChangedForwardByOffset(index, offset, DynamicType_Int);
+		return 1;
+	}
+	else if (type == DynamicType_Bool)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, RoundToFloor(GetNativeCell(3)));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Bool);
 		return 1;
 	}
 	else if (type == DynamicType_String)
@@ -766,7 +778,6 @@ public int Native_Dynamic_GetString(Handle plugin, int params)
 	{
 		char[] buffer = new char[GetNativeCell(4)];
 		GetMemberDataString(data, position, offset, blocksize, buffer, GetNativeCell(4));
-		//LogMessage("-> '%s'", buffer);
 		SetNativeString(3, buffer, GetNativeCell(4));
 		return 1;
 	}
@@ -786,6 +797,14 @@ public int Native_Dynamic_GetString(Handle plugin, int params)
 		char[] buffer = new char[length];
 		FloatToString(value, buffer, length);
 		SetNativeString(3, buffer, length);
+		return 1;
+	}
+	else if (type == DynamicType_Bool)
+	{
+		if (GetMemberDataInt(data, position, offset, blocksize))
+			SetNativeString(3, "True", 4);
+		else
+			SetNativeString(3, "False", 5);
 		return 1;
 	}
 	else
@@ -849,6 +868,19 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 		CallOnChangedForward(index, offset, membername, DynamicType_Float);
 		return offset;
 	}
+	else if (type == DynamicType_Bool)
+	{
+		char[] buffer = new char[length];
+		GetNativeString(3, buffer, length);
+		
+		if (StrEqual(buffer, "True"))
+			SetMemberDataInt(data, position, offset, blocksize, true);
+		else if (StrEqual(buffer, "1"))
+			SetMemberDataInt(data, position, offset, blocksize, true);
+		
+		SetMemberDataInt(data, position, offset, blocksize, false);
+		return 1;
+	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
@@ -882,7 +914,6 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 	{
 		char[] buffer = new char[GetNativeCell(4)];
 		GetMemberDataString(array, position, offset, blocksize, buffer, GetNativeCell(4));
-		//LogMessage("-> '%s'", buffer);
 		SetNativeString(3, buffer, GetNativeCell(4));
 		return 1;
 	}
@@ -902,6 +933,14 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 		char[] buffer = new char[length];
 		FloatToString(value, buffer, length);
 		SetNativeString(3, buffer, length);
+		return 1;
+	}
+	else if (type == DynamicType_Bool)
+	{
+		if (GetMemberDataInt(array, position, offset, blocksize))
+			SetNativeString(3, "True", 4);
+		else
+			SetNativeString(3, "False", 5);
 		return 1;
 	}
 	else
@@ -964,6 +1003,19 @@ public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 		CallOnChangedForwardByOffset(index, offset, DynamicType_Float);
 		return 1;
 	}
+	else if (type == DynamicType_Bool)
+	{
+		char[] buffer = new char[length];
+		GetNativeString(3, buffer, length);
+		
+		if (StrEqual(buffer, "True"))
+			SetMemberDataInt(array, position, offset, blocksize, true);
+		else if (StrEqual(buffer, "1"))
+			SetMemberDataInt(array, position, offset, blocksize, true);
+		
+		SetMemberDataInt(array, position, offset, blocksize, false);
+		return 1;
+	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
@@ -1006,9 +1058,8 @@ public int Native_Dynamic_GetStringLengthByOffset(Handle plugin, int params)
 	
 	int offset = GetNativeCell(2);
 	int position;
-
-	RecalculateOffset(array, position, offset, blocksize);
 	
+	RecalculateOffset(array, position, offset, blocksize);
 	return GetMemberStringLength(array, position, offset, blocksize);
 }
 
@@ -1113,6 +1164,203 @@ public int Native_Dynamic_SetObjectByOffset(Handle plugin, int params)
 	{
 		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
 		CallOnChangedForwardByOffset(index, offset, DynamicType_Object);
+		return 1;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return 0;
+	}
+}
+
+public int Native_Dynamic_GetBool(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return GetNativeCell(3);
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int position; int offset;
+	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Int))
+		return GetNativeCell(3);
+		
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Bool || type == DynamicType_Int)
+		return GetMemberDataInt(array, position, offset, blocksize);
+	else if (type == DynamicType_Float)
+		return RoundToFloor(GetMemberDataFloat(array, position, offset, blocksize));
+	else if (type == DynamicType_String)
+	{
+		int length = GetMemberStringLength(array, position, offset, blocksize);
+		char[] buffer = new char[length];
+		GetMemberDataString(array, position, offset, blocksize, buffer, length);
+		if (StrEqual(buffer, ""))
+			return false;
+		
+		return true;
+	}
+	else if (type == DynamicType_Object)
+	{
+		int value = GetMemberDataInt(array, position, offset, blocksize);
+		if (value == INVALID_DYNAMIC_OBJECT)
+			return false;
+		return true;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return GetNativeCell(3);
+	}
+}
+
+public int Native_Dynamic_SetBool(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int position; int offset;
+	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Int))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Bool)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForward(index, offset, membername, DynamicType_Bool);
+		return offset;
+	}
+	else if (type == DynamicType_Int)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForward(index, offset, membername, DynamicType_Int);
+		return offset;
+	}
+	else if (type == DynamicType_Float)
+	{
+		SetMemberDataFloat(array, position, offset, blocksize, float(GetNativeCell(3)));
+		CallOnChangedForward(index, offset, membername, DynamicType_Float);
+		return offset;
+	}
+	else if (type == DynamicType_String)
+	{
+		int length = GetMemberStringLength(array, position, offset, blocksize);
+		char[] buffer = new char[length];
+		if (GetNativeCell(3))
+			strcopy(buffer, length, "True");
+		else
+			strcopy(buffer, length, "");
+		SetMemberDataString(array, position, offset, blocksize, buffer);
+		CallOnChangedForward(index, offset, membername, DynamicType_String);
+		return offset;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OFFSET;
+	}
+}
+
+public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return GetNativeCell(3);
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int offset = GetNativeCell(2);
+	int position;
+	if (!ValidateOffset(array, position, offset, blocksize))
+		return GetNativeCell(3);
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Bool || type == DynamicType_Int)
+		return GetMemberDataInt(array, position, offset, blocksize);
+	else if (type == DynamicType_Float)
+		return RoundToFloor(GetMemberDataFloat(array, position, offset, blocksize));
+	else if (type == DynamicType_String)
+	{
+		int length = GetMemberStringLength(array, position, offset, blocksize);
+		char[] buffer = new char[length];
+		GetMemberDataString(array, position, offset, blocksize, buffer, length);
+		if (StrEqual(buffer, ""))
+			return false;
+		return true;
+	}
+	else if (type == DynamicType_Object)
+	{
+		int value = GetMemberDataInt(array, position, offset, blocksize);
+		if (value == INVALID_DYNAMIC_OBJECT)
+			return false;
+		else
+			return true;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return GetNativeCell(3);
+	}
+}
+
+public int Native_Dynamic_SetBoolByOffset(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return 0;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int offset = GetNativeCell(2);
+	
+	int position;
+	if (!ValidateOffset(array, position, offset, blocksize))
+		return 0;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	
+	if (type == DynamicType_Bool)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Bool);
+		return 1;
+	}
+	else if (type == DynamicType_Int)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Int);
+		return 1;
+	}
+	else if (type == DynamicType_Float)
+	{
+		SetMemberDataFloat(array, position, offset, blocksize, float(GetNativeCell(3)));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Float);
+		return 1;
+	}
+	else if (type == DynamicType_String)
+	{
+		int length = GetMemberStringLength(array, position, offset, blocksize);
+		char[] buffer = new char[length];
+		if (GetNativeCell(3))
+			strcopy(buffer, length, "True");
+		else
+			strcopy(buffer, length, "");
+		SetMemberDataString(array, position, offset, blocksize, buffer);
+		CallOnChangedForwardByOffset(index, offset, DynamicType_String);
 		return 1;
 	}
 	else
