@@ -185,9 +185,9 @@ methodmap Dynamic
 		Dynamic_SetObjectByOffset(this, offset, value);
 	}
 	
-	public bool GetBool(const char[] membername)
+	public bool GetBool(const char[] membername, bool defaultvalue = false)
 	{
-		return Dynamic_GetBool(this, membername);
+		return Dynamic_GetBool(this, membername, defaultvalue);
 	}
 	
 	public int SetBool(const char[] membername, bool value)
@@ -195,9 +195,9 @@ methodmap Dynamic
 		return Dynamic_SetBool(this, membername, value);
 	}
 	
-	public bool GetBoolByOffset(int offset)
+	public bool GetBoolByOffset(int offset, bool defaultvalue = false)
 	{
-		return Dynamic_GetBoolByOffset(this, offset);
+		return Dynamic_GetBoolByOffset(this, offset, defaultvalue);
 	}
 	
 	public void SetBoolByOffset(int offset, bool value)
