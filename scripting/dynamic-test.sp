@@ -158,8 +158,8 @@ stock void BenchmarkTest()
 					if (someoject.GetFloat(membernames[x]) != fval)
 						PrintToServer("!! Conversion error (Int2Float)");
 					if (someoject.GetBool(membernames[x]) != true)
-						PrintToServer("!! Conversion error (Int2Bool)");
-	
+						PrintToServer("!! Conversion error (Int2Bool) - (%d != true) - (ival=%d)", someoject.GetBool(membernames[x]), ival);
+					
 					someoject.GetString(membernames[x], buffer, sizeof(buffer));
 					IntToString(ival, sval, sizeof(sval));
 					if (!StrEqual(buffer, sval))
@@ -173,8 +173,8 @@ stock void BenchmarkTest()
 					if (someoject.GetInt(membernames[x]) != ival)
 						PrintToServer("!! Conversion error (FloatToInt)");
 					if (someoject.GetBool(membernames[x]) != true)
-						PrintToServer("!! Conversion error (FloatToBool)");
-
+						PrintToServer("!! Conversion error (FloatToBool) - (%d != true) - (fval: %f)", someoject.GetBool(membernames[x]), fval);
+					
 					someoject.GetString(membernames[x], buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, sval))
@@ -190,11 +190,10 @@ stock void BenchmarkTest()
 					if (someoject.GetInt(membernames[x]) != 1)
 						PrintToServer("!! Conversion error (BoolToInt)");
 					
-
 					someoject.GetString(membernames[x], buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, "True"))
-						PrintToServer("!! Conversion error (Bool2String)");
+						PrintToServer("!! Conversion error (Bool2String) - ('%s' != 'True')", buffer);
 					x++;
 				}
 				else if (p==4)
@@ -294,7 +293,7 @@ stock void BenchmarkTest()
 					someoject.GetStringByOffset(offset, buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, "False"))
-						PrintToServer("!! Conversion error (Bool2String)");
+						PrintToServer("!! Conversion error (Bool2String) - ('%s' != 'False'", buffer);
 					x++;
 				}
 				else if (p==4)

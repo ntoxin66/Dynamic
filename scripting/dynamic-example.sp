@@ -97,6 +97,7 @@ public void OnPluginStart()
 	someobj.HookChanges(OnDynamicMemberChanged);
 	someobj.SetInt("someint", 256);
 	someobj.SetFloat("somefloat", -12.04);
+	someobj.SetBool("somebool", false);
 	someobj.SetString("somestring", "ye sure moite");
 	
 	// You MUST! dispose your dynamic objects when your done.
@@ -114,7 +115,7 @@ public void OnPluginStart()
 	PrintToServer("myclass.SomeInt = %d;", myclass.SomeInt);
 	PrintToServer("myclass.SomeFloat = %f;", myclass.SomeFloat);
 	myclass.GetSomeString(somestring, sizeof(somestring));
-	PrintToServer("myclass.SomeFloat = %s;", somestring);
+	PrintToServer("myclass.SomeFloat = '%s';", somestring);
 	myclass.Dispose();
 }
 
@@ -125,11 +126,15 @@ public void OnDynamicMemberChanged(Dynamic obj, int offset, const char[] member,
 		case DynamicType_Int:
 		{
 			PrintToServer("[%d] <int>obj.%s = %d", offset, member, obj.GetIntByOffset(offset));
-		}		
+		}
 		case DynamicType_Float:
 		{
 			PrintToServer("[%d] <float>obj.%s = %f", offset, member, obj.GetFloatByOffset(offset));
-		}				
+		}
+		case DynamicType_Bool:
+		{
+			PrintToServer("[%d] <bool>obj.%s = %d", offset, member, obj.GetBoolByOffset(offset));
+		}
 		case DynamicType_String:
 		{
 			char somestring[64];

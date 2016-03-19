@@ -802,9 +802,9 @@ public int Native_Dynamic_GetString(Handle plugin, int params)
 	else if (type == DynamicType_Bool)
 	{
 		if (GetMemberDataInt(data, position, offset, blocksize))
-			SetNativeString(3, "True", 4);
+			SetNativeString(3, "True", 5);
 		else
-			SetNativeString(3, "False", 5);
+			SetNativeString(3, "False", 6);
 		return 1;
 	}
 	else
@@ -938,9 +938,9 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 	else if (type == DynamicType_Bool)
 	{
 		if (GetMemberDataInt(array, position, offset, blocksize))
-			SetNativeString(3, "True", 4);
+			SetNativeString(3, "True", 5);
 		else
-			SetNativeString(3, "False", 5);
+			SetNativeString(3, "False", 6);
 		return 1;
 	}
 	else
@@ -1186,14 +1186,16 @@ public int Native_Dynamic_GetBool(Handle plugin, int params)
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	
 	int position; int offset;
-	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Int))
+	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Bool))
 		return GetNativeCell(3);
 		
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
-	if (type == DynamicType_Bool || type == DynamicType_Int)
+	if (type == DynamicType_Bool)
 		return GetMemberDataInt(array, position, offset, blocksize);
+	else if (type == DynamicType_Int)
+		return (GetMemberDataInt(array, position, offset, blocksize) == 0 ? 0 : 1);
 	else if (type == DynamicType_Float)
-		return RoundToFloor(GetMemberDataFloat(array, position, offset, blocksize));
+		return (GetMemberDataFloat(array, position, offset, blocksize) == 0.0 ? 0 : 1);
 	else if (type == DynamicType_String)
 	{
 		int length = GetMemberStringLength(array, position, offset, blocksize);
@@ -1231,7 +1233,7 @@ public int Native_Dynamic_SetBool(Handle plugin, int params)
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	
 	int position; int offset;
-	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Int))
+	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Bool))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
@@ -1288,10 +1290,12 @@ public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
 		return GetNativeCell(3);
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
-	if (type == DynamicType_Bool || type == DynamicType_Int)
+	if (type == DynamicType_Bool)
 		return GetMemberDataInt(array, position, offset, blocksize);
+	else if (type == DynamicType_Int)
+		return (GetMemberDataInt(array, position, offset, blocksize) == 0 ? 0 : 1);
 	else if (type == DynamicType_Float)
-		return RoundToFloor(GetMemberDataFloat(array, position, offset, blocksize));
+		return (GetMemberDataFloat(array, position, offset, blocksize) == 0.0 ? 0 : 1);
 	else if (type == DynamicType_String)
 	{
 		int length = GetMemberStringLength(array, position, offset, blocksize);
