@@ -49,6 +49,12 @@ public void OnPluginStart()
 	Dynamic anotherobj = Dynamic();
 	anotherobj.SetInt("someint", 128);
 	someobj.SetObject("anotherobj", anotherobj);
+	
+	// You can name a dynamic object
+	someobj.SetName("someobj");
+	
+	// So another plugin can access it like so
+	someobj = Dynamic.FindByName("someobj");	
 
 	// Sometimes you might want to iterate through members to accomplish stuff
 	int count = someobj.MemberCount;
@@ -101,8 +107,10 @@ public void OnPluginStart()
 	someobj.SetString("somestring", "ye sure moite");
 	
 	// You MUST! dispose your dynamic objects when your done.
-	someobj.Dispose();
 	anotherobj.Dispose();
+	
+	// You can also dispose of any disposable members like this
+	someobj.Dispose(true);
 	
 	// You can also use Dynamic to back Methodmap properties. This is another step
 	// towards pawn feeling a bit more OO

@@ -26,7 +26,7 @@ native int Dynamic_GetCollectionSize();
 
 native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0);
 native bool Dynamic_IsValid(int index, bool throwerror=false);
-native bool Dynamic_Dispose(Dynamic obj);
+native bool Dynamic_Dispose(int index, bool disposemembers);
 
 native int Dynamic_GetMemberCount(Dynamic obj);
 native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
@@ -35,6 +35,9 @@ native bool Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, 
 native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int size);
 native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
 native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
+
+native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
+native Dynamic Dynamic_FindByName(const char[] objectname);
 
 native int Dynamic_CallbackCount(Dynamic obj);
 native bool Dynamic_HookChanges(Dynamic obj, DynamicHookCB callback);
@@ -90,9 +93,19 @@ methodmap Dynamic
 		}
 	}
 	
-	public void Dispose()
+	public void Dispose(bool disposemembers=true)
 	{
-		Dynamic_Dispose(this);
+		Dynamic_Dispose(view_as<int>(this), disposemembers);
+	}
+	
+	public bool SetName(const char[] objectname, bool replace=false)
+	{
+		return Dynamic_SetName(this, objectname, replace);
+	}
+	
+	public static Dynamic FindByName(const char[] objectname)
+	{
+		return Dynamic_FindByName(objectname);
 	}
 	
 	public int GetInt(const char[] membername, int defaultvalue=-1)
@@ -251,6 +264,8 @@ public __pl_dynamic_SetNTVOptional()
 {
 	MarkNativeAsOptional("Dynamic_Initialise");
 	MarkNativeAsOptional("Dynamic_Dispose");
+	MarkNativeAsOptional("Dynamic_SetName");
+	MarkNativeAsOptional("Dynamic_FindByName");
 	MarkNativeAsOptional("Dynamic_GetInt");
 	MarkNativeAsOptional("Dynamic_SetInt");
 	MarkNativeAsOptional("Dynamic_GetIntByOffset");

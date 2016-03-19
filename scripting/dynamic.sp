@@ -5,13 +5,14 @@
 static Handle s_Collection = null;
 static int s_CollectionSize = 0;
 static Handle s_FreeIndicies = null;
+static Handle s_tObjectNames = null;
 
 public Plugin myinfo =
 {
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.7",
+	version = "0.0.8",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -33,6 +34,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	RegPluginLibrary("dynamic");
 	CreateNative("Dynamic_Initialise", Native_Dynamic_Initialise);
 	CreateNative("Dynamic_Dispose", Native_Dynamic_Dispose);
+	CreateNative("Dynamic_SetName", Native_Dynamic_SetName);
+	CreateNative("Dynamic_FindByName", Native_Dynamic_FindByName);
 	CreateNative("Dynamic_GetInt", Native_Dynamic_GetInt);
 	CreateNative("Dynamic_SetInt", Native_Dynamic_SetInt);
 	CreateNative("Dynamic_GetIntByOffset", Native_Dynamic_GetIntByOffset);
@@ -76,6 +79,7 @@ public void OnPluginStart()
 	s_Collection = CreateArray(Dynamic_Field_Count);
 	s_CollectionSize = 0;
 	s_FreeIndicies = CreateStack();
+	s_tObjectNames = CreateTrie();
 }
 
 public void OnPluginEnd()
@@ -83,7 +87,7 @@ public void OnPluginEnd()
 	// Dipose of all objects in the collection pool
 	while (s_CollectionSize > 0)
 	{
-		Dynamic_Dispose(view_as<Dynamic>(s_CollectionSize - 1));
+		Dynamic_Dispose(s_CollectionSize - 1, false);
 	}
 }
 
@@ -129,8 +133,32 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 {
 	// Get and validate index
 	int index = GetNativeCell(1);
-	if (!Dynamic_IsValid(index))
+	if (!Dynamic_IsValid(index, true))
 		return 0;
+		
+	// Dispose of child members if
+	if (GetNativeCell(2))
+	{
+		Handle data = GetArrayCell(s_Collection, index, Dynamic_Data);
+		int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+		int count = GetMemberCount(index);
+		int offset; int position; int disposablemember;
+		Dynamic_MemberType membertype;
+		
+		for (int i = 0; i < count; i++)
+		{
+			position = 0;
+			offset = GetMemberOffsetByIndex(index, i);
+			membertype = GetMemberType(data, position, offset, blocksize);
+			
+			if (membertype == DynamicType_Object)
+			{
+				disposablemember = GetMemberDataInt(data, position, offset, blocksize);
+				if (Dynamic_IsValid(disposablemember))
+					Dynamic_Dispose(disposablemember, true);
+			}
+		}	
+	}
 	
 	// Close dynamic object array handles
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Offsets));
@@ -160,8 +188,38 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 		SetArrayCell(s_Collection, index, -1, Dynamic_Index);
 		PushStackCell(s_FreeIndicies, index);
 	}
-	
 	return 1;
+}
+
+public int Native_Dynamic_SetName(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+	
+	int length;
+	GetNativeStringLength(2, length);
+	char[] objectname = new char[length];
+	GetNativeString(2, objectname, length);
+	return SetTrieValue(s_tObjectNames, objectname, index, GetNativeCell(3));
+}
+
+public int Native_Dynamic_FindByName(Handle plugin, int params)
+{
+	int length;
+	GetNativeStringLength(1, length);
+	char[] objectname = new char[length];
+	GetNativeString(1, objectname, length);
+	
+	int index;
+	if (!GetTrieValue(s_tObjectNames, objectname, index))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	if (!Dynamic_IsValid(index))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	return index;
 }
 
 public int Native_Dynamic_IsValid(Handle plugin, int params)
@@ -1453,7 +1511,11 @@ public int Native_Dynamic_GetMemberOffsetByIndex(Handle plugin, int params)
 		return INVALID_DYNAMIC_OFFSET;
 	
 	int memberindex = GetNativeCell(2);
-	
+	return GetMemberOffsetByIndex(index, memberindex);
+}
+
+public int GetMemberOffsetByIndex(int index, int memberindex)
+{
 	Handle memberoffsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
 	int membercount = GetArraySize(memberoffsets);
 	
