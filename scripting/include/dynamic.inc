@@ -35,6 +35,7 @@ native bool Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, 
 native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int size);
 native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
 native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
+native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
 
 native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
 native Dynamic Dynamic_FindByName(const char[] objectname);
@@ -257,6 +258,11 @@ methodmap Dynamic
 	{
 		return Dynamic_GetMemberNameByOffset(this, offset, buffer, length);
 	}
+	
+	public bool SortMembers(SortOrder order = Sort_Ascending)
+	{
+		return Dynamic_SortMembers(this, order);
+	}
 }
 
 #if !defined REQUIRE_PLUGIN
@@ -300,6 +306,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_GetMemberTypeByOffset");
 	MarkNativeAsOptional("Dynamic_GetMemberNameByIndex");
 	MarkNativeAsOptional("Dynamic_GetMemberNameByOffset");
+	MarkNativeAsOptional("Dynamic_SortMembers");
 }
 #endif
 

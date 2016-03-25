@@ -12,7 +12,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.8",
+	version = "0.0.9",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -70,6 +70,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_GetMemberTypeByOffset", Native_Dynamic_GetMemberTypeByOffset);
 	CreateNative("Dynamic_GetMemberNameByIndex", Native_Dynamic_GetMemberNameByIndex);
 	CreateNative("Dynamic_GetMemberNameByOffset", Native_Dynamic_GetMemberNameByOffset);
+	CreateNative("Dynamic_SortMembers", Native_Dynamic_SortMembers);
 	return APLRes_Success;
 }
 
@@ -1608,6 +1609,49 @@ public int Native_Dynamic_GetMemberNameByOffset(Handle plugin, int params)
 		}
 	}
 	return 0;
+}
+
+//native Dynamic_SortMembers(Dynamic obj, SortOrder order);
+public int Native_Dynamic_SortMembers(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return 0;
+	
+	int count = GetMemberCount(index);
+	if (count == 0)
+		return 0;
+	
+	// Dont bother sorting if there are no members
+	Handle members = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
+	Handle offsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
+	Handle offsetstrie = GetArrayCell(s_Collection, index, Dynamic_Offsets);
+	char[][] membernames = new char[count][DYNAMIC_MEMBERNAME_MAXLEN];
+	int offset;
+	
+	// Get each membername into a string array
+	for (int memberindex = 0; memberindex < count; memberindex++)
+		GetArrayString(members, memberindex, membernames[memberindex], DYNAMIC_MEMBERNAME_MAXLEN);
+	
+	// Sort member names
+	SortOrder order = GetNativeCell(2);
+	SortStrings(membernames, count, order);
+	
+	// Clear current member index lookup arrays
+	ClearArray(members);
+	ClearArray(offsets);
+	
+	// Rebuild member lookup arrays based on sorted membernames
+	for (int memberindex = 0; memberindex < count; memberindex++)
+	{
+		if (!GetTrieValue(offsetstrie, membernames[memberindex], offset))
+			continue;
+		
+		PushArrayString(members, membernames[memberindex]);
+		PushArrayCell(offsets, offset);
+	}
+	return 1;
 }
 
 stock int GetFieldIndex(Handle array, const char[] fieldname)

@@ -54,7 +54,10 @@ public void OnPluginStart()
 	someobj.SetName("someobj");
 	
 	// So another plugin can access it like so
-	someobj = Dynamic.FindByName("someobj");	
+	someobj = Dynamic.FindByName("someobj");
+	
+	// You can also sort members within a dynamic object by name
+	someobj.SortMembers(Sort_Ascending);
 
 	// Sometimes you might want to iterate through members to accomplish stuff
 	int count = someobj.MemberCount;
