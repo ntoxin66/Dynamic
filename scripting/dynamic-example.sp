@@ -55,6 +55,11 @@ public void OnPluginStart()
 	Handle somehandle = someobj.GetHandle("somehandle");
 	PushArrayCell(somehandle, 1);
 	
+	// Vectors are also supported like so
+	float somevec[3] = {1.0, 2.0, 3.0};
+	someobj.SetVector("somevec", somevec);
+	someobj.GetVector("somevec", somevec);
+	
 	// You can name a dynamic object
 	someobj.SetName("someobj");
 	
@@ -108,6 +113,11 @@ public void OnPluginStart()
 				somehandle = someobj.GetHandleByOffset(memberoffset);
 				PrintToServer("[%d] <Handle>.someobj.%s = %d", memberoffset, membername, somehandle);
 			}
+			case DynamicType_Vector:
+			{
+				someobj.GetVectorByOffset(memberoffset, somevec);
+				PrintToServer("[%d] <Vector>.someobj.%s = {%f, %f, %f}", memberoffset, membername, somevec[0], somevec[1], somevec[2]);
+			}
 		}
 	}
 	
@@ -118,6 +128,7 @@ public void OnPluginStart()
 	someobj.SetFloat("somefloat", -12.04);
 	someobj.SetBool("somebool", false);
 	someobj.SetString("somestring", "ye sure moite");
+	someobj.SetVector("somevec", view_as<float>({2.0, 3.0, 4.0}));
 	
 	// You MUST! dispose your dynamic objects when your done.
 	anotherobj.Dispose();
@@ -162,6 +173,12 @@ public void OnDynamicMemberChanged(Dynamic obj, int offset, const char[] member,
 			char somestring[64];
 			obj.GetStringByOffset(offset, somestring, sizeof(somestring));
 			PrintToServer("[%d] <string>obj.%s = '%s'", offset, member, somestring);
+		}
+		case DynamicType_Vector:
+		{
+			char somestring[64];
+			obj.GetStringByOffset(offset, somestring, sizeof(somestring));
+			PrintToServer("[%d] <Vector>obj.%s = %s", offset, member, somestring);
 		}
 	}
 }

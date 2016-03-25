@@ -18,14 +18,14 @@ public void OnPluginStart()
 stock void BenchmarkTest()
 {
 	int objectcount = 1000;
-	int membercount = 100; // must be a multiple of 4
+	int membercount = 100; // must be a multiple of 5
 
 	PrintToServer("[SM] Preparing benchmark Test...");
-	Dynamic someoject;
+	Dynamic someobject;
 	char membernames[100][DYNAMIC_MEMBERNAME_MAXLEN];
 	int memberoffsets[100];
 	char buffer[DYNAMIC_MEMBERNAME_MAXLEN];
-	int ival; float fval; char sval[DYNAMIC_MEMBERNAME_MAXLEN];
+	int ival; float fval; char sval[DYNAMIC_MEMBERNAME_MAXLEN]; float vector[3];
 	int offset;
     
 	// Make member names
@@ -39,69 +39,79 @@ stock void BenchmarkTest()
 	float start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = Dynamic(16, 0);
-		//someoject.HookChanges(OnDynamicMemberChanged);
+		someobject = Dynamic(16, 0);
+		//someobject.HookChanges(OnDynamicMemberChanged);
 	}
 	PrintToServer("Created %d dynamic object(s) in %f second(s)", objectcount, GetEngineTime() - start);
 
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
+		someobject = view_as<Dynamic>(i);
 		for (int x = 0; x < membercount; x++)
 		{
-			for (int p = 1; p < 5; p++)
+			for (int p = 1; p < 6; p++)
 			{
 				if (p == 1)
 				{
-					memberoffsets[x] = someoject.SetInt(membernames[x], x+i+p);
+					memberoffsets[x] = someobject.SetInt(membernames[x], x+i+p);
 					x++;
 				}
 				else if (p==2)
 				{
-					memberoffsets[x] = someoject.SetFloat(membernames[x], float(x+i+p));
+					memberoffsets[x] = someobject.SetFloat(membernames[x], float(x+i+p));
 					x++;
 				}
 				else if (p==3)
 				{
-					memberoffsets[x] = someoject.SetBool(membernames[x], true);
+					memberoffsets[x] = someobject.SetBool(membernames[x], true);
 					x++;
 				}
 				else if (p==4)
 				{
-					memberoffsets[x] = someoject.SetString(membernames[x], "Some nice string that has some data", 128);
+					memberoffsets[x] = someobject.SetVector(membernames[x], view_as<float>({1.0, 2.0, 3.0}));
+					x++;
+				}
+				else if (p==5)
+				{
+					memberoffsets[x] = someobject.SetString(membernames[x], "Some nice string that has some data", 128);
 				}
 			}
 		}
 	}
 	PrintToServer("Created %d dynamic member(s) in %f second(s)", objectcount * membercount, GetEngineTime() - start);
-
+	
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
+		someobject = view_as<Dynamic>(i);
 		for (int x = 0; x < membercount; x++)
 		{
-			for (int p = 1; p < 5; p++)
+			for (int p = 1; p < 6; p++)
 			{
 				if (p == 1)
 				{
-					someoject.GetInt(membernames[x]);
+					someobject.GetInt(membernames[x]);
 					x++;
 				}
 				else if (p==2)
 				{
-					someoject.GetFloat(membernames[x]);
+					someobject.GetFloat(membernames[x]);
 					x++;
 				}
 				else if (p==3)
 				{
-					someoject.GetBool(membernames[x]);
+					someobject.GetBool(membernames[x]);
 					x++;
 				}
 				else if (p==4)
 				{
-					someoject.GetString(membernames[x], buffer, sizeof(buffer));
+					someobject.GetVector(membernames[x], vector);
+					x++;
+				}
+				else if (p==5)
+				{
+					someobject.GetString(membernames[x], buffer, sizeof(buffer));
 				}
 			}
 		}
@@ -111,29 +121,34 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
+		someobject = view_as<Dynamic>(i);
 		for (int x = 0; x < membercount; x++)
 		{
-			for (int p = 1; p < 5; p++)
+			for (int p = 1; p < 6; p++)
 			{
 				if (p == 1)
 				{
-					someoject.GetIntByOffset(memberoffsets[x]);
+					someobject.GetIntByOffset(memberoffsets[x]);
 					x++;
 				}
 				else if (p==2)
 				{
-					someoject.GetFloatByOffset(memberoffsets[x]);
+					someobject.GetFloatByOffset(memberoffsets[x]);
 					x++;
 				}
 				else if (p==3)
 				{
-					someoject.GetBoolByOffset(memberoffsets[x]);
+					someobject.GetBoolByOffset(memberoffsets[x]);
 					x++;
 				}
 				else if (p==4)
 				{
-					someoject.GetStringByOffset(memberoffsets[x], buffer, sizeof(buffer));
+					someobject.GetVectorByOffset(memberoffsets[x], vector);
+					x++;
+				}
+				else if (p==5)
+				{
+					someobject.GetStringByOffset(memberoffsets[x], buffer, sizeof(buffer));
 				}
 			}
 		}
@@ -143,24 +158,24 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
+		someobject = view_as<Dynamic>(i);
 		for (int x = 0; x < membercount; x++)
 		{
-			for (int p = 1; p < 5; p++)
+			for (int p = 1; p < 6; p++)
 			{
 				ival = x+i+p;
 				fval = float(x+i+p);
 
 				if (p == 1)
 				{
-					if (someoject.GetInt(membernames[x]) != ival)
+					if (someobject.GetInt(membernames[x]) != ival)
 						PrintToServer("!! Member data INVALID! (Int)");
-					if (someoject.GetFloat(membernames[x]) != fval)
+					if (someobject.GetFloat(membernames[x]) != fval)
 						PrintToServer("!! Conversion error (Int2Float)");
-					if (someoject.GetBool(membernames[x]) != true)
-						PrintToServer("!! Conversion error (Int2Bool) - (%d != true) - (ival=%d)", someoject.GetBool(membernames[x]), ival);
+					if (someobject.GetBool(membernames[x]) != true)
+						PrintToServer("!! Conversion error (Int2Bool) - (%d != true) - (ival=%d)", someobject.GetBool(membernames[x]), ival);
 					
-					someoject.GetString(membernames[x], buffer, sizeof(buffer));
+					someobject.GetString(membernames[x], buffer, sizeof(buffer));
 					IntToString(ival, sval, sizeof(sval));
 					if (!StrEqual(buffer, sval))
 						PrintToServer("!! Conversion error (Int2String)");
@@ -168,29 +183,29 @@ stock void BenchmarkTest()
 				}
 				else if (p==2)
 				{
-					if (someoject.GetFloat(membernames[x]) != fval)
+					if (someobject.GetFloat(membernames[x]) != fval)
 						PrintToServer("!! Member data INVALID! (Float)");
-					if (someoject.GetInt(membernames[x]) != ival)
+					if (someobject.GetInt(membernames[x]) != ival)
 						PrintToServer("!! Conversion error (FloatToInt)");
-					if (someoject.GetBool(membernames[x]) != true)
-						PrintToServer("!! Conversion error (FloatToBool) - (%d != true) - (fval: %f)", someoject.GetBool(membernames[x]), fval);
+					if (someobject.GetBool(membernames[x]) != true)
+						PrintToServer("!! Conversion error (FloatToBool) - (%d != true) - (fval: %f)", someobject.GetBool(membernames[x]), fval);
 					
-					someoject.GetString(membernames[x], buffer, sizeof(buffer));
+					someobject.GetString(membernames[x], buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, sval))
 						PrintToServer("!! Conversion error (Float2String)");
 					x++;
 				}
-				else if (p == 3)
+				else if (p==3)
 				{
-					if (someoject.GetBool(membernames[x]) != true)
+					if (someobject.GetBool(membernames[x]) != true)
 						PrintToServer("!! Conversion error (Bool)");
-					if (someoject.GetFloat(membernames[x]) != 1.0)
+					if (someobject.GetFloat(membernames[x]) != 1.0)
 						PrintToServer("!! Member data INVALID! (BoolToFloat)");
-					if (someoject.GetInt(membernames[x]) != 1)
+					if (someobject.GetInt(membernames[x]) != 1)
 						PrintToServer("!! Conversion error (BoolToInt)");
 					
-					someoject.GetString(membernames[x], buffer, sizeof(buffer));
+					someobject.GetString(membernames[x], buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, "True"))
 						PrintToServer("!! Conversion error (Bool2String) - ('%s' != 'True')", buffer);
@@ -198,7 +213,14 @@ stock void BenchmarkTest()
 				}
 				else if (p==4)
 				{
-					someoject.GetString(membernames[x], buffer, sizeof(buffer));
+					someobject.GetVector(membernames[x], vector);
+					if (vector[0] != 1.0 || vector[1] != 2.0 || vector[2] != 3.0)
+						PrintToServer("!! Data corruption for vector");
+					x++;
+				}
+				else if (p==5)
+				{
+					someobject.GetString(membernames[x], buffer, sizeof(buffer));
 					if (!StrEqual(buffer, "Some nice string that has some data"))
 						PrintToServer("!! Member data INVALID! (String)");
 				}
@@ -210,29 +232,34 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
+		someobject = view_as<Dynamic>(i);
 		for (int x = 0; x < membercount; x++)
 		{
-			for (int p = 1; p < 5; p++)
+			for (int p = 1; p < 6; p++)
 			{
 				if (p == 1)
 				{
-					someoject.SetInt(membernames[x], x+i+p);
+					someobject.SetInt(membernames[x], x+i+p);
 					x++;
 				}
 				else if (p==2)
 				{
-					someoject.SetFloat(membernames[x], float(x+i+p));
+					someobject.SetFloat(membernames[x], float(x+i+p));
 					x++;
 				}
 				else if (p==3)
 				{
-					someoject.SetBool(membernames[x], false);
+					someobject.SetBool(membernames[x], false);
 					x++;
 				}
 				else if (p==4)
 				{
-					someoject.SetString(membernames[x], "Some nice string that has some data");
+					someobject.SetVector(membernames[x], view_as<float>({2.0, 3.0, 4.0}));
+					x++;
+				}
+				else if (p==5)
+				{
+					someobject.SetString(membernames[x], "Some nice string that has some data");
 				}
 			}
 		}
@@ -242,25 +269,25 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
+		someobject = view_as<Dynamic>(i);
 		for (int x = 0; x < membercount; x++)
 		{
-			for (int p = 1; p < 5; p++)
+			for (int p = 1; p < 6; p++)
 			{
 				ival = x+i+p;
 				fval = float(x+i+p);
-				offset = someoject.GetMemberOffset(membernames[x]);
+				offset = someobject.GetMemberOffset(membernames[x]);
 
 				if (p == 1)
 				{
-					if (someoject.GetIntByOffset(offset) != ival)
+					if (someobject.GetIntByOffset(offset) != ival)
 						PrintToServer("!! Member data INVALID! (Int)");
-					if (someoject.GetFloatByOffset(offset) != fval)
+					if (someobject.GetFloatByOffset(offset) != fval)
 						PrintToServer("!! Conversion error (Int2Float)");
-					if (someoject.GetBoolByOffset(offset) != true)
+					if (someobject.GetBoolByOffset(offset) != true)
 						PrintToServer("!! Member data INVALID! (IntToBool)");
 
-					someoject.GetStringByOffset(offset, buffer, sizeof(buffer));
+					someobject.GetStringByOffset(offset, buffer, sizeof(buffer));
 					IntToString(ival, sval, sizeof(sval));
 					if (!StrEqual(buffer, sval))
 						PrintToServer("!! Conversion error (Int2String)");
@@ -268,14 +295,14 @@ stock void BenchmarkTest()
 				}
 				else if (p==2)
 				{
-					if (someoject.GetFloatByOffset(offset) != fval)
+					if (someobject.GetFloatByOffset(offset) != fval)
 						PrintToServer("!! Member data INVALID! (Float)");
-					if (someoject.GetIntByOffset(offset) != ival)
+					if (someobject.GetIntByOffset(offset) != ival)
 						PrintToServer("!! Conversion error (FloatToInt)");
-					if (someoject.GetBoolByOffset(offset) != true)
+					if (someobject.GetBoolByOffset(offset) != true)
 						PrintToServer("!! Member data INVALID! (FloatToBool)");
 
-					someoject.GetStringByOffset(offset, buffer, sizeof(buffer));
+					someobject.GetStringByOffset(offset, buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, sval))
 						PrintToServer("!! Conversion error (Float2String)");
@@ -283,14 +310,14 @@ stock void BenchmarkTest()
 				}
 				else if (p==3)
 				{
-					if (someoject.GetBoolByOffset(offset) != false)
+					if (someobject.GetBoolByOffset(offset) != false)
 						PrintToServer("!! Member data INVALID! (Bool)");
-					if (someoject.GetFloatByOffset(offset) != 0.0)
+					if (someobject.GetFloatByOffset(offset) != 0.0)
 						PrintToServer("!! Member data INVALID! (BoolToFloat)");
-					if (someoject.GetIntByOffset(offset) != 0)
+					if (someobject.GetIntByOffset(offset) != 0)
 						PrintToServer("!! Conversion error (BoolToInt)");
 					
-					someoject.GetStringByOffset(offset, buffer, sizeof(buffer));
+					someobject.GetStringByOffset(offset, buffer, sizeof(buffer));
 					FloatToString(fval, sval, sizeof(sval));
 					if (!StrEqual(buffer, "False"))
 						PrintToServer("!! Conversion error (Bool2String) - ('%s' != 'False'", buffer);
@@ -298,7 +325,14 @@ stock void BenchmarkTest()
 				}
 				else if (p==4)
 				{
-					someoject.GetStringByOffset(offset, buffer, sizeof(buffer));
+					someobject.GetVectorByOffset(offset, vector);
+					if (vector[0] != 2.0 || vector[1] != 3.0 || vector[2] != 4.0)
+						PrintToServer("!! Data corruption for vector using offset");
+					x++;
+				}
+				else if (p==5)
+				{
+					someobject.GetStringByOffset(offset, buffer, sizeof(buffer));
 					if (!StrEqual(buffer, "Some nice string that has some data"))
 						PrintToServer("!! Member data INVALID! (String)");
 				}
@@ -310,8 +344,8 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someoject = view_as<Dynamic>(i);
-		someoject.Dispose();
+		someobject = view_as<Dynamic>(i);
+		someobject.Dispose();
 	}
 	PrintToServer("Disposed %d dynamic object(s) in %f second(s)", objectcount, GetEngineTime() - start);
 }

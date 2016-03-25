@@ -12,7 +12,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.10",
+	version = "0.0.11",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -40,6 +40,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_SetInt", Native_Dynamic_SetInt);
 	CreateNative("Dynamic_GetIntByOffset", Native_Dynamic_GetIntByOffset);
 	CreateNative("Dynamic_SetIntByOffset", Native_Dynamic_SetIntByOffset);
+	CreateNative("Dynamic_GetBool", Native_Dynamic_GetBool);
+	CreateNative("Dynamic_SetBool", Native_Dynamic_SetBool);
+	CreateNative("Dynamic_GetBoolByOffset", Native_Dynamic_GetBoolByOffset);
+	CreateNative("Dynamic_SetBoolByOffset", Native_Dynamic_SetBoolByOffset);
 	CreateNative("Dynamic_GetFloat", Native_Dynamic_GetFloat);
 	CreateNative("Dynamic_SetFloat", Native_Dynamic_SetFloat);
 	CreateNative("Dynamic_GetFloatByOffset", Native_Dynamic_GetFloatByOffset);
@@ -58,11 +62,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_SetHandle", Native_Dynamic_SetHandle);
 	CreateNative("Dynamic_GetHandleByOffset", Native_Dynamic_GetHandleByOffset);
 	CreateNative("Dynamic_SetHandleByOffset", Native_Dynamic_SetHandleByOffset);
-	CreateNative("Dynamic_GetBool", Native_Dynamic_GetBool);
-	CreateNative("Dynamic_SetBool", Native_Dynamic_SetBool);
-	CreateNative("Dynamic_GetBoolByOffset", Native_Dynamic_GetBoolByOffset);
-	CreateNative("Dynamic_SetBoolByOffset", Native_Dynamic_SetBoolByOffset);
 	CreateNative("Dynamic_GetCollectionSize", Native_Dynamic_GetCollectionSize);
+	CreateNative("Dynamic_GetVector", Native_Dynamic_GetVector);
+	CreateNative("Dynamic_SetVector", Native_Dynamic_SetVector);
+	CreateNative("Dynamic_GetVectorByOffset", Native_Dynamic_GetVectorByOffset);
+	CreateNative("Dynamic_SetVectorByOffset", Native_Dynamic_SetVectorByOffset);
 	CreateNative("Dynamic_GetMemberCount", Native_Dynamic_GetMemberCount);
 	CreateNative("Dynamic_IsValid", Native_Dynamic_IsValid);
 	CreateNative("Dynamic_HookChanges", Native_Dynamic_HookChanges);
@@ -291,6 +295,18 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 		SetArrayCell(s_Collection, index, offset + 3 + ByteCountToCells(stringlength), Dynamic_NextOffset);
 		return true;
 	}
+	else if (newtype == DynamicType_Vector)
+	{
+		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
+		SetTrieValue(offsets, membername, offset);
+		PushArrayString(membernames, membername);
+		PushArrayCell(memberoffsets, offset);
+		
+		ExpandIfRequired(array, position, offset, blocksize, 3);
+		SetMemberType(array, position, offset, blocksize, newtype);
+		SetArrayCell(s_Collection, index, offset + 4, Dynamic_NextOffset);
+		return true;
+	}
 	else
 	{
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
@@ -417,6 +433,27 @@ stock void SetMemberDataFloat(Handle array, int position, int offset, int blocks
 	offset++;
 	RecalculateOffset(array, position, offset, blocksize);
 	SetArrayCell(array, position, value, offset);
+}
+
+stock bool GetMemberDataVector(Handle array, int position, int offset, int blocksize, float vector[3])
+{
+	for (int i=0; i<3; i++)
+	{
+		offset++;
+		RecalculateOffset(array, position, offset, blocksize);
+		vector[i] = GetArrayCell(array, position, offset);
+	}
+	return true;
+}
+
+stock void SetMemberDataVector(Handle array, int position, int offset, int blocksize, float value[3])
+{
+	for (int i=0; i<3; i++)
+	{
+		offset++;
+		RecalculateOffset(array, position, offset, blocksize);
+		SetArrayCell(array, position, value[i], offset);
+	}
 }
 
 stock void GetMemberDataString(Handle array, int position, int offset, int blocksize, char[] buffer, int length)
@@ -875,6 +912,14 @@ public int Native_Dynamic_GetString(Handle plugin, int params)
 			SetNativeString(3, "False", 6);
 		return 1;
 	}
+	else if (type == DynamicType_Vector)
+	{
+		float vector[3];
+		GetMemberDataVector(data, position, offset, blocksize, vector);
+		Format(membername, sizeof(membername), "{%f, %f, %f}", vector[0], vector[1], vector[2]);
+		SetNativeString(3, membername, sizeof(membername));
+		return 1;
+	}
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
@@ -1009,6 +1054,15 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 			SetNativeString(3, "True", 5);
 		else
 			SetNativeString(3, "False", 6);
+		return 1;
+	}
+	else if (type == DynamicType_Vector)
+	{
+		float vector[3];
+		char buffer[DYNAMIC_MEMBERNAME_MAXLEN];
+		GetMemberDataVector(array, position, offset, blocksize, vector);
+		Format(buffer, sizeof(buffer), "{%f, %f, %f}", vector[0], vector[1], vector[2]);
+		SetNativeString(3, buffer, sizeof(buffer));
 		return 1;
 	}
 	else
@@ -1342,6 +1396,138 @@ public int Native_Dynamic_SetHandleByOffset(Handle plugin, int params)
 	{
 		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
 		CallOnChangedForwardByOffset(index, offset, DynamicType_Handle);
+		return 1;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return 0;
+	}
+}
+
+public int Native_Dynamic_GetVector(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int position; int offset;
+	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Vector))
+		return INVALID_DYNAMIC_OBJECT;
+		
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Vector)
+	{
+		float vector[3];
+		bool returnvalue = GetMemberDataVector(array, position, offset, blocksize, vector);
+		if (returnvalue)
+		{
+			SetNativeArray(3, vector, sizeof(vector));
+			return 1;
+		}
+		return 0;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OBJECT;
+	}
+}
+
+public int Native_Dynamic_SetVector(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int position; int offset;
+	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Vector))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Vector)
+	{
+		float vector[3];
+		GetNativeArray(3, vector, sizeof(vector));
+		SetMemberDataVector(array, position, offset, blocksize, vector);
+		CallOnChangedForward(index, offset, membername, DynamicType_Vector);
+		return offset;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OFFSET;
+	}
+}
+
+public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int offset = GetNativeCell(2);
+	int position;
+	if (!ValidateOffset(array, position, offset, blocksize))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Vector)
+	{
+		float vector[3];
+		bool returnvalue = GetMemberDataVector(array, position, offset, blocksize, vector);
+		if (returnvalue)
+		{
+			SetNativeArray(3, vector, sizeof(vector));
+			return 1;
+		}
+		return 0;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OBJECT;
+	}
+}
+
+public int Native_Dynamic_SetVectorByOffset(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return 0;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int offset = GetNativeCell(2);
+	
+	int position;
+	if (!ValidateOffset(array, position, offset, blocksize))
+		return 0;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Vector)
+	{
+		float vector[3];
+		GetNativeArray(3, vector, sizeof(vector));
+		SetMemberDataVector(array, position, offset, blocksize, vector);
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Vector);
 		return 1;
 	}
 	else
