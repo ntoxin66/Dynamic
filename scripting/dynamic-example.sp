@@ -50,6 +50,11 @@ public void OnPluginStart()
 	anotherobj.SetInt("someint", 128);
 	someobj.SetObject("anotherobj", anotherobj);
 	
+	// You can also get and set Handles
+	someobj.SetHandle("somehandle", CreateArray());
+	Handle somehandle = someobj.GetHandle("somehandle");
+	PushArrayCell(somehandle, 1);
+	
 	// You can name a dynamic object
 	someobj.SetName("someobj");
 	
@@ -98,6 +103,11 @@ public void OnPluginStart()
 				someint = anotherobj.GetInt("someint");
 				PrintToServer("[%d] <dynamic>.<int>someobj.%s.someint = %d", memberoffset, membername, someint);
 			}
+			case DynamicType_Handle:
+			{
+				somehandle = someobj.GetHandleByOffset(memberoffset);
+				PrintToServer("[%d] <Handle>.someobj.%s = %d", memberoffset, membername, somehandle);
+			}
 		}
 	}
 	
@@ -113,6 +123,7 @@ public void OnPluginStart()
 	anotherobj.Dispose();
 	
 	// You can also dispose of any disposable members like this
+	// -> This includes auto closure of Handle datatypes
 	someobj.Dispose(true);
 	
 	// You can also use Dynamic to back Methodmap properties. This is another step

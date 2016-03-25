@@ -14,7 +14,8 @@ enum Dynamic_MemberType
 	DynamicType_String = 2,
 	DynamicType_Object = 3,
 	DynamicType_Bool = 4,
-	DynamicType_Unknown = 5
+	DynamicType_Handle = 5,
+	DynamicType_Unknown = 6
 }
 
 typeset DynamicHookCB
@@ -70,6 +71,11 @@ native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultva
 native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
 native bool Dynamic_GetBoolByOffset(Dynamic obj, int offset, bool defaultvalue=false);
 native bool Dynamic_SetBoolByOffset(Dynamic obj, int offset, bool value);
+
+native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);
+native int Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
+native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
+native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
 
 methodmap Dynamic
 {
@@ -199,6 +205,26 @@ methodmap Dynamic
 		Dynamic_SetObjectByOffset(this, offset, value);
 	}
 	
+	public Handle GetHandle(const char[] membername)
+	{
+		return Dynamic_GetHandle(this, membername);
+	}
+	
+	public int SetHandle(const char[] membername, Handle value)
+	{
+		return Dynamic_SetHandle(this, membername, value);
+	}
+	
+	public Handle GetHandleByOffset(int offset)
+	{
+		return Dynamic_GetHandleByOffset(this, offset);
+	}
+	
+	public void SetHandleByOffset(int offset, Handle value)
+	{
+		Dynamic_SetHandleByOffset(this, offset, value);
+	}
+	
 	public bool GetBool(const char[] membername, bool defaultvalue = false)
 	{
 		return Dynamic_GetBool(this, membername, defaultvalue);
@@ -290,6 +316,10 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetObject");
 	MarkNativeAsOptional("Dynamic_GetObjectByOffset");
 	MarkNativeAsOptional("Dynamic_SetObjectByOffset");
+	MarkNativeAsOptional("Dynamic_GetHandle");
+	MarkNativeAsOptional("Dynamic_SetHandle");
+	MarkNativeAsOptional("Dynamic_GetHandleByOffset");
+	MarkNativeAsOptional("Dynamic_SetHandleByOffset");
 	MarkNativeAsOptional("Dynamic_GetBool");
 	MarkNativeAsOptional("Dynamic_SetBool");
 	MarkNativeAsOptional("Dynamic_GetBoolByOffset");

@@ -12,7 +12,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.9",
+	version = "0.0.10",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -54,6 +54,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_SetObject", Native_Dynamic_SetObject);
 	CreateNative("Dynamic_GetObjectByOffset", Native_Dynamic_GetObjectByOffset);
 	CreateNative("Dynamic_SetObjectByOffset", Native_Dynamic_SetObjectByOffset);
+	CreateNative("Dynamic_GetHandle", Native_Dynamic_GetHandle);
+	CreateNative("Dynamic_SetHandle", Native_Dynamic_SetHandle);
+	CreateNative("Dynamic_GetHandleByOffset", Native_Dynamic_GetHandleByOffset);
+	CreateNative("Dynamic_SetHandleByOffset", Native_Dynamic_SetHandleByOffset);
 	CreateNative("Dynamic_GetBool", Native_Dynamic_GetBool);
 	CreateNative("Dynamic_SetBool", Native_Dynamic_SetBool);
 	CreateNative("Dynamic_GetBoolByOffset", Native_Dynamic_GetBoolByOffset);
@@ -85,7 +89,7 @@ public void OnPluginStart()
 
 public void OnPluginEnd()
 {
-	// Dipose of all objects in the collection pool
+	// Dispose of all objects in the collection pool
 	while (s_CollectionSize > 0)
 	{
 		Dynamic_Dispose(s_CollectionSize - 1, false);
@@ -158,7 +162,12 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 				if (Dynamic_IsValid(disposablemember))
 					Dynamic_Dispose(disposablemember, true);
 			}
-		}	
+			else if (membertype == DynamicType_Handle)
+			{
+				disposablemember = GetMemberDataInt(data, position, offset, blocksize);
+				CloseHandle(view_as<Handle>(disposablemember));
+			}
+		}
 	}
 	
 	// Close dynamic object array handles
@@ -1223,6 +1232,116 @@ public int Native_Dynamic_SetObjectByOffset(Handle plugin, int params)
 	{
 		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
 		CallOnChangedForwardByOffset(index, offset, DynamicType_Object);
+		return 1;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return 0;
+	}
+}
+
+public int Native_Dynamic_GetHandle(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int position; int offset;
+	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Handle))
+		return INVALID_DYNAMIC_OBJECT;
+		
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Handle)
+		return GetMemberDataInt(array, position, offset, blocksize);
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OBJECT;
+	}
+}
+
+public int Native_Dynamic_SetHandle(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int position; int offset;
+	if (!GetMemberOffset(array, index, membername, true, position, offset, blocksize, DynamicType_Handle))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Handle)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForward(index, offset, membername, DynamicType_Handle);
+		return offset;
+	}
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OFFSET;
+	}
+}
+
+public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
+	int offset = GetNativeCell(2);
+	int position;
+	if (!ValidateOffset(array, position, offset, blocksize))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Handle)
+		return GetMemberDataInt(array, position, offset, blocksize);
+	else
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
+		return INVALID_DYNAMIC_OBJECT;
+	}
+}
+
+public int Native_Dynamic_SetHandleByOffset(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return 0;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int offset = GetNativeCell(2);
+	
+	int position;
+	if (!ValidateOffset(array, position, offset, blocksize))
+		return 0;
+	
+	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
+	if (type == DynamicType_Handle)
+	{
+		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		CallOnChangedForwardByOffset(index, offset, DynamicType_Handle);
 		return 1;
 	}
 	else
