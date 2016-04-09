@@ -15,7 +15,8 @@ enum Dynamic_MemberType
 	DynamicType_Object = 3,
 	DynamicType_Bool = 4,
 	DynamicType_Handle = 5,
-	DynamicType_Unknown = 6
+	DynamicType_Vector = 6,
+	DynamicType_Unknown = 7
 }
 
 typeset DynamicHookCB
@@ -77,6 +78,11 @@ native int Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value)
 native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
 
+native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float[3] vector);
+native int Dynamic_SetVector(Dynamic obj, const char[] membername, float[3] value);
+native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float[3] vector);
+native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, float[3] value);
+
 methodmap Dynamic
 {
 	public Dynamic(int blocksize=64, int startsize=0)
@@ -133,6 +139,26 @@ methodmap Dynamic
 	public void SetIntByOffset(int offset, int value)
 	{
 		Dynamic_SetIntByOffset(this, offset, value);
+	}
+	
+	public bool GetBool(const char[] membername, bool defaultvalue = false)
+	{
+		return Dynamic_GetBool(this, membername, defaultvalue);
+	}
+	
+	public int SetBool(const char[] membername, bool value)
+	{
+		return Dynamic_SetBool(this, membername, value);
+	}
+	
+	public bool GetBoolByOffset(int offset, bool defaultvalue = false)
+	{
+		return Dynamic_GetBoolByOffset(this, offset, defaultvalue);
+	}
+	
+	public void SetBoolByOffset(int offset, bool value)
+	{
+		Dynamic_SetBoolByOffset(this, offset, value);
 	}
 	
 	public float GetFloat(const char[] membername, float defaultvalue=-1.0)
@@ -225,24 +251,24 @@ methodmap Dynamic
 		Dynamic_SetHandleByOffset(this, offset, value);
 	}
 	
-	public bool GetBool(const char[] membername, bool defaultvalue = false)
+	public bool GetVector(const char[] membername, float[3] vector)
 	{
-		return Dynamic_GetBool(this, membername, defaultvalue);
+		return Dynamic_GetVector(this, membername, vector);
 	}
 	
-	public int SetBool(const char[] membername, bool value)
+	public int SetVector(const char[] membername, float[3] value)
 	{
-		return Dynamic_SetBool(this, membername, value);
+		return Dynamic_SetVector(this, membername, value);
 	}
 	
-	public bool GetBoolByOffset(int offset, bool defaultvalue = false)
+	public bool GetVectorByOffset(int offset, float[3] vector)
 	{
-		return Dynamic_GetBoolByOffset(this, offset, defaultvalue);
+		return Dynamic_GetVectorByOffset(this, offset, vector);
 	}
 	
-	public void SetBoolByOffset(int offset, bool value)
+	public void SetVectorByOffset(int offset, float[3] value)
 	{
-		Dynamic_SetBoolByOffset(this, offset, value);
+		Dynamic_SetVectorByOffset(this, offset, value);
 	}
 	
 	public void HookChanges(DynamicHookCB callback)
@@ -302,6 +328,10 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetInt");
 	MarkNativeAsOptional("Dynamic_GetIntByOffset");
 	MarkNativeAsOptional("Dynamic_SetIntByOffset");
+	MarkNativeAsOptional("Dynamic_GetBool");
+	MarkNativeAsOptional("Dynamic_SetBool");
+	MarkNativeAsOptional("Dynamic_GetBoolByOffset");
+	MarkNativeAsOptional("Dynamic_SetBoolByOffset");
 	MarkNativeAsOptional("Dynamic_GetFloat");
 	MarkNativeAsOptional("Dynamic_SetFloat");
 	MarkNativeAsOptional("Dynamic_GetFloatByOffset");
@@ -320,10 +350,10 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetHandle");
 	MarkNativeAsOptional("Dynamic_GetHandleByOffset");
 	MarkNativeAsOptional("Dynamic_SetHandleByOffset");
-	MarkNativeAsOptional("Dynamic_GetBool");
-	MarkNativeAsOptional("Dynamic_SetBool");
-	MarkNativeAsOptional("Dynamic_GetBoolByOffset");
-	MarkNativeAsOptional("Dynamic_SetBoolByOffset");
+	MarkNativeAsOptional("Dynamic_GetVector");
+	MarkNativeAsOptional("Dynamic_SetVector");
+	MarkNativeAsOptional("Dynamic_GetVectorByOffset");
+	MarkNativeAsOptional("Dynamic_SetVectorByOffset");
 	MarkNativeAsOptional("Dynamic_GetCollectionSize");
 	MarkNativeAsOptional("Dynamic_GetMemberCount");
 	MarkNativeAsOptional("Dynamic_IsValid");
