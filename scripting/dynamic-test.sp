@@ -6,7 +6,7 @@ public Plugin myinfo =
 	name = "Dynamic Test",
 	author = "Neuro Toxin",
 	description = "Benchmarks and Tests all Dynamic Object aspects",
-	version = "1.0.0",
+	version = "1.0.1",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 

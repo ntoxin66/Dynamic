@@ -15,8 +15,11 @@ methodmap MyClass < Dynamic
 		//    over multiple instances of the same class.
 		myclass.SetInt("SomeInt", 0);
 		myclass.SetFloat("SomeFloat", 0.0);
-		myclass.SetString("SomeString", "", 1024);
-
+		myclass.SetBool("SomeBool", false);
+		myclass.SetString("SomeString", "", 64);
+		myclass.SetHandle("SomeHandle", null);
+		myclass.SetObject("SomeObject", view_as<Dynamic>(INVALID_DYNAMIC_OBJECT));
+		myclass.SetVector("SomeVector", NULL_VECTOR);
 		return view_as<MyClass>(myclass);
 	}
 
@@ -34,9 +37,9 @@ methodmap MyClass < Dynamic
 			{
 				offset = this.GetMemberOffset("SomeInt");
 				if (offset == INVALID_DYNAMIC_OFFSET)
-					return 0;
+					SetFailState("A serious error occured in Dynamic!");
 			}
-			return this.GetIntByOffset(offset, 0);
+			return this.GetIntByOffset(offset);
 		}
 		public set(int value)
 		{
@@ -63,9 +66,9 @@ methodmap MyClass < Dynamic
 			{
 				offset = this.GetMemberOffset("SomeFloat");
 				if (offset == INVALID_DYNAMIC_OFFSET)
-					return 0.0;
+					SetFailState("A serious error occured in Dynamic!");
 			}
-			return this.GetFloatByOffset(offset, 0.0);
+			return this.GetFloatByOffset(offset);
 		}
 		public set(float value)
 		{
@@ -83,6 +86,35 @@ methodmap MyClass < Dynamic
 		}
 	}
 
+	property bool SomeBool
+	{
+		public get()
+		{
+			static int offset = INVALID_DYNAMIC_OFFSET;
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.GetMemberOffset("SomeBool");
+				if (offset == INVALID_DYNAMIC_OFFSET)
+					SetFailState("A serious error occured in Dynamic!");
+			}
+			return this.GetBoolByOffset(offset);
+		}
+		public set(bool value)
+		{
+			static int offset = INVALID_DYNAMIC_OFFSET;
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.GetMemberOffset("SomeBool");
+				if (offset == INVALID_DYNAMIC_OFFSET)
+				{
+					offset = this.SetBool("SomeBool", value);
+					return;
+				}
+			}
+			this.SetBoolByOffset(offset, value);
+		}
+	}
+
 	public bool GetSomeString(char[] buffer, int length)
 	{
 		static int offset = INVALID_DYNAMIC_OFFSET;
@@ -90,7 +122,7 @@ methodmap MyClass < Dynamic
 		{
 			offset = this.GetMemberOffset("SomeString");
 			if (offset == INVALID_DYNAMIC_OFFSET)
-				return false;
+				SetFailState("A serious error occured in Dynamic!");
 		}
 		this.GetStringByOffset(offset, buffer, length);
 		return true;
@@ -109,5 +141,91 @@ methodmap MyClass < Dynamic
 			}
 		}
 		this.SetStringByOffset(offset, buffer);
+	}
+
+	property Handle SomeHandle
+	{
+		public get()
+		{
+			static int offset = INVALID_DYNAMIC_OFFSET;
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.GetMemberOffset("SomeHandle");
+				if (offset == INVALID_DYNAMIC_OFFSET)
+					SetFailState("A serious error occured in Dynamic!");
+			}
+			return this.GetHandleByOffset(offset);
+		}
+		public set(Handle value)
+		{
+			static int offset = INVALID_DYNAMIC_OFFSET;
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.GetMemberOffset("SomeHandle");
+				if (offset == INVALID_DYNAMIC_OFFSET)
+				{
+					offset = this.SetHandle("SomeHandle", value);
+					return;
+				}
+			}
+			this.SetHandleByOffset(offset, value);
+		}
+	}
+
+	property Dynamic SomeObject
+	{
+		public get()
+		{
+			static int offset = INVALID_DYNAMIC_OFFSET;
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.GetMemberOffset("SomeObject");
+				if (offset == INVALID_DYNAMIC_OFFSET)
+					SetFailState("A serious error occured in Dynamic!");
+			}
+			return this.GetObjectByOffset(offset);
+		}
+		public set(Dynamic value)
+		{
+			static int offset = INVALID_DYNAMIC_OFFSET;
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.GetMemberOffset("SomeObject");
+				if (offset == INVALID_DYNAMIC_OFFSET)
+				{
+					offset = this.SetObject("SomeObject", value);
+					return;
+				}
+			}
+			this.SetObjectByOffset(offset, value);
+		}
+	}
+
+	public bool GetSomeVector(float[3] value)
+	{
+		static int offset = INVALID_DYNAMIC_OFFSET;
+		if (offset == INVALID_DYNAMIC_OFFSET)
+		{
+			offset = this.GetMemberOffset("SomeVector");
+			if (offset == INVALID_DYNAMIC_OFFSET)
+				SetFailState("A serious error occured in Dynamic!");
+		}
+		this.GetVectorByOffset(offset, value);
+		return true;
+	}
+
+	public void SetSomeVector(const float[3] value)
+	{
+		static int offset = INVALID_DYNAMIC_OFFSET;
+		if (offset == INVALID_DYNAMIC_OFFSET)
+		{
+			offset = this.GetMemberOffset("SomeVector");
+			if (offset == INVALID_DYNAMIC_OFFSET)
+			{
+				offset = this.SetVector("SomeVector", value);
+				return;
+			}
+		}
+		this.SetVectorByOffset(offset, value);
 	}
 }

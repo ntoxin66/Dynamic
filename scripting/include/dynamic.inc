@@ -79,9 +79,9 @@ native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
 
 native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float[3] vector);
-native int Dynamic_SetVector(Dynamic obj, const char[] membername, float[3] value);
+native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float[3] value);
 native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float[3] vector);
-native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, float[3] value);
+native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float[3] value);
 
 methodmap Dynamic
 {
@@ -256,7 +256,7 @@ methodmap Dynamic
 		return Dynamic_GetVector(this, membername, vector);
 	}
 	
-	public int SetVector(const char[] membername, float[3] value)
+	public int SetVector(const char[] membername, const float[3] value)
 	{
 		return Dynamic_SetVector(this, membername, value);
 	}
@@ -266,7 +266,7 @@ methodmap Dynamic
 		return Dynamic_GetVectorByOffset(this, offset, vector);
 	}
 	
-	public void SetVectorByOffset(int offset, float[3] value)
+	public void SetVectorByOffset(int offset, const float[3] value)
 	{
 		Dynamic_SetVectorByOffset(this, offset, value);
 	}

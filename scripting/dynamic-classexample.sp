@@ -1,70 +1,70 @@
 #include <dynamic>
+#include <dynamic-example>
 #pragma newdecls required
 #pragma semicolon 1
 
 public void OnPluginStart()
-{	
-	// Creating dynamic objects is straight foward
-	Dynamic someobj = Dynamic();
+{
+	// You can also use Dynamic to back Methodmap properties.
+	// This is another step towards sourcepawn feeling a bit more OO
+	// -> Find the methodmap in 'include/dynamic-example.sp'
+	// -> This class was generated @ 'http://console.aus-tg.com/index.php?page=createdynamicclass'
 	
+	// Creating dynamic classes is straight foward
+	MyClass someobj = MyClass();
+	
+	PrintToServer("Got here... 1 ...");
 	// Setting integers, floats and booleans also
-	someobj.SetInt("someint", 1);
-	someobj.SetFloat("somefloat", 512.7);
-	someobj.SetBool("somebool", true);
+	someobj.SomeInt = 1;
+	someobj.SomeFloat = 512.7;
+	someobj.SomeBool = true;
 	
-	// When dealing with strings...
-	// you want to set an appropriate length if the value will change
-	someobj.SetString("somestring", "What did you say?", 64);
-	
-	// If the value of a string will never change you might as well
-	someobj.SetString("our_planets_name", "Earth");
+	// The strings length is now defined within the class initialiser code
+	someobj.SetSomeString("What did you say?");
 	
 	// Getting integers, floats and booleans is also straight foward
-	int someint = someobj.GetInt("someint");
-	float somefloat = someobj.GetFloat("somefloat");
-	bool somebool = someobj.GetBool("somebool");
+	int someint = someobj.SomeInt;
+	float somefloat = someobj.SomeFloat;
+	bool somebool = someobj.SomeBool;
 	
-	// You can also include default values in case a member doesn't exist
-	someint = someobj.GetInt("someint1", -1);
-	somefloat = someobj.GetFloat("somefloat2", 7.25);
-	somebool = someobj.GetBool("somebool2", false);
+	PrintToServer("Got here... 2 ...");
 	
 	// And the normal "extra" stuff to get a string in sourcespawn
 	char somestring[64];
-	someobj.GetString("somestring", somestring, sizeof(somestring));
+	someobj.GetSomeString(somestring, 64);
 	
 	// You can also get an exact string by size
-	int length = someobj.GetStringLength("our_planets_name");
-	char[] our_planets_name = new char[length];
-	someobj.GetString("our_planets_name", our_planets_name, length);
+	int length = someobj.GetStringLength("SomeString");
+	someobj.GetSomeString(somestring, length);
 	
 	// Dynamic supports type conversion!!!!!!!!!!!
-	someint = someobj.GetInt("somefloat"); // rounds to floor
-	somefloat = someobj.GetFloat("someint");
-	someobj.GetString("somefloat", somestring, sizeof(somestring));
-	someobj.GetString("somebool", somestring, sizeof(somestring));
+	// -> Type conversion is not possible inside of classes
+	//someint = someobj.GetInt("somefloat"); // rounds to floor
+	//somefloat = someobj.GetFloat("someint");
+	//someobj.GetString("somefloat", somestring, sizeof(somestring));
+	//someobj.GetString("somebool", somestring, sizeof(somestring));
 	
 	// You can even set dynamic objects within themselves
 	Dynamic anotherobj = Dynamic();
 	anotherobj.SetInt("someint", 128);
-	someobj.SetObject("anotherobj", anotherobj);
+	someobj.SomeObject = anotherobj;
 	
 	// You can also get and set Handles
-	someobj.SetHandle("somehandle", CreateArray());
-	Handle somehandle = someobj.GetHandle("somehandle");
+	someobj.SomeHandle = CreateArray();
+	Handle somehandle = someobj.SomeHandle;
 	PushArrayCell(somehandle, 1);
 	
 	// Vectors are also supported like so
 	float somevec[3] = {1.0, 2.0, 3.0};
-	someobj.SetVector("somevec", NULL_VECTOR);
-	someobj.SetVector("somevec", somevec);
-	someobj.GetVector("somevec", somevec);
+	someobj.SetSomeVector(NULL_VECTOR);
+	someobj.SetSomeVector(somevec);
+	someobj.GetSomeVector(somevec);
 	
 	// You can name a dynamic object
 	someobj.SetName("someobj");
 	
 	// So another plugin can access it like so
-	someobj = Dynamic.FindByName("someobj");
+	someobj = view_as<MyClass>(Dynamic.FindByName("someobj"));
 	
 	// You can also sort members within a dynamic object by name
 	someobj.SortMembers(Sort_Ascending);
