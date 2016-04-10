@@ -13,7 +13,6 @@ public void OnPluginStart()
 	// Creating dynamic classes is straight foward
 	MyClass someobj = MyClass();
 	
-	PrintToServer("Got here... 1 ...");
 	// Setting integers, floats and booleans also
 	someobj.SomeInt = 1;
 	someobj.SomeFloat = 512.7;
@@ -26,8 +25,6 @@ public void OnPluginStart()
 	int someint = someobj.SomeInt;
 	float somefloat = someobj.SomeFloat;
 	bool somebool = someobj.SomeBool;
-	
-	PrintToServer("Got here... 2 ...");
 	
 	// And the normal "extra" stuff to get a string in sourcespawn
 	char somestring[64];
