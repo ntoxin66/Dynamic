@@ -215,6 +215,9 @@ public int Native_Dynamic_SetName(Handle plugin, int params)
 	if (!Dynamic_IsValid(index))
 		return 0;
 	
+	// Set object name to object names trie
+	// -> This currently overrides a previous name
+	// -> This should throw an error
 	int length;
 	GetNativeStringLength(2, length);
 	char[] objectname = new char[length];
@@ -225,26 +228,33 @@ public int Native_Dynamic_SetName(Handle plugin, int params)
 // native Dynamic Dynamic_FindByName(const char[] objectname);
 public int Native_Dynamic_FindByName(Handle plugin, int params)
 {
+	// Get native params
 	int length;
 	GetNativeStringLength(1, length);
 	char[] objectname = new char[length];
 	GetNativeString(1, objectname, length);
 	
+	// Find name in object names trie
 	int index;
 	if (!GetTrieValue(s_tObjectNames, objectname, index))
 		return INVALID_DYNAMIC_OBJECT;
 	
+	// Check object is still valid
 	if (!Dynamic_IsValid(index))
 		return INVALID_DYNAMIC_OBJECT;
 	
+	// Return object index
 	return index;
 }
 
 // native bool Dynamic_IsValid(int index, bool throwerror=false);
 public int Native_Dynamic_IsValid(Handle plugin, int params)
 {
+	// Get native params
 	int index = GetNativeCell(1);
 	bool throwerror = GetNativeCell(2);
+	
+	// Check if object index is valid
 	if (index < 0 || index >= s_CollectionSize)
 	{
 		if (throwerror)
@@ -268,12 +278,14 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 	offset = 0;
 	Handle offsets = GetArrayCell(s_Collection, index, Dynamic_Offsets);
 	
+	// Find and return member offset
 	if (GetTrieValue(offsets, membername, offset))
 	{
 		RecalculateOffset(array, position, offset, blocksize);
 		return true;
 	}
 	
+	// Return false if offset was not found and we dont need to create a new member
 	if (!create)
 		return false;
 	
@@ -328,6 +340,7 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 
 stock bool RecalculateOffset(Handle array, int &position, int &offset, int blocksize, bool expand=false, bool aschar=false)
 {
+	// Calculate offset into internal array index and cell position
 	if (aschar)
 		blocksize *= 4;
 		
@@ -341,8 +354,10 @@ stock bool RecalculateOffset(Handle array, int &position, int &offset, int block
 		offset-=blocksize;
 		position++;
 	}
+	
 	if (expand)
 	{
+		// Expand array if offset is outside of array bounds
 		int size = GetArraySize(array);
 		while (size <= position)
 		{
@@ -355,6 +370,8 @@ stock bool RecalculateOffset(Handle array, int &position, int &offset, int block
 
 stock bool ValidateOffset(Handle array, int &position, int &offset, int blocksize, bool aschar=false)
 {
+	// This has become redundant and is no longer required
+	// -> Some internal methods still use this and need to be switched to RecalculateOffset
 	if (aschar)
 		blocksize *= 4;
 		
@@ -380,28 +397,39 @@ stock bool ValidateOffset(Handle array, int &position, int &offset, int blocksiz
 
 stock void ExpandIfRequired(Handle array, int position, int offset, int blocksize, int length=1)
 {
+	// Used to expand internal object arrays by the GetMemberOffset method
 	offset += length + 1;
 	RecalculateOffset(array, position, offset, blocksize, true);
 }
 
 stock Dynamic_MemberType GetMemberType(Handle array, int position, int offset, int blocksize)
 {
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
 	
+	// Get and return type
 	int type = GetArrayCell(array, position, offset);
 	return view_as<Dynamic_MemberType>(type);
 }
 
 stock void SetMemberType(Handle array, int position, int offset, int blocksize, Dynamic_MemberType type)
 {
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Set member type
 	SetArrayCell(array, position, type, offset);
 }
 
 stock int GetMemberStringLength(Handle array, int position, int offset, int blocksize)
 {
+	// Move the offset forward by one cell as this is where a strings length is stored
 	offset++;
+	
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Return string length
 	return GetArrayCell(array, position, offset);
 }
 
@@ -414,38 +442,64 @@ stock void SetMemberStringLength(Handle array, int position, int offset, int blo
 
 stock int GetMemberDataInt(Handle array, int position, int offset, int blocksize)
 {
+	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
+	
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Return value
 	return GetArrayCell(array, position, offset);
 }
 
 stock void SetMemberDataInt(Handle array, int position, int offset, int blocksize, int value)
 {
+	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
+	
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Set the value
 	SetArrayCell(array, position, value, offset);
 }
 
 stock float GetMemberDataFloat(Handle array, int position, int offset, int blocksize)
 {
+	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
+	
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Return value
 	return GetArrayCell(array, position, offset);
 }
 
 stock void SetMemberDataFloat(Handle array, int position, int offset, int blocksize, float value)
 {
+	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
+	
+	// Calculate internal data array index and cell position
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Set the value
 	SetArrayCell(array, position, value, offset);
 }
 
 stock bool GetMemberDataVector(Handle array, int position, int offset, int blocksize, float vector[3])
 {
+	// A vector has 3 cells of data to be retrieved
 	for (int i=0; i<3; i++)
 	{
+		// Move the offset forward by one cell as this is where the value is stored
 		offset++;
+		
+		// Calculate internal data array index and cell position
 		RecalculateOffset(array, position, offset, blocksize);
+		
+		// Get the value
 		vector[i] = GetArrayCell(array, position, offset);
 	}
 	return true;
@@ -453,26 +507,37 @@ stock bool GetMemberDataVector(Handle array, int position, int offset, int block
 
 stock void SetMemberDataVector(Handle array, int position, int offset, int blocksize, float value[3])
 {
+	// A vector has 3 cells of data to be stored
 	for (int i=0; i<3; i++)
 	{
+		// Move the offset forward by one cell as this is where the value is stored
 		offset++;
+		
+		// Calculate internal data array index and cell position
 		RecalculateOffset(array, position, offset, blocksize);
+		
+		// Set the value
 		SetArrayCell(array, position, value[i], offset);
 	}
 }
 
 stock void GetMemberDataString(Handle array, int position, int offset, int blocksize, char[] buffer, int length)
 {
+	// Move the offset forward by two cells as this is where the string data starts
 	offset+=2;
 	RecalculateOffset(array, position, offset, blocksize, true);
 	
+	// Offsets for Strings must by multiplied by 4
 	offset*=4;
 	
+	// Get string data cell by cell and recalculate offset incase the string data wraps onto a new array index
 	int i; char letter;
 	for (i=0; i < length; i++)
 	{
 		letter = view_as<char>(GetArrayCell(array, position, offset, true));
 		buffer[i] = letter;
+		
+		// If the null terminator exists we are done
 		if (letter == 0)
 			return;
 			
@@ -480,6 +545,7 @@ stock void GetMemberDataString(Handle array, int position, int offset, int block
 		RecalculateOffset(array, position, offset, blocksize, false, true);
 	}
 	
+	// Add null terminator to end of string
 	buffer[i-1] = '0';
 }
 
@@ -487,16 +553,22 @@ stock void SetMemberDataString(Handle array, int position, int offset, int block
 {
 	int length = GetMemberStringLength(array, position, offset, blocksize);
 	
+	// Move the offset forward by two cells as this is where the string data starts
 	offset+=2;
 	RecalculateOffset(array, position, offset, blocksize);
+	
+	// Offsets for Strings must by multiplied by 4
 	offset*=4;
 	
+	// Set string data cell by cell and recalculate offset incase the string data wraps onto a new array index
 	int i;
 	char letter;
 	for (i=0; i < length; i++)
 	{
 		letter = buffer[i];
 		SetArrayCell(array, position, letter, offset, true);
+		
+		// If the null terminator exists we are done
 		if (letter == 0)
 			return;
 			
@@ -504,13 +576,18 @@ stock void SetMemberDataString(Handle array, int position, int offset, int block
 		RecalculateOffset(array, position, offset, blocksize, false, true);
 	}
 	
+	// Move back one offset once string is written to internal data array
 	offset--;
 	RecalculateOffset(array, position, offset, blocksize, false, true);
+	
+	// Set null terminator
 	SetArrayCell(array, position, 0, offset, true);
 }
 
 stock int GetMemberCount(int index)
 {
+	// A simple way to ge the member count
+	// -> If performance is faster to store a count for the object this will be updated
 	return GetTrieSize(GetArrayCell(s_Collection, index, Dynamic_Offsets));
 }
 
@@ -1776,6 +1853,7 @@ public int Native_Dynamic_SetBoolByOffset(Handle plugin, int params)
 // native int Dynamic_GetCollectionSize();
 public int Native_Dynamic_GetCollectionSize(Handle plugin, int params)
 {
+	// Collection size is stored within the dynamic object as this is MUCH faster than GetArraySize
 	return s_CollectionSize;
 }
 
@@ -1787,6 +1865,7 @@ public int Native_Dynamic_GetMemberCount(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 	
+	// Return the member count
 	return GetMemberCount(index);
 }
 
@@ -1798,8 +1877,10 @@ public int Native_Dynamic_HookChanges(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 	
+	// Add forward to objects forward list
 	AddToForward(GetArrayCell(s_Collection, index, Dynamic_Forwards), plugin, GetNativeCell(2));
 	
+	// Store new callback count
 	int count = GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, ++count, Dynamic_CallbackCount);
 	return 1;
@@ -1813,8 +1894,10 @@ public int Native_Dynamic_UnHookChanges(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 	
+	// Remove forward from objects forward list
 	RemoveFromForward(GetArrayCell(s_Collection, index, Dynamic_Forwards), plugin, GetNativeCell(2));
 	
+	// Store new callback count
 	int count = GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, --count, Dynamic_CallbackCount);
 	return 1;
@@ -1828,6 +1911,7 @@ public int Native_Dynamic_CallbackCount(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 	
+	// Return callback count
 	return GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
 }
 
@@ -1839,14 +1923,17 @@ public int Native_Dynamic_GetMemberOffset(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return INVALID_DYNAMIC_OFFSET;
 	
+	// Get member name
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	
+	// Find and return offset for member
 	Handle offsets = GetArrayCell(s_Collection, index, Dynamic_Offsets);
 	int offset;
 	if (GetTrieValue(offsets, membername, offset))
 		return offset;
 	
+	// No offset found
 	return INVALID_DYNAMIC_OFFSET;
 }
 
@@ -1858,6 +1945,7 @@ public int Native_Dynamic_GetMemberOffsetByIndex(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return INVALID_DYNAMIC_OFFSET;
 	
+	// Get member index param and return offset at this position
 	int memberindex = GetNativeCell(2);
 	return GetMemberOffsetByIndex(index, memberindex);
 }
@@ -1865,6 +1953,8 @@ public int Native_Dynamic_GetMemberOffsetByIndex(Handle plugin, int params)
 public int GetMemberOffsetByIndex(int index, int memberindex)
 {
 	Handle memberoffsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
+	
+	// -> This is slow and should be replaced
 	int membercount = GetArraySize(memberoffsets);
 	
 	if (memberindex < membercount)
