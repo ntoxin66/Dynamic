@@ -12,7 +12,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.13",
+	version = "0.0.14",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -100,6 +100,7 @@ public void OnPluginEnd()
 	}
 }
 
+// native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0);
 public int Native_Dynamic_Initialise(Handle plugin, int params)
 {
 	int blocksize = GetNativeCell(1);
@@ -134,10 +135,11 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
 	
-	// Return the next indexs
+	// Return the next index
 	return index;
 }
 
+// native bool Dynamic_Dispose(int index, bool disposemembers);
 public int Native_Dynamic_Dispose(Handle plugin, int params)
 {
 	// Get and validate index
@@ -145,7 +147,7 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 		
-	// Dispose of child members if
+	// Dispose of child members if disposemembers is set
 	if (GetNativeCell(2))
 	{
 		Handle data = GetArrayCell(s_Collection, index, Dynamic_Data);
@@ -205,6 +207,7 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 	return 1;
 }
 
+// native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
 public int Native_Dynamic_SetName(Handle plugin, int params)
 {
 	// Get and validate index
@@ -219,6 +222,7 @@ public int Native_Dynamic_SetName(Handle plugin, int params)
 	return SetTrieValue(s_tObjectNames, objectname, index, GetNativeCell(3));
 }
 
+// native Dynamic Dynamic_FindByName(const char[] objectname);
 public int Native_Dynamic_FindByName(Handle plugin, int params)
 {
 	int length;
@@ -236,6 +240,7 @@ public int Native_Dynamic_FindByName(Handle plugin, int params)
 	return index;
 }
 
+// native bool Dynamic_IsValid(int index, bool throwerror=false);
 public int Native_Dynamic_IsValid(Handle plugin, int params)
 {
 	int index = GetNativeCell(1);
@@ -509,6 +514,7 @@ stock int GetMemberCount(int index)
 	return GetTrieSize(GetArrayCell(s_Collection, index, Dynamic_Offsets));
 }
 
+// native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue=-1);
 public int Native_Dynamic_GetInt(Handle plugin, int params)
 {
 	// Get and validate index
@@ -546,6 +552,7 @@ public int Native_Dynamic_GetInt(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
 public int Native_Dynamic_SetInt(Handle plugin, int params)
 {
 	// Get and validate index
@@ -599,6 +606,7 @@ public int Native_Dynamic_SetInt(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_GetIntByOffset(Dynamic obj, int offset, int defaultvalue=-1);
 public int Native_Dynamic_GetIntByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -635,6 +643,7 @@ public int Native_Dynamic_GetIntByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetIntByOffset(Dynamic obj, int offset, int value);
 public int Native_Dynamic_SetIntByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -686,6 +695,7 @@ public int Native_Dynamic_SetIntByOffset(Handle plugin, int params)
 	}
 }
 
+// native float Dynamic_GetFloat(Dynamic obj, const char[] membername, float defaultvalue=-1.0);
 public int Native_Dynamic_GetFloat(Handle plugin, int params)
 {
 	// Get and validate index
@@ -721,6 +731,7 @@ public int Native_Dynamic_GetFloat(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
 public int Native_Dynamic_SetFloat(Handle plugin, int params)
 {
 	// Get and validate index
@@ -772,6 +783,7 @@ public int Native_Dynamic_SetFloat(Handle plugin, int params)
 	}
 }
 
+// native float Dynamic_GetFloatByOffset(Dynamic obj, int offset, float defaultvalue=-1.0);
 public int Native_Dynamic_GetFloatByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -806,6 +818,7 @@ public int Native_Dynamic_GetFloatByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetFloatByOffset(Dynamic obj, int offset, float value);
 public int Native_Dynamic_SetFloatByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -856,6 +869,7 @@ public int Native_Dynamic_SetFloatByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int size);
 public int Native_Dynamic_GetString(Handle plugin, int params)
 {
 	// Get and validate index
@@ -928,6 +942,7 @@ public int Native_Dynamic_GetString(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
 public int Native_Dynamic_SetString(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1001,6 +1016,7 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int size);
 public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1073,6 +1089,7 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
 public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1145,6 +1162,7 @@ public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetStringLength(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1168,6 +1186,7 @@ public int Native_Dynamic_GetStringLength(Handle plugin, int params)
 	return GetMemberStringLength(array, position, offset, blocksize);
 }
 
+// native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
 public int Native_Dynamic_GetStringLengthByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1185,6 +1204,7 @@ public int Native_Dynamic_GetStringLengthByOffset(Handle plugin, int params)
 	return GetMemberStringLength(array, position, offset, blocksize);
 }
 
+// native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetObject(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1211,6 +1231,7 @@ public int Native_Dynamic_GetObject(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
 public int Native_Dynamic_SetObject(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1241,6 +1262,7 @@ public int Native_Dynamic_SetObject(Handle plugin, int params)
 	}
 }
 
+// native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
 public int Native_Dynamic_GetObjectByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1266,6 +1288,7 @@ public int Native_Dynamic_GetObjectByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
 public int Native_Dynamic_SetObjectByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1295,6 +1318,7 @@ public int Native_Dynamic_SetObjectByOffset(Handle plugin, int params)
 	}
 }
 
+// native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetHandle(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1321,6 +1345,7 @@ public int Native_Dynamic_GetHandle(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
 public int Native_Dynamic_SetHandle(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1351,6 +1376,7 @@ public int Native_Dynamic_SetHandle(Handle plugin, int params)
 	}
 }
 
+// native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
 public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1376,6 +1402,7 @@ public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
 public int Native_Dynamic_SetHandleByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1405,6 +1432,7 @@ public int Native_Dynamic_SetHandleByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float[3] vector);
 public int Native_Dynamic_GetVector(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1440,6 +1468,7 @@ public int Native_Dynamic_GetVector(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float[3] value);
 public int Native_Dynamic_SetVector(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1472,6 +1501,7 @@ public int Native_Dynamic_SetVector(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float[3] vector);
 public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1506,6 +1536,7 @@ public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float[3] value);
 public int Native_Dynamic_SetVectorByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1537,6 +1568,7 @@ public int Native_Dynamic_SetVectorByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultvalue=false);
 public int Native_Dynamic_GetBool(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1584,6 +1616,7 @@ public int Native_Dynamic_GetBool(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
 public int Native_Dynamic_SetBool(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1638,6 +1671,7 @@ public int Native_Dynamic_SetBool(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_GetBoolByOffset(Dynamic obj, int offset, bool defaultvalue=false);
 public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1684,6 +1718,7 @@ public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
 	}
 }
 
+// native bool Dynamic_SetBoolByOffset(Dynamic obj, int offset, bool value);
 public int Native_Dynamic_SetBoolByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1738,11 +1773,13 @@ public int Native_Dynamic_SetBoolByOffset(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_GetCollectionSize();
 public int Native_Dynamic_GetCollectionSize(Handle plugin, int params)
 {
 	return s_CollectionSize;
 }
 
+// native int Dynamic_GetMemberCount(Dynamic obj);
 public int Native_Dynamic_GetMemberCount(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1753,6 +1790,7 @@ public int Native_Dynamic_GetMemberCount(Handle plugin, int params)
 	return GetMemberCount(index);
 }
 
+// native bool Dynamic_HookChanges(Dynamic obj, DynamicHookCB callback);
 public int Native_Dynamic_HookChanges(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1767,6 +1805,7 @@ public int Native_Dynamic_HookChanges(Handle plugin, int params)
 	return 1;
 }
 
+// native bool Dynamic_UnHookChanges(Dynamic obj, DynamicHookCB callback);
 public int Native_Dynamic_UnHookChanges(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1781,6 +1820,7 @@ public int Native_Dynamic_UnHookChanges(Handle plugin, int params)
 	return 1;
 }
 
+// native int Dynamic_CallbackCount(Dynamic obj);
 public int Native_Dynamic_CallbackCount(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1791,6 +1831,7 @@ public int Native_Dynamic_CallbackCount(Handle plugin, int params)
 	return GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
 }
 
+// native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetMemberOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1809,6 +1850,7 @@ public int Native_Dynamic_GetMemberOffset(Handle plugin, int params)
 	return INVALID_DYNAMIC_OFFSET;
 }
 
+// native int Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
 public int Native_Dynamic_GetMemberOffsetByIndex(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1831,6 +1873,7 @@ public int GetMemberOffsetByIndex(int index, int memberindex)
 		return INVALID_DYNAMIC_OFFSET;
 }
 
+// native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetMemberType(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1850,6 +1893,7 @@ public int Native_Dynamic_GetMemberType(Handle plugin, int params)
 	return view_as<int>(GetMemberType(array, position, offset, blocksize));
 }
 
+// native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
 public int Native_Dynamic_GetMemberTypeByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1864,8 +1908,7 @@ public int Native_Dynamic_GetMemberTypeByOffset(Handle plugin, int params)
 	return view_as<int>(GetMemberType(GetArrayCell(s_Collection, index, Dynamic_Data), position, offset, blocksize));
 }
 
-
-// native Dynamic_MemberType Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, int size);
+// native bool Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, int size);
 public int Native_Dynamic_GetMemberNameByIndex(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1889,7 +1932,7 @@ public int Native_Dynamic_GetMemberNameByIndex(Handle plugin, int params)
 	return 1;
 }
 
-//native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int size);
+// native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int size);
 public int Native_Dynamic_GetMemberNameByOffset(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1916,7 +1959,7 @@ public int Native_Dynamic_GetMemberNameByOffset(Handle plugin, int params)
 	return 0;
 }
 
-//native Dynamic_SortMembers(Dynamic obj, SortOrder order);
+// native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
 public int Native_Dynamic_SortMembers(Handle plugin, int params)
 {
 	// Get and validate index
