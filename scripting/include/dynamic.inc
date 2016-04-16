@@ -121,6 +121,16 @@ methodmap Dynamic
 		return Dynamic_FindByName(objectname);
 	}
 	
+	public static Dynamic GetSettings()
+	{
+		return view_as<Dynamic>(0);
+	}
+	
+	public static Dynamic GetPlayerSettings(int client)
+	{
+		return view_as<Dynamic>(client);
+	}
+	
 	public int GetInt(const char[] membername, int defaultvalue=-1)
 	{
 		return Dynamic_GetInt(this, membername, defaultvalue);

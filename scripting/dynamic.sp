@@ -89,6 +89,23 @@ public void OnPluginStart()
 	s_CollectionSize = 0;
 	s_FreeIndicies = CreateStack();
 	s_tObjectNames = CreateTrie();
+	
+	// Reserve first object index for global settings
+	Dynamic settings = Dynamic();
+	
+	// Ensure settings is assigned index 0
+	if (view_as<int>(settings) != 0)
+		SetFailState("Serious error encountered assigning server settings index!");
+	
+	// Reserve first object indicies for player objects
+	for (int client = 1; client < MAXPLAYERS; client++)
+	{
+		settings = Dynamic();
+		
+		// This is a check to ensure the index matches the client
+		if (view_as<int>(settings) != client)
+			SetFailState("Serious error encountered assigning player settings indicies!");
+	}
 }
 
 public void OnPluginEnd()

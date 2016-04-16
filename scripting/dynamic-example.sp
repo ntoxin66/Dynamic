@@ -68,6 +68,22 @@ public void OnPluginStart()
 	
 	// You can also sort members within a dynamic object by name
 	someobj.SortMembers(Sort_Ascending);
+	
+	// Dynamic assigns player settings which can be accessed like so
+	int client = 1;
+	Dynamic settings = Dynamic.GetPlayerSettings(client);
+	
+	// You can also access dynamic player settings like this
+	settings = view_as<Dynamic>(client);
+	
+	// Dynamic also provides a global settings object
+	settings = Dynamic.GetSettings();
+	
+	// You can also access the global settings object like this
+	settings = view_as<Dynamic>(0);
+	
+	// This is to a stop compilation warning
+	settings.SetInt("someint", 1);
 
 	// Sometimes you might want to iterate through members to accomplish stuff
 	int count = someobj.MemberCount;
