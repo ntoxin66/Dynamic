@@ -30,6 +30,12 @@ native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0);
 native bool Dynamic_IsValid(int index, bool throwerror=false);
 native bool Dynamic_Dispose(int index, bool disposemembers);
 
+native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
+native Dynamic Dynamic_FindByName(const char[] objectname);
+
+native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs = false, int valuelength);
+native bool Dynamic_WriteConfig(Dynamic obj, const char[] path, bool use_valve_fs = false);
+
 native int Dynamic_GetMemberCount(Dynamic obj);
 native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
 native int Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
@@ -38,9 +44,6 @@ native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer
 native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
 native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
 native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
-
-native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
-native Dynamic Dynamic_FindByName(const char[] objectname);
 
 native int Dynamic_CallbackCount(Dynamic obj);
 native bool Dynamic_HookChanges(Dynamic obj, DynamicHookCB callback);
@@ -119,6 +122,16 @@ methodmap Dynamic
 	public static Dynamic FindByName(const char[] objectname)
 	{
 		return Dynamic_FindByName(objectname);
+	}
+	
+	public bool ReadConfig(const char[] path, bool use_valve_fs = false, int valuelength = 128)
+	{
+		return Dynamic_ReadConfig(this, path, use_valve_fs, valuelength);
+	}
+	
+	public bool WriteConfig(const char[] path)
+	{
+		return Dynamic_WriteConfig(this, path);
 	}
 	
 	public static Dynamic GetSettings()
@@ -331,9 +344,12 @@ methodmap Dynamic
 public __pl_dynamic_SetNTVOptional()
 {
 	MarkNativeAsOptional("Dynamic_Initialise");
+	MarkNativeAsOptional("Dynamic_IsValid");
 	MarkNativeAsOptional("Dynamic_Dispose");
 	MarkNativeAsOptional("Dynamic_SetName");
 	MarkNativeAsOptional("Dynamic_FindByName");
+	MarkNativeAsOptional("Dynamic_ReadConfig");
+	MarkNativeAsOptional("Dynamic_WriteConfig");
 	MarkNativeAsOptional("Dynamic_GetInt");
 	MarkNativeAsOptional("Dynamic_SetInt");
 	MarkNativeAsOptional("Dynamic_GetIntByOffset");
@@ -366,7 +382,6 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetVectorByOffset");
 	MarkNativeAsOptional("Dynamic_GetCollectionSize");
 	MarkNativeAsOptional("Dynamic_GetMemberCount");
-	MarkNativeAsOptional("Dynamic_IsValid");
 	MarkNativeAsOptional("Dynamic_HookChanges");
 	MarkNativeAsOptional("Dynamic_UnHookChanges");
 	MarkNativeAsOptional("Dynamic_CallbackCount");

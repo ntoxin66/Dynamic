@@ -6,7 +6,7 @@ public Plugin myinfo =
 	name = "Dynamic Test",
 	author = "Neuro Toxin",
 	description = "Benchmarks and Tests all Dynamic Object aspects",
-	version = "1.0.1",
+	version = "1.0.2",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -27,6 +27,7 @@ stock void BenchmarkTest()
 	char buffer[DYNAMIC_MEMBERNAME_MAXLEN];
 	int ival; float fval; char sval[DYNAMIC_MEMBERNAME_MAXLEN]; float vector[3];
 	int offset;
+	Dynamic objects[1000];
     
 	// Make member names
 	for (int x = 0; x < membercount; x++)
@@ -39,7 +40,7 @@ stock void BenchmarkTest()
 	float start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = Dynamic(16, 0);
+		objects[i] = Dynamic(16, 0);
 		//someobject.HookChanges(OnDynamicMemberChanged);
 	}
 	PrintToServer("Created %d dynamic object(s) in %f second(s)", objectcount, GetEngineTime() - start);
@@ -47,7 +48,7 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		for (int x = 0; x < membercount; x++)
 		{
 			for (int p = 1; p < 6; p++)
@@ -84,7 +85,7 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		for (int x = 0; x < membercount; x++)
 		{
 			for (int p = 1; p < 6; p++)
@@ -121,7 +122,7 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		for (int x = 0; x < membercount; x++)
 		{
 			for (int p = 1; p < 6; p++)
@@ -158,7 +159,7 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		for (int x = 0; x < membercount; x++)
 		{
 			for (int p = 1; p < 6; p++)
@@ -232,19 +233,19 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		for (int x = 0; x < membercount; x++)
 		{
 			for (int p = 1; p < 6; p++)
 			{
 				if (p == 1)
 				{
-					someobject.SetInt(membernames[x], x+i+p);
+					someobject.SetInt(membernames[x], x+i+p+1);
 					x++;
 				}
 				else if (p==2)
 				{
-					someobject.SetFloat(membernames[x], float(x+i+p));
+					someobject.SetFloat(membernames[x], float(x+i+p+1));
 					x++;
 				}
 				else if (p==3)
@@ -259,7 +260,7 @@ stock void BenchmarkTest()
 				}
 				else if (p==5)
 				{
-					someobject.SetString(membernames[x], "Some nice string that has some data");
+					someobject.SetString(membernames[x], "123Some nice string that has some data123");
 				}
 			}
 		}
@@ -269,13 +270,13 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		for (int x = 0; x < membercount; x++)
 		{
 			for (int p = 1; p < 6; p++)
 			{
-				ival = x+i+p;
-				fval = float(x+i+p);
+				ival = x+i+p+1;
+				fval = float(x+i+p+1);
 				offset = someobject.GetMemberOffset(membernames[x]);
 
 				if (p == 1)
@@ -333,7 +334,7 @@ stock void BenchmarkTest()
 				else if (p==5)
 				{
 					someobject.GetStringByOffset(offset, buffer, sizeof(buffer));
-					if (!StrEqual(buffer, "Some nice string that has some data"))
+					if (!StrEqual(buffer, "123Some nice string that has some data123"))
 						PrintToServer("!! Member data INVALID! (String)");
 				}
 			}

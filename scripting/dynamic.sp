@@ -33,9 +33,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// Register plugin and natives
 	RegPluginLibrary("dynamic");
 	CreateNative("Dynamic_Initialise", Native_Dynamic_Initialise);
+	CreateNative("Dynamic_IsValid", Native_Dynamic_IsValid);
 	CreateNative("Dynamic_Dispose", Native_Dynamic_Dispose);
 	CreateNative("Dynamic_SetName", Native_Dynamic_SetName);
 	CreateNative("Dynamic_FindByName", Native_Dynamic_FindByName);
+	CreateNative("Dynamic_ReadConfig", Native_Dynamic_ReadConfig);
+	CreateNative("Dynamic_WriteConfig", Native_Dynamic_WriteConfig);
 	CreateNative("Dynamic_GetInt", Native_Dynamic_GetInt);
 	CreateNative("Dynamic_SetInt", Native_Dynamic_SetInt);
 	CreateNative("Dynamic_GetIntByOffset", Native_Dynamic_GetIntByOffset);
@@ -68,7 +71,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_GetVectorByOffset", Native_Dynamic_GetVectorByOffset);
 	CreateNative("Dynamic_SetVectorByOffset", Native_Dynamic_SetVectorByOffset);
 	CreateNative("Dynamic_GetMemberCount", Native_Dynamic_GetMemberCount);
-	CreateNative("Dynamic_IsValid", Native_Dynamic_IsValid);
 	CreateNative("Dynamic_HookChanges", Native_Dynamic_HookChanges);
 	CreateNative("Dynamic_UnHookChanges", Native_Dynamic_UnHookChanges);
 	CreateNative("Dynamic_CallbackCount", Native_Dynamic_CallbackCount);
@@ -239,6 +241,7 @@ public int Native_Dynamic_SetName(Handle plugin, int params)
 	GetNativeStringLength(2, length);
 	char[] objectname = new char[length];
 	GetNativeString(2, objectname, length);
+	
 	return SetTrieValue(s_tObjectNames, objectname, index, GetNativeCell(3));
 }
 
@@ -262,6 +265,226 @@ public int Native_Dynamic_FindByName(Handle plugin, int params)
 	
 	// Return object index
 	return index;
+}
+
+// native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs = false, bool valuelength=128);
+public int Native_Dynamic_ReadConfig(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+		
+	// Get native params
+	int length;
+	GetNativeStringLength(2, length);
+	char[] path = new char[length];
+	GetNativeString(2, path, length+1);
+	bool use_valve_fs = GetNativeCell(3);
+	int maxlength = GetNativeCell(4);
+	
+	// Check file exists
+	if (!FileExists(path, use_valve_fs))
+	{
+		ThrowNativeError(0, "Filepath '%s' doesn't exist!", path);
+		return 0;
+	}
+	
+	// Open file for reading
+	File stream = OpenFile(path, "r", use_valve_fs);
+	
+	// Exit if failed to open
+	if (stream == null)
+	{
+		ThrowNativeError(0, "Unable to open file stream '%s'!", path);
+		return 0;
+	}
+		
+	// Loop through file in blocks
+	char buffer[16];
+	char testbuffer[1024*10];
+	int testbufferpos = 0;
+	bool readingname = true;
+	bool readingstring = false;
+	bool readingvalue = false;
+	int lastchar = 0;
+	bool skippingcomment = false;
+	ArrayList settingnamearray = CreateArray(1);
+	int settingnamelength = 0;
+	ArrayList settingvaluearray = CreateArray(1);
+	int settingvaluelength = 0;
+	while ((length = stream.ReadString(buffer, sizeof(buffer))) > 0)
+	{
+		for (int i = 0; i < length; i++)
+		{
+			testbuffer[testbufferpos] = buffer[i];
+			testbufferpos++;
+			
+			int byte = buffer[i];
+			
+			// space and tabspace
+			if (byte == 9 || byte == 32)
+			{
+				// continue if skipping comments
+				if (skippingcomment)
+					continue;
+					
+				if (readingname)
+				{
+					if (readingstring)
+					{
+						settingvaluearray.Push(byte);
+						settingvaluelength++;
+					}
+					else
+					{
+						readingname = false;
+						readingvalue = true;
+					}
+				}
+				
+				else if (readingvalue)
+				{
+					if (readingstring)
+					{
+						settingvaluearray.Push(byte);
+						settingvaluelength++;
+					}
+					else
+					{
+						//if (settingvaluelength > 0)
+						//	skippingcomment = true;
+					}
+				}
+			}
+			
+			// new line
+			else if (byte == 10)
+			{
+				readingname = true;
+				readingstring = false;
+				readingvalue = false;
+				
+				if (skippingcomment)
+				{
+					skippingcomment = false;
+					continue;
+				}
+				
+				AddConfigSetting(index, settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, maxlength);
+				settingnamelength = 0;
+				settingvaluelength = 0;
+			}
+			
+			// quote
+			else if (byte == 34)
+			{
+				readingstring = !readingstring;
+				
+				if (!readingstring && readingvalue)
+				{
+					AddConfigSetting(index, settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, maxlength);
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					skippingcomment = true;
+				}
+			}
+			else
+			{
+				// continue if skipping a comment
+				if (skippingcomment)
+					continue;
+				
+				// skip double backslash comments
+				if (byte == 92 && lastchar == 92)
+				{
+					skippingcomment = true;
+					settingnamearray.Clear();
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					continue;
+				}
+				
+				lastchar = byte;
+				if (readingname)
+				{
+					settingnamearray.Push(byte);
+					settingnamelength++;
+				}
+				else if (readingvalue)
+				{
+					settingvaluearray.Push(byte);
+					settingvaluelength++;
+				}
+			}
+		}
+	}
+	
+	delete stream;
+	delete settingnamearray;
+	return 1;
+}
+
+stock void GetArrayStackAsString(ArrayList stack, char[] buffer, int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		buffer[i] = view_as<int>(stack.Get(i));
+	}
+}
+
+stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList value, int valuelength, int maxlength)
+{
+	char[] settingname = new char[namelength];
+	GetArrayStackAsString(name, settingname, namelength);
+	name.Clear();
+	
+	char[] settingvalue = new char[valuelength];
+	GetArrayStackAsString(value, settingvalue, valuelength);
+	value.Clear();
+	
+	Dynamic_SetString(view_as<Dynamic>(index), settingname, settingvalue, maxlength);
+}
+
+// native bool Dynamic_Config(Dynamic obj, const char[] path, bool use_valve_fs = false);
+public int Native_Dynamic_WriteConfig(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+		
+	// Get native params
+	int length;
+	GetNativeStringLength(2, length);
+	char[] path = new char[length];
+	GetNativeString(2, path, length+1);
+
+	// Open file for writting
+	File stream = OpenFile(path, "w", false);
+	
+	// Exit if failed to open
+	if (stream == null)
+	{
+		ThrowNativeError(0, "Unable to open file stream '%s'!", path);
+		return 0;
+	}
+	
+	int count = GetMemberCount(index);
+	int memberoffset;
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	for (int i = 0; i < count; i++)
+	{
+		memberoffset = GetMemberOffsetByIndex(index, i);
+		GetMemberNameByIndex(index, i, membername, sizeof(membername));
+		length = GetStringLengthByOffset(index, memberoffset);
+		char[] membervalue = new char[length];
+		Dynamic_GetStringByOffset(view_as<Dynamic>(index), memberoffset, membervalue, length);
+		stream.WriteLine("%s\t\"%s\"", membername, membervalue);
+	}
+	
+	delete stream;
+	return 0;
 }
 
 // native bool Dynamic_IsValid(int index, bool throwerror=false);
@@ -1101,7 +1324,7 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 			SetMemberDataInt(data, position, offset, blocksize, true);
 		
 		SetMemberDataInt(data, position, offset, blocksize, false);
-		return 1;
+		return offset;
 	}
 	else
 	{
@@ -1292,6 +1515,17 @@ public int Native_Dynamic_GetStringLengthByOffset(Handle plugin, int params)
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	
 	int offset = GetNativeCell(2);
+	int position;
+	
+	RecalculateOffset(array, position, offset, blocksize);
+	return GetMemberStringLength(array, position, offset, blocksize);
+}
+
+stock int GetStringLengthByOffset(int index, int offset)
+{
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	
 	int position;
 	
 	RecalculateOffset(array, position, offset, blocksize);
@@ -2024,19 +2258,33 @@ public int Native_Dynamic_GetMemberNameByIndex(Handle plugin, int params)
 		return 0;
 	
 	int memberindex = GetNativeCell(2);
+	int size = GetNativeCell(4);
+	
+	char[] buffer = new char[size];
+	
+	if (!GetMemberNameByIndex(index, memberindex, buffer, size))
+	{
+		SetNativeString(3, "", size);
+		return 0;
+	}
+	
+	SetNativeString(3, buffer, size);
+	return 1;
+}
+
+public bool GetMemberNameByIndex(int index, int memberindex, char[] buffer, int size)
+{
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
 	int membercount = GetArraySize(membernames);
 	
 	if (memberindex >= membercount)
 	{
-		SetNativeString(3, "", 1);
-		return 0;
+		buffer[0] = '\0';
+		return false;
 	}
 	
-	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
-	GetArrayString(membernames, memberindex, membername, sizeof(membername));
-	SetNativeString(3, membername, GetNativeCell(4));
-	return 1;
+	GetArrayString(membernames, memberindex, buffer, size);
+	return true;
 }
 
 // native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int size);
