@@ -65,7 +65,7 @@ native float Dynamic_GetFloatByIndex(Dynamic obj, int index, float defaultvalue=
 
 native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int length);
 native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
-native int Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int length);
+native bool Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int length);
 native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
 native int Dynamic_PushString(Dynamic obj, const char[] value);
 native bool Dynamic_GetStringByIndex(Dynamic obj, int index, char[] buffer, int length);

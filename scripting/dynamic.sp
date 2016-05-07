@@ -44,34 +44,46 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_GetIntByOffset", Native_Dynamic_GetIntByOffset);
 	CreateNative("Dynamic_SetIntByOffset", Native_Dynamic_SetIntByOffset);
 	CreateNative("Dynamic_PushInt", Native_Dynamic_PushInt);
-	
+	CreateNative("Dynamic_GetIntByIndex", Native_Dynamic_GetIntByIndex);
 	CreateNative("Dynamic_GetBool", Native_Dynamic_GetBool);
 	CreateNative("Dynamic_SetBool", Native_Dynamic_SetBool);
 	CreateNative("Dynamic_GetBoolByOffset", Native_Dynamic_GetBoolByOffset);
 	CreateNative("Dynamic_SetBoolByOffset", Native_Dynamic_SetBoolByOffset);
+	CreateNative("Dynamic_PushBool", Native_Dynamic_PushBool);
+	CreateNative("Dynamic_GetBoolByIndex", Native_Dynamic_GetBoolByIndex);
 	CreateNative("Dynamic_GetFloat", Native_Dynamic_GetFloat);
 	CreateNative("Dynamic_SetFloat", Native_Dynamic_SetFloat);
 	CreateNative("Dynamic_GetFloatByOffset", Native_Dynamic_GetFloatByOffset);
 	CreateNative("Dynamic_SetFloatByOffset", Native_Dynamic_SetFloatByOffset);
+	CreateNative("Dynamic_PushFloat", Native_Dynamic_PushFloat);
+	CreateNative("Dynamic_GetFloatByIndex", Native_Dynamic_GetFloatByIndex);
 	CreateNative("Dynamic_GetString", Native_Dynamic_GetString);
 	CreateNative("Dynamic_SetString", Native_Dynamic_SetString);
 	CreateNative("Dynamic_GetStringByOffset", Native_Dynamic_GetStringByOffset);
 	CreateNative("Dynamic_SetStringByOffset", Native_Dynamic_SetStringByOffset);
+	CreateNative("Dynamic_PushString", Native_Dynamic_PushString);
+	CreateNative("Dynamic_GetStringByIndex", Native_Dynamic_GetStringByIndex);
 	CreateNative("Dynamic_GetStringLengthByOffset", Native_Dynamic_GetStringLengthByOffset);
 	CreateNative("Dynamic_GetStringLength", Native_Dynamic_GetStringLength);
 	CreateNative("Dynamic_GetObject", Native_Dynamic_GetObject);
 	CreateNative("Dynamic_SetObject", Native_Dynamic_SetObject);
 	CreateNative("Dynamic_GetObjectByOffset", Native_Dynamic_GetObjectByOffset);
 	CreateNative("Dynamic_SetObjectByOffset", Native_Dynamic_SetObjectByOffset);
+	CreateNative("Dynamic_PushObject", Native_Dynamic_PushObject);
+	CreateNative("Dynamic_GetObjectByIndex", Native_Dynamic_GetObjectByIndex);
 	CreateNative("Dynamic_GetHandle", Native_Dynamic_GetHandle);
 	CreateNative("Dynamic_SetHandle", Native_Dynamic_SetHandle);
 	CreateNative("Dynamic_GetHandleByOffset", Native_Dynamic_GetHandleByOffset);
 	CreateNative("Dynamic_SetHandleByOffset", Native_Dynamic_SetHandleByOffset);
-	CreateNative("Dynamic_GetCollectionSize", Native_Dynamic_GetCollectionSize);
+	CreateNative("Dynamic_PushHandle", Native_Dynamic_PushHandle);
+	CreateNative("Dynamic_GetHandleByIndex", Native_Dynamic_GetHandleByIndex);
 	CreateNative("Dynamic_GetVector", Native_Dynamic_GetVector);
 	CreateNative("Dynamic_SetVector", Native_Dynamic_SetVector);
 	CreateNative("Dynamic_GetVectorByOffset", Native_Dynamic_GetVectorByOffset);
 	CreateNative("Dynamic_SetVectorByOffset", Native_Dynamic_SetVectorByOffset);
+	CreateNative("Dynamic_PushVector", Native_Dynamic_PushVector);
+	CreateNative("Dynamic_GetVectorByIndex", Native_Dynamic_GetVectorByIndex);
+	CreateNative("Dynamic_GetCollectionSize", Native_Dynamic_GetCollectionSize);
 	CreateNative("Dynamic_GetMemberCount", Native_Dynamic_GetMemberCount);
 	CreateNative("Dynamic_HookChanges", Native_Dynamic_HookChanges);
 	CreateNative("Dynamic_UnHookChanges", Native_Dynamic_UnHookChanges);
@@ -1062,7 +1074,7 @@ public int Native_Dynamic_SetIntByOffset(Handle plugin, int params)
 	}
 }
 
-// native int Dynamic_PushInt(Dynamic obj, int value, int count=1);
+// native int Dynamic_PushInt(Dynamic obj, int value);
 public int Native_Dynamic_PushInt(Handle plugin, int params)
 {
 	// Get and validate index
@@ -1078,6 +1090,22 @@ public int Native_Dynamic_PushInt(Handle plugin, int params)
 	SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(2));
 	//CallOnChangedForward(index, offset, membername, DynamicType_Int);
 	return memberindex;
+}
+
+// native int Dynamic_GetIntByIndex(Dynamic obj, int index, int defaultvalue=-1);
+public int Native_Dynamic_GetIntByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return GetNativeCell(3);
+	
+	return Dynamic_GetIntByOffset(view_as<Dynamic>(index), offset, GetNativeCell(3));
 }
 
 // native float Dynamic_GetFloat(Dynamic obj, const char[] membername, float defaultvalue=-1.0);
@@ -1252,6 +1280,41 @@ public int Native_Dynamic_SetFloatByOffset(Handle plugin, int params)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
 		return 0;
 	}
+}
+
+// native int Dynamic_PushFloat(Dynamic obj, float value);
+public int Native_Dynamic_PushFloat(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Handle data = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int position; int offset;
+	
+	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, DynamicType_Float);
+	SetMemberDataFloat(data, position, offset, blocksize, GetNativeCell(2));
+	//CallOnChangedForward(index, offset, membername, DynamicType_Float);
+	return memberindex;
+}
+
+
+// native float Dynamic_GetFloatByIndex(Dynamic obj, int index, float defaultvalue=-1.0);
+public int Native_Dynamic_GetFloatByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return GetNativeCell(3);
+	
+	return view_as<int>(Dynamic_GetFloatByOffset(view_as<Dynamic>(index), offset, GetNativeCell(3)));
 }
 
 // native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int size);
@@ -1547,6 +1610,53 @@ public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_PushString(Dynamic obj, const char[] value);
+public int Native_Dynamic_PushString(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Handle data = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int position; int offset;
+	
+	int length = GetNativeStringLength(3, length);
+	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, DynamicType_String, length);
+	
+	length+=2; // this can probably be removed (review Native_Dynamic_SetString for removal also)
+	char[] buffer = new char[length];
+	GetNativeString(3, buffer, length);
+	SetMemberDataString(data, position, offset, blocksize, buffer);
+	//CallOnChangedForward(index, offset, membername, DynamicType_String);
+	return memberindex;
+}
+
+// native bool Dynamic_GetStringByIndex(Dynamic obj, int index, char[] buffer, int length);
+public int Native_Dynamic_GetStringByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return GetNativeCell(3);
+	
+	int length = GetNativeCell(4);
+	char[] buffer = new char[length];
+	
+	if (Dynamic_GetStringByOffset(view_as<Dynamic>(index), offset, buffer, length))
+	{
+		SetNativeString(3, buffer, length);
+		return 1;
+	}
+	return 0;
+}
+
 // native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetStringLength(Handle plugin, int params)
 {
@@ -1714,6 +1824,40 @@ public int Native_Dynamic_SetObjectByOffset(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_PushObject(Dynamic obj, Dynamic value);
+public int Native_Dynamic_PushObject(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int position; int offset;
+	
+	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Object);
+	SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(2));
+	//CallOnChangedForward(index, offset, membername, DynamicType_Int);
+	return memberindex;
+}
+
+// native Dynamic Dynamic_GetObjectByIndex(Dynamic obj, int index);
+public int Native_Dynamic_GetObjectByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OBJECT;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return INVALID_DYNAMIC_OBJECT;
+	
+	return view_as<int>(Dynamic_GetObjectByOffset(view_as<Dynamic>(index), offset));
+}
+
 // native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetHandle(Handle plugin, int params)
 {
@@ -1828,13 +1972,47 @@ public int Native_Dynamic_SetHandleByOffset(Handle plugin, int params)
 	}
 }
 
+// native int Dynamic_PushHandle(Dynamic obj, Handle value);
+public int Native_Dynamic_PushHandle(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int position; int offset;
+	
+	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Object);
+	SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(2));
+	//CallOnChangedForward(index, offset, membername, DynamicType_Int);
+	return memberindex;
+}
+
+// native Handle Dynamic_GetHandleByIndex(Dynamic obj, int index);
+public int Native_Dynamic_GetHandleByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return 0;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return 0;
+	
+	return view_as<int>(Dynamic_GetHandleByOffset(view_as<Dynamic>(index), offset));
+}
+
 // native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float[3] vector);
 public int Native_Dynamic_GetVector(Handle plugin, int params)
 {
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -1843,7 +2021,7 @@ public int Native_Dynamic_GetVector(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Vector))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 		
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Vector)
@@ -1860,7 +2038,7 @@ public int Native_Dynamic_GetVector(Handle plugin, int params)
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	}
 }
 
@@ -1903,7 +2081,7 @@ public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	
 	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
@@ -1911,7 +2089,7 @@ public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
 	int offset = GetNativeCell(2);
 	int position;
 	if (!ValidateOffset(array, position, offset, blocksize))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Vector)
@@ -1928,7 +2106,7 @@ public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	}
 }
 
@@ -1962,6 +2140,50 @@ public int Native_Dynamic_SetVectorByOffset(Handle plugin, int params)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
 		return 0;
 	}
+}
+
+// native int Dynamic_PushVector(Dynamic obj, const float value[3]);
+public int Native_Dynamic_PushVector(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int position; int offset; float vector[3];
+	
+	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Vector);
+	GetNativeArray(3, vector, sizeof(vector));
+	SetMemberDataVector(array, position, offset, blocksize, vector);
+	//CallOnChangedForward(index, offset, membername, DynamicType_Vector);
+	return memberindex;
+}
+
+// native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float[3] vector);
+public int Native_Dynamic_GetVectorByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return GetNativeCell(3);
+	
+	float vector[3];
+	
+	if (Dynamic_GetVectorByOffset(view_as<Dynamic>(index), offset, vector))
+	{
+		SetNativeArray(3, vector, sizeof(vector));
+		return 1;
+	}
+	return 0;
 }
 
 // native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultvalue=false);
@@ -2167,6 +2389,40 @@ public int Native_Dynamic_SetBoolByOffset(Handle plugin, int params)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
 		return 0;
 	}
+}
+
+// native int Dynamic_PushBool(Dynamic obj, bool value);
+public int Native_Dynamic_PushBool(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int position; int offset;
+	
+	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Bool);
+	SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(2));
+	//CallOnChangedForward(index, offset, membername, DynamicType_Bool);
+	return memberindex;
+}
+
+// native bool Dynamic_GetBoolByIndex(Dynamic obj, int index, bool defaultvalue=false);
+public int Native_Dynamic_GetBoolByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return INVALID_DYNAMIC_OFFSET;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return GetNativeCell(3);
+	
+	return Dynamic_GetBoolByOffset(view_as<Dynamic>(index), offset, GetNativeCell(3));
 }
 
 // native int Dynamic_GetCollectionSize();
