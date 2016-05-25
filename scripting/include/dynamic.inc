@@ -3,7 +3,7 @@
 #endif
 #define _dynamic_included_
 
-#define INVALID_DYNAMIC_OBJECT			-1
+#define INVALID_DYNAMIC_OBJECT			view_as<Dynamic>(-1)
 #define INVALID_DYNAMIC_OFFSET			-1
 #define DYNAMIC_MEMBERNAME_MAXLEN		64
 
@@ -32,9 +32,13 @@ native bool Dynamic_Dispose(int index, bool disposemembers);
 
 native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
 native Dynamic Dynamic_FindByName(const char[] objectname);
+native Dynamic Dynamic_GetParent(Dynamic obj);
 
 native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs = false, int valuelength);
 native bool Dynamic_WriteConfig(Dynamic obj, const char[] path, bool use_valve_fs = false);
+
+native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false, int valuelength);
+native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false);
 
 native int Dynamic_GetMemberCount(Dynamic obj);
 native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
@@ -112,6 +116,14 @@ methodmap Dynamic
 		public get()
 		{
 			return Dynamic_IsValid(view_as<int>(this), false);
+		}
+	}
+	
+	property Dynamic Parent
+	{
+		public get()
+		{
+			return Dynamic_GetParent(this);
 		}
 	}
 	
@@ -432,8 +444,11 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_Dispose");
 	MarkNativeAsOptional("Dynamic_SetName");
 	MarkNativeAsOptional("Dynamic_FindByName");
+	MarkNativeAsOptional("Dynamic_GetParent");
 	MarkNativeAsOptional("Dynamic_ReadConfig");
 	MarkNativeAsOptional("Dynamic_WriteConfig");
+	MarkNativeAsOptional("Dynamic_ReadKeyValues");
+	MarkNativeAsOptional("Dynamic_WriteKeyValues");
 	MarkNativeAsOptional("Dynamic_GetInt");
 	MarkNativeAsOptional("Dynamic_SetInt");
 	MarkNativeAsOptional("Dynamic_GetIntByOffset");
