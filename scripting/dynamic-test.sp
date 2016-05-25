@@ -17,6 +17,50 @@ public void OnPluginStart()
 
 stock void BenchmarkTest()
 {
+	// parenting testing
+	
+	Dynamic parent = Dynamic();
+	Dynamic child = Dynamic();
+	Dynamic anotherchild = Dynamic();
+
+	parent.SetObject("child", child);
+	// child.parent == parent
+	if (child.Parent != parent)
+		PrintToServer("INVALID 1");
+		
+	PrintToServer("1 was good");
+		
+	parent.SetObject("child", anotherchild);
+	// anotherchild.parent == parent
+	// child.parent == invalid
+	if (anotherchild.Parent != parent)
+		PrintToServer("INVALID 2");
+	if (child.Parent != INVALID_DYNAMIC_OBJECT)
+		PrintToServer("INVALID 3");
+		
+	PrintToServer("2 also");
+
+	parent.SetObject("child", INVALID_DYNAMIC_OBJECT);
+	// child.parent == invalid
+	if (child.Parent != INVALID_DYNAMIC_OBJECT)
+		PrintToServer("INVALID 3");
+	
+	
+	PrintToServer("It worked as expected");
+	return;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	int objectcount = 1000;
 	int membercount = 100; // must be a multiple of 5
 

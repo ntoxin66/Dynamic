@@ -26,7 +26,8 @@ public Plugin myinfo =
 #define Dynamic_Forwards					7
 #define Dynamic_NextOffset				8
 #define Dynamic_CallbackCount			9
-#define Dynamic_Field_Count				10
+#define Dynamic_ParentObject				10
+#define Dynamic_Field_Count				11
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -37,6 +38,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_Dispose", Native_Dynamic_Dispose);
 	CreateNative("Dynamic_SetName", Native_Dynamic_SetName);
 	CreateNative("Dynamic_FindByName", Native_Dynamic_FindByName);
+	CreateNative("Dynamic_GetParent", Native_Dynamic_GetParent);
 	CreateNative("Dynamic_ReadConfig", Native_Dynamic_ReadConfig);
 	CreateNative("Dynamic_WriteConfig", Native_Dynamic_WriteConfig);
 	CreateNative("Dynamic_GetInt", Native_Dynamic_GetInt);
@@ -167,6 +169,7 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, CreateArray(DYNAMIC_MEMBERNAME_MAXLEN), Dynamic_MemberOffsets);
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
+	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
 	
 	// Return the next index
 	return index;
@@ -271,14 +274,25 @@ public int Native_Dynamic_FindByName(Handle plugin, int params)
 	// Find name in object names trie
 	int index;
 	if (!GetTrieValue(s_tObjectNames, objectname, index))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	// Check object is still valid
 	if (!Dynamic_IsValid(index))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	// Return object index
 	return index;
+}
+
+// native Dynamic Dynamic_GetParent(Dynamic obj);
+public int Native_Dynamic_GetParent(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
+	
+	return GetArrayCell(s_Collection, index, Dynamic_ParentObject);
 }
 
 // native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs = false, bool valuelength=128);
@@ -439,14 +453,6 @@ public int Native_Dynamic_ReadConfig(Handle plugin, int params)
 	return 1;
 }
 
-stock void GetArrayStackAsString(ArrayList stack, char[] buffer, int length)
-{
-	for (int i = 0; i < length; i++)
-	{
-		buffer[i] = view_as<int>(stack.Get(i));
-	}
-}
-
 stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList value, int valuelength, int maxlength)
 {
 	char[] settingname = new char[namelength];
@@ -458,6 +464,14 @@ stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList
 	value.Clear();
 	
 	Dynamic_SetString(view_as<Dynamic>(index), settingname, settingvalue, maxlength);
+}
+
+stock void GetArrayStackAsString(ArrayList stack, char[] buffer, int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		buffer[i] = view_as<int>(stack.Get(i));
+	}
 }
 
 // native bool Dynamic_Config(Dynamic obj, const char[] path, bool use_valve_fs = false);
@@ -660,11 +674,20 @@ stock bool RecalculateOffset(Handle array, int &position, int &offset, int block
 	if (expand)
 	{
 		// Expand array if offset is outside of array bounds
+		// Performance: Get array size should be replaced with an size counter
 		int size = GetArraySize(array);
 		while (size <= position)
 		{
-			PushArrayCell(array, 0);
+			// -1 is the default value of unused memory to allow parenting via Set/PushObject
+			int val = PushArrayCell(array, INVALID_DYNAMIC_OBJECT);
 			size++;
+			
+			// This was added to ensure all memory is set to -1 for a parent resetting
+			// -> this might impact performance and potentially cause parent resetting be redone
+			for (int block = 1; block < blocksize; block++)
+			{
+				SetArrayCell(array, val, INVALID_DYNAMIC_OBJECT, block);
+			}
 		}
 	}
 	return true;
@@ -1716,7 +1739,7 @@ public int Native_Dynamic_GetObject(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -1725,7 +1748,7 @@ public int Native_Dynamic_GetObject(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Object))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 		
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Object)
@@ -1733,7 +1756,7 @@ public int Native_Dynamic_GetObject(Handle plugin, int params)
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	}
 }
 
@@ -1757,7 +1780,22 @@ public int Native_Dynamic_SetObject(Handle plugin, int params)
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Object)
 	{
+		// remove parent from current value
+		int currentobject = GetMemberDataInt(array, position, offset, blocksize);
+		if (currentobject != view_as<int>(INVALID_DYNAMIC_OBJECT))
+			SetArrayCell(s_Collection, currentobject, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
+		
+		// set value
 		SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(3));
+		
+		// set parent only on first attempt
+		// the only time a parent can be reset is after the parenting member is set to INVALID_DYNAMIC_OBJECT
+		if (GetNativeCell(3) != INVALID_DYNAMIC_OBJECT)
+		{
+			if (GetArrayCell(s_Collection, GetNativeCell(3), Dynamic_ParentObject) == INVALID_DYNAMIC_OBJECT)
+				SetArrayCell(s_Collection, GetNativeCell(3), index, Dynamic_ParentObject);
+		}
+		
 		CallOnChangedForward(index, offset, membername, DynamicType_Object);
 		return offset;
 	}
@@ -1774,7 +1812,7 @@ public int Native_Dynamic_GetObjectByOffset(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
@@ -1782,7 +1820,7 @@ public int Native_Dynamic_GetObjectByOffset(Handle plugin, int params)
 	int offset = GetNativeCell(2);
 	int position;
 	if (!ValidateOffset(array, position, offset, blocksize))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Object)
@@ -1790,7 +1828,7 @@ public int Native_Dynamic_GetObjectByOffset(Handle plugin, int params)
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	}
 }
 
@@ -1848,12 +1886,12 @@ public int Native_Dynamic_GetObjectByIndex(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	int memberindex = GetNativeCell(2);
 	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
-		return INVALID_DYNAMIC_OBJECT;
+		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	return view_as<int>(Dynamic_GetObjectByOffset(view_as<Dynamic>(index), offset));
 }
@@ -1864,7 +1902,7 @@ public int Native_Dynamic_GetHandle(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
@@ -1873,7 +1911,7 @@ public int Native_Dynamic_GetHandle(Handle plugin, int params)
 	
 	int position; int offset;
 	if (!GetMemberOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Handle))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 		
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Handle)
@@ -1881,7 +1919,7 @@ public int Native_Dynamic_GetHandle(Handle plugin, int params)
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	}
 }
 
@@ -1922,7 +1960,7 @@ public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
 	// Get and validate index
 	int index = GetNativeCell(1);
 	if (!Dynamic_IsValid(index, true))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	
 	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
@@ -1930,7 +1968,7 @@ public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
 	int offset = GetNativeCell(2);
 	int position;
 	if (!ValidateOffset(array, position, offset, blocksize))
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	
 	Dynamic_MemberType type = GetMemberType(array, position, offset, blocksize);
 	if (type == DynamicType_Handle)
@@ -1938,7 +1976,7 @@ public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return INVALID_DYNAMIC_OBJECT;
+		return 0;
 	}
 }
 
@@ -2223,7 +2261,7 @@ public int Native_Dynamic_GetBool(Handle plugin, int params)
 	else if (type == DynamicType_Object)
 	{
 		int value = GetMemberDataInt(array, position, offset, blocksize);
-		if (value == INVALID_DYNAMIC_OBJECT)
+		if (value == view_as<int>(INVALID_DYNAMIC_OBJECT))
 			return false;
 		return true;
 	}
@@ -2324,7 +2362,7 @@ public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
 	else if (type == DynamicType_Object)
 	{
 		int value = GetMemberDataInt(array, position, offset, blocksize);
-		if (value == INVALID_DYNAMIC_OBJECT)
+		if (value == view_as<int>(INVALID_DYNAMIC_OBJECT))
 			return false;
 		else
 			return true;
