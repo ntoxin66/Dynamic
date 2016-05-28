@@ -1,4 +1,5 @@
 #include <dynamic>
+#include <regex>
 #pragma semicolon 1
 #pragma newdecls required
 
@@ -6,6 +7,7 @@ static Handle s_Collection = null;
 static int s_CollectionSize = 0;
 static Handle s_FreeIndicies = null;
 static Handle s_tObjectNames = null;
+static Handle g_sRegex_Vector = null;
 
 public Plugin myinfo =
 {
@@ -465,7 +467,80 @@ stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList
 	GetArrayStackAsString(value, settingvalue, valuelength);
 	value.Clear();
 	
-	Dynamic_SetString(view_as<Dynamic>(index), settingname, settingvalue, maxlength);
+	CreateMemberFromString(view_as<Dynamic>(index), settingname, settingvalue);
+}
+
+stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] membername, const char[] value)
+{
+	bool canbeint = true;
+	bool canbefloat = true;
+	int byte;
+	
+	for (int i = 0; (byte = value[i]) != 0; i++)
+	{
+		// 48 = `0`, 57 = `9`, 46 = `.`
+		if (byte < 48 || byte > 57)
+		{
+			canbeint = false;
+			
+			if (byte != 46)
+				canbefloat = false;
+		}
+		
+		if (!canbeint && !canbefloat)
+			break;
+	}
+	
+	if (canbeint)
+	{
+		obj.SetInt(membername, StringToInt(value));
+		return DynamicType_Int;
+	}
+	else if (canbefloat)
+	{
+		obj.SetFloat(membername, StringToFloat(value));
+		return DynamicType_Float;
+	}
+	else
+	{
+		// make regex if required
+		if (g_sRegex_Vector == null)
+			g_sRegex_Vector = CompileRegex("^\\{ ?+([-+]?[0-9]*\\.?[0-9]+) ?+, ?+([-+]?[0-9]*\\.?[0-9]+) ?+, ?+([-+]?[0-9]*\\.?[0-9]+) ?+\\}$");
+		
+		int count = MatchRegex(g_sRegex_Vector, value);
+		if (count == 4)
+		{
+			float vec[3];
+			char matchbuffer[64];
+			
+			GetRegexSubString(g_sRegex_Vector, 1, matchbuffer, sizeof(matchbuffer));
+			vec[0] = StringToFloat(matchbuffer);
+			
+			GetRegexSubString(g_sRegex_Vector, 2, matchbuffer, sizeof(matchbuffer));
+			vec[1] = StringToFloat(matchbuffer);
+			
+			GetRegexSubString(g_sRegex_Vector, 3, matchbuffer, sizeof(matchbuffer));
+			vec[2] = StringToFloat(matchbuffer);
+			
+			obj.SetVector(membername, vec);
+			return DynamicType_Vector;
+		}
+		
+		// check for bool last
+		if (StrEqual(value, "true", false))
+		{
+			obj.SetBool(membername, true);
+			return DynamicType_Bool;
+		}
+		else if (StrEqual(value, "false", false))
+		{
+			obj.SetBool(membername, false);
+			return DynamicType_Bool;
+		}
+		
+		obj.SetString(membername, value);
+		return DynamicType_String;
+	}	
 }
 
 stock void GetArrayStackAsString(ArrayList stack, char[] buffer, int length)
