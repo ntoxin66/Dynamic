@@ -41,6 +41,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_GetParent", Native_Dynamic_GetParent);
 	CreateNative("Dynamic_ReadConfig", Native_Dynamic_ReadConfig);
 	CreateNative("Dynamic_WriteConfig", Native_Dynamic_WriteConfig);
+	CreateNative("Dynamic_ReadKeyValues", Native_Dynamic_ReadKeyValues);
+	CreateNative("Dynamic_WriteKeyValues", Native_Dynamic_WriteKeyValues);
 	CreateNative("Dynamic_GetInt", Native_Dynamic_GetInt);
 	CreateNative("Dynamic_SetInt", Native_Dynamic_SetInt);
 	CreateNative("Dynamic_GetIntByOffset", Native_Dynamic_GetIntByOffset);
@@ -512,7 +514,367 @@ public int Native_Dynamic_WriteConfig(Handle plugin, int params)
 	}
 	
 	delete stream;
-	return 0;
+	return 1;
+}
+
+// native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false, bool valuelength=128);
+public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+		
+	// Get native params
+	int length;
+	GetNativeStringLength(2, length);
+	char[] path = new char[length];
+	GetNativeString(2, path, length+1);
+	bool use_valve_fs = GetNativeCell(3);
+	int maxlength = GetNativeCell(4);
+	
+	// Check file exists
+	if (!FileExists(path, use_valve_fs))
+	{
+		ThrowNativeError(0, "Filepath '%s' doesn't exist!", path);
+		return 0;
+	}
+	
+	// Open file for reading
+	File stream = OpenFile(path, "r", use_valve_fs);
+	
+	// Exit if failed to open
+	if (stream == null)
+	{
+		ThrowNativeError(0, "Unable to open file stream '%s'!", path);
+		return 0;
+	}
+		
+	// Loop through file in blocks
+	char buffer[16];
+	char testbuffer[1024*10];
+	int testbufferpos = 0;
+	bool readingname = true;
+	bool readingstring = false;
+	bool readingvalue = false;
+	int lastchar = 0;
+	bool skippingcomment = false;
+	ArrayList settingnamearray = CreateArray(1);
+	int settingnamelength = 0;
+	ArrayList settingvaluearray = CreateArray(1);
+	int settingvaluelength = 0;
+	
+	Dynamic child;
+	Dynamic parent = INVALID_DYNAMIC_OBJECT;
+	
+	bool waitingbrace = false;
+	
+	while ((length = stream.ReadString(buffer, sizeof(buffer))) > 0)
+	{
+		for (int i = 0; i < length; i++)
+		{
+			testbuffer[testbufferpos] = buffer[i];
+			testbufferpos++;
+			
+			int byte = buffer[i];
+			
+			// open brace
+			if (byte == 123)
+			{
+				// continue if skipping comments
+				if (skippingcomment)
+					continue;
+			
+				if (readingstring)
+				{
+					if (readingvalue)
+					{
+						settingvaluearray.Push(byte);
+						settingvaluelength++;
+						waitingbrace = false;
+					}
+					else if (readingname)
+					{
+						settingnamearray.Push(byte);
+						settingnamelength++;
+						waitingbrace = false;
+					}
+				}
+				
+				else if (readingvalue && settingvaluelength > 0)
+				{
+					settingvaluearray.Push(byte);
+					settingvaluelength++;
+					waitingbrace = false;
+				}
+				
+				else if (readingname || waitingbrace)
+				{					
+					char[] childname = new char[settingnamelength];
+					GetArrayStackAsString(settingnamearray, childname, settingnamelength);
+					
+					if (parent == INVALID_DYNAMIC_OBJECT)
+					{
+						parent = view_as<Dynamic>(index);
+					}
+					else
+					{
+						child = parent.GetObject(childname);
+						if (child == INVALID_DYNAMIC_OBJECT)
+						{
+							child = Dynamic();
+							parent.SetObject(childname, child);
+						}
+						parent = child;
+					}
+					
+					readingname = true;
+					waitingbrace = false;
+					readingstring = false;
+					readingvalue = false;
+					skippingcomment = false;
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					settingnamearray.Clear();
+					settingvaluearray.Clear();
+				}
+			}
+			
+			// close brace
+			else if (byte == 125)
+			{
+				if (readingstring)
+				{
+					if (readingvalue)
+					{
+						settingvaluearray.Push(byte);
+						settingvaluelength++;
+						waitingbrace = false;
+					}
+					else if (readingname)
+					{
+						settingnamearray.Push(byte);
+						settingnamelength++;
+						waitingbrace = false;
+					}
+				}
+				
+				else if (readingvalue)
+				{
+					settingvaluearray.Push(byte);
+					settingvaluelength++;
+					waitingbrace = false;
+				}
+				
+				else
+				{
+					parent = parent.Parent;
+					skippingcomment = true;
+				}
+			}
+			
+			// space and tabspace
+			else if (byte == 9 || byte == 32)
+			{
+				// continue if skipping comments
+				if (skippingcomment)
+					continue;
+					
+				if (readingname)
+				{
+					if (readingstring)
+					{
+						settingnamearray.Push(byte);
+						settingnamelength++;
+						waitingbrace = false;
+					}
+					else
+					{
+						if (settingnamelength > 0)
+						{
+							readingname = false;
+							readingvalue = true;
+							waitingbrace = true;
+						}
+					}
+				}
+				
+				else if (readingvalue)
+				{
+					if (readingstring)
+					{
+						settingvaluearray.Push(byte);
+						settingvaluelength++;
+						waitingbrace = false;
+					}
+					else
+					{
+						if (settingvaluelength > 0)
+							skippingcomment = true;
+					}
+				}
+			}
+			
+			// new line
+			else if (byte == 10)
+			{
+				if (readingname)
+				{
+					if (settingnamelength > 0)
+					{
+						readingname = false;
+						readingvalue = false;
+						waitingbrace = true;
+						continue;
+					}
+				}
+				
+				readingname = true;
+				waitingbrace = false;
+				readingstring = false;
+				readingvalue = false;
+				
+				if (skippingcomment && settingvaluelength == 0)
+				{
+					skippingcomment = false;
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					settingnamearray.Clear();
+					settingvaluearray.Clear();
+					continue;
+				}
+				
+				if (settingvaluelength > 0)
+				{
+					AddConfigSetting(view_as<int>(parent), settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, maxlength);
+					settingnamelength = 0;
+					settingvaluelength = 0;
+				}
+			}
+			
+			// quote
+			else if (byte == 34)
+			{
+				readingstring = !readingstring;
+				
+				if (!readingstring && readingvalue)
+				{
+					AddConfigSetting(view_as<int>(parent), settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, maxlength);
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					skippingcomment = true;
+				}
+			}
+			else
+			{
+				// continue if skipping a comment
+				if (skippingcomment)
+					continue;
+				
+				// skip double backslash comments
+				if (byte == 92 && lastchar == 92)
+				{
+					skippingcomment = true;
+					settingnamearray.Clear();
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					continue;
+				}
+				
+				lastchar = byte;
+				if (readingname)
+				{
+					char somestring[2];
+					somestring[0] = byte;
+					somestring[1] = 0;
+					
+					settingnamearray.Push(byte);
+					settingnamelength++;
+				}
+				else if (readingvalue)
+				{
+					char somestring[2];
+					somestring[0] = byte;
+					somestring[1] = 0;
+					
+					settingvaluearray.Push(byte);
+					settingvaluelength++;
+					waitingbrace = false;					
+				}
+			}
+		}
+	}
+	
+	delete stream;
+	delete settingnamearray;
+	return 1;
+}
+
+// native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false);
+public int Native_Dynamic_WriteKeyValues(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+		
+	// Get native params
+	int length;
+	GetNativeStringLength(2, length);
+	char[] path = new char[length];
+	GetNativeString(2, path, length+1);
+
+	// Open file for writting
+	File stream = OpenFile(path, "w", false);
+	
+	// Exit if failed to open
+	if (stream == null)
+	{
+		ThrowNativeError(0, "Unable to open file stream '%s'!", path);
+		return 0;
+	}
+	
+	stream.WriteLine("{");
+	WriteObjectToKeyValues(stream, view_as<Dynamic>(index), 1);
+	stream.WriteLine("}");
+	
+	delete stream;
+	return 1;
+}
+
+stock void WriteObjectToKeyValues(File stream, Dynamic obj, int indent)
+{
+	// Create indent
+	char indextext[16];
+	for (int i = 0; i < indent; i++)
+		indextext[i] = 9;
+	indextext[indent] = 0;
+	int length = 1024;
+
+	int count = GetMemberCount(view_as<int>(obj));
+	int memberoffset;
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	for (int i = 0; i < count; i++)
+	{
+		memberoffset = GetMemberOffsetByIndex(view_as<int>(obj), i);
+		GetMemberNameByIndex(view_as<int>(obj), i, membername, sizeof(membername));
+		Dynamic_MemberType type = Dynamic_GetMemberTypeByOffset(obj, memberoffset);
+		
+		if (type == DynamicType_Object)
+		{
+			stream.WriteLine("%s\"%s\"", indextext, membername);
+			stream.WriteLine("%s{", indextext);
+			WriteObjectToKeyValues(stream, obj.GetObjectByOffset(memberoffset), indent+1);
+			stream.WriteLine("%s}", indextext);
+		}
+		else
+		{
+			//length = GetStringLengthByOffset(view_as<int>(obj), memberoffset);
+			char[] membervalue = new char[length];
+			Dynamic_GetStringByOffset(obj, memberoffset, membervalue, length);
+			stream.WriteLine("%s\"%s\"\t\"%s\"", indextext, membername, membervalue);
+		}
+	}
 }
 
 // native bool Dynamic_IsValid(int index, bool throwerror=false);

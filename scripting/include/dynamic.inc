@@ -160,6 +160,16 @@ methodmap Dynamic
 		return Dynamic_WriteConfig(this, path);
 	}
 	
+	public bool ReadKeyValues(const char[] path, bool use_valve_fs = false, int valuelength = 128)
+	{
+		return Dynamic_ReadKeyValues(this, path, use_valve_fs, valuelength);
+	}
+	
+	public bool WriteKeyValues(const char[] path)
+	{
+		return Dynamic_WriteKeyValues(this, path);
+	}
+	
 	public static Dynamic GetSettings()
 	{
 		return view_as<Dynamic>(0);

@@ -17,8 +17,39 @@ public void OnPluginStart()
 
 stock void BenchmarkTest()
 {
-	// parenting testing
+
+	// KeyValues testing
 	
+	/*Dynamic kv = Dynamic();
+	kv.SetInt("someint", 666);
+	kv.SetFloat("somefloat", 6.66);
+	kv.SetString("somestring", "twist needs to map for me");
+
+	Dynamic kvchild1 = Dynamic();
+	kv.SetObject("child", kvchild1);
+	kvchild1.SetInt("someint", 666);
+	kvchild1.SetFloat("somefloat", 6.66);
+	kvchild1.SetString("somestring", "twist needs to map for me");
+	
+	Dynamic kvchild2 = Dynamic();
+	kv.SetObject("child2", kvchild2);
+	
+	Dynamic_WriteKeyValues(kv, "keyvalues_test.txt");
+
+	kv.Dispose(); // child members auto dispose*/
+	
+	Dynamic kv = Dynamic();
+	Dynamic_ReadKeyValues(kv, "keyvalues_test.txt", false, 1024);
+	Dynamic_WriteKeyValues(kv, "keyvalues_test2.txt");
+
+
+
+
+
+
+	return;
+	
+	// parenting testing
 	Dynamic parent = Dynamic();
 	Dynamic child = Dynamic();
 	Dynamic anotherchild = Dynamic();
