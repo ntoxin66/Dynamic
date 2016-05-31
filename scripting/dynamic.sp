@@ -334,8 +334,6 @@ public int Native_Dynamic_ReadConfig(Handle plugin, int params)
 		
 	// Loop through file in blocks
 	char buffer[16];
-	char testbuffer[1024*10];
-	int testbufferpos = 0;
 	bool readingname = true;
 	bool readingstring = false;
 	bool readingvalue = false;
@@ -349,9 +347,6 @@ public int Native_Dynamic_ReadConfig(Handle plugin, int params)
 	{
 		for (int i = 0; i < length; i++)
 		{
-			testbuffer[testbufferpos] = buffer[i];
-			testbufferpos++;
-			
 			int byte = buffer[i];
 			
 			// space and tabspace
