@@ -454,6 +454,7 @@ public int Native_Dynamic_ReadConfig(Handle plugin, int params)
 	
 	delete stream;
 	delete settingnamearray;
+	delete settingvaluearray;
 	return 1;
 }
 
@@ -882,6 +883,7 @@ public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 	
 	delete stream;
 	delete settingnamearray;
+	delete settingvaluearray;
 	return 1;
 }
 
