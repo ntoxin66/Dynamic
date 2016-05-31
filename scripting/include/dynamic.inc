@@ -150,7 +150,7 @@ methodmap Dynamic
 		return Dynamic_FindByName(objectname);
 	}
 	
-	public bool ReadConfig(const char[] path, bool use_valve_fs = false, int valuelength = 128)
+	public bool ReadConfig(const char[] path, bool use_valve_fs = false, int valuelength = 256)
 	{
 		return Dynamic_ReadConfig(this, path, use_valve_fs, valuelength);
 	}
@@ -160,7 +160,7 @@ methodmap Dynamic
 		return Dynamic_WriteConfig(this, path);
 	}
 	
-	public bool ReadKeyValues(const char[] path, bool use_valve_fs = false, int valuelength = 128)
+	public bool ReadKeyValues(const char[] path, bool use_valve_fs = false, int valuelength = 256)
 	{
 		return Dynamic_ReadKeyValues(this, path, use_valve_fs, valuelength);
 	}

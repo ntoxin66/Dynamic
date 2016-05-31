@@ -1,13 +1,14 @@
 #include <dynamic>
 #include <regex>
-#pragma semicolon 1
 #pragma newdecls required
+#pragma semicolon 1
 
 static Handle s_Collection = null;
 static int s_CollectionSize = 0;
 static Handle s_FreeIndicies = null;
 static Handle s_tObjectNames = null;
 static Handle g_sRegex_Vector = null;
+static int g_iDynamic_MemberLookup_Offset;
 
 public Plugin myinfo =
 {
@@ -23,13 +24,15 @@ public Plugin myinfo =
 #define Dynamic_Blocksize				2
 #define Dynamic_Offsets					3
 #define Dynamic_MemberNames				4
-#define Dynamic_MemberOffsets			5
+//#define Dynamic_MemberOffsets			5
 #define Dynamic_Data						6
 #define Dynamic_Forwards					7
 #define Dynamic_NextOffset				8
 #define Dynamic_CallbackCount			9
 #define Dynamic_ParentObject				10
-#define Dynamic_Field_Count				11
+// MemberCount needs to be implemented for member iterator performance
+#define Dynamic_MemberCount				11
+#define Dynamic_Field_Count				12
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -111,6 +114,7 @@ public void OnPluginStart()
 	s_CollectionSize = 0;
 	s_FreeIndicies = CreateStack();
 	s_tObjectNames = CreateTrie();
+	g_iDynamic_MemberLookup_Offset = ByteCountToCells(DYNAMIC_MEMBERNAME_MAXLEN)+1;
 	
 	// Reserve first object index for global settings
 	Dynamic settings = Dynamic();
@@ -169,12 +173,8 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, CreateTrie(), Dynamic_Offsets);
 	SetArrayCell(s_Collection, index, CreateArray(blocksize, startsize), Dynamic_Data);
 	SetArrayCell(s_Collection, index, CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell), Dynamic_Forwards);
-	
-	// Dynamic needs to reduce its handle count to allow larger datasets to load
-	// Dynamic_MemberOffsets can be combined into Dynamic_MemberNames
-	// Dynamic_MemberNames length = DYNAMIC_MEMBERNAME_MAXLEN + 1 and position 0 can hold the offset
-	SetArrayCell(s_Collection, index, CreateArray(DYNAMIC_MEMBERNAME_MAXLEN), Dynamic_MemberNames);
-	SetArrayCell(s_Collection, index, CreateArray(DYNAMIC_MEMBERNAME_MAXLEN), Dynamic_MemberOffsets);
+	SetArrayCell(s_Collection, index, CreateArray(g_iDynamic_MemberLookup_Offset+1), Dynamic_MemberNames);
+	//SetArrayCell(s_Collection, index, CreateArray(), Dynamic_MemberOffsets);
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
@@ -225,7 +225,7 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Data));
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Forwards));
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberNames));
-	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberOffsets));
+	//CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberOffsets));
 	
 	// Remove all indicies from the end of the array which are empty (trimend array)
 	if (index + 1 == s_CollectionSize)
@@ -507,6 +507,7 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 		if (g_sRegex_Vector == null)
 			g_sRegex_Vector = CompileRegex("^\\{ ?+([-+]?[0-9]*\\.?[0-9]+) ?+, ?+([-+]?[0-9]*\\.?[0-9]+) ?+, ?+([-+]?[0-9]*\\.?[0-9]+) ?+\\}$");
 		
+		// check for vector
 		int count = MatchRegex(g_sRegex_Vector, value);
 		if (count == 4)
 		{
@@ -624,11 +625,9 @@ public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 		ThrowNativeError(0, "Unable to open file stream '%s'!", path);
 		return 0;
 	}
-		
+	
 	// Loop through file in blocks
 	char buffer[16];
-	char testbuffer[1024*10];
-	int testbufferpos = 0;
 	bool readingname = true;
 	bool readingstring = false;
 	bool readingvalue = false;
@@ -648,9 +647,6 @@ public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 	{
 		for (int i = 0; i < length; i++)
 		{
-			testbuffer[testbufferpos] = buffer[i];
-			testbufferpos++;
-			
 			int byte = buffer[i];
 			
 			// open brace
@@ -996,7 +992,7 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 		return false;
 	
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	Handle memberoffsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
+	int memberindex;
 	
 	// Create new entry
 	if (newtype == DynamicType_String)
@@ -1009,8 +1005,8 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 		
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
 		SetTrieValue(offsets, membername, offset);
-		PushArrayString(membernames, membername);
-		PushArrayCell(memberoffsets, offset);
+		memberindex = PushArrayString(membernames, membername);
+		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, ByteCountToCells(stringlength));
 		SetMemberType(array, position, offset, blocksize, newtype);
@@ -1022,8 +1018,8 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 	{
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
 		SetTrieValue(offsets, membername, offset);
-		PushArrayString(membernames, membername);
-		PushArrayCell(memberoffsets, offset);
+		memberindex = PushArrayString(membernames, membername);
+		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, 3);
 		SetMemberType(array, position, offset, blocksize, newtype);
@@ -1034,8 +1030,8 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 	{
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
 		SetTrieValue(offsets, membername, offset);
-		PushArrayString(membernames, membername);
-		PushArrayCell(memberoffsets, offset);
+		memberindex = PushArrayString(membernames, membername);
+		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, 1);
 		SetMemberType(array, position, offset, blocksize, newtype);
@@ -1048,7 +1044,6 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 {
 	int memberindex;
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	Handle memberoffsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
 	
 	if (type == DynamicType_String)
 	{
@@ -1059,8 +1054,8 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 		}
 		
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-		PushArrayString(membernames, "");
-		memberindex = PushArrayCell(memberoffsets, offset);
+		memberindex = PushArrayString(membernames, "");
+		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, ByteCountToCells(stringlength));
 		SetMemberType(array, position, offset, blocksize, type);
@@ -1071,8 +1066,8 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 	else if (type == DynamicType_Vector)
 	{
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-		PushArrayString(membernames, "");
-		memberindex = PushArrayCell(memberoffsets, offset);
+		memberindex = PushArrayString(membernames, "");
+		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, 3);
 		SetMemberType(array, position, offset, blocksize, type);
@@ -1082,8 +1077,8 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 	else
 	{
 		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-		PushArrayString(membernames, "");
-		memberindex = PushArrayCell(memberoffsets, offset);
+		memberindex = PushArrayString(membernames, "");
+		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, 1);
 		SetMemberType(array, position, offset, blocksize, type);
@@ -2314,7 +2309,7 @@ public int Native_Dynamic_PushObject(Handle plugin, int params)
 	
 	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Object);
 	SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(2));
-	//CallOnChangedForward(index, offset, membername, DynamicType_Int);
+	//CallOnChangedForward(index, offset, "Pushed", DynamicType_Object);
 	return memberindex;
 }
 
@@ -3003,15 +2998,11 @@ public int Native_Dynamic_GetMemberOffsetByIndex(Handle plugin, int params)
 
 public int GetMemberOffsetByIndex(int index, int memberindex)
 {
-	Handle memberoffsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
+	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
 	
-	// -> This is slow and should be replaced
-	int membercount = GetArraySize(memberoffsets);
-	
-	if (memberindex < membercount)
-		return GetArrayCell(memberoffsets, memberindex);
-	else
-		return INVALID_DYNAMIC_OFFSET;
+	// We dont validate the size of the member count for performance
+	// This means a plugin calling for an invalid index will generate errors
+	return GetArrayCell(membernames, memberindex, g_iDynamic_MemberLookup_Offset);
 }
 
 // native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
@@ -3098,12 +3089,12 @@ public int Native_Dynamic_GetMemberNameByOffset(Handle plugin, int params)
 	int offset = GetNativeCell(2);
 	
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	Handle memberoffsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
+	// GetArraySize is expensive, we need to implement an internal member counter
 	int membercount = GetArraySize(membernames);
 	
 	for (int i = 0; i < membercount; i++)
 	{
-		if (GetArrayCell(memberoffsets, i) == offset)
+		if (GetArrayCell(membernames, i, g_iDynamic_MemberLookup_Offset) == offset)
 		{
 			char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 			GetArrayString(membernames, i, membername, sizeof(membername));
@@ -3128,7 +3119,6 @@ public int Native_Dynamic_SortMembers(Handle plugin, int params)
 	
 	// Dont bother sorting if there are no members
 	Handle members = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	Handle offsets = GetArrayCell(s_Collection, index, Dynamic_MemberOffsets);
 	Handle offsetstrie = GetArrayCell(s_Collection, index, Dynamic_Offsets);
 	char[][] membernames = new char[count][DYNAMIC_MEMBERNAME_MAXLEN];
 	int offset;
@@ -3143,7 +3133,6 @@ public int Native_Dynamic_SortMembers(Handle plugin, int params)
 	
 	// Clear current member index lookup arrays
 	ClearArray(members);
-	ClearArray(offsets);
 	
 	// Rebuild member lookup arrays based on sorted membernames
 	for (int memberindex = 0; memberindex < count; memberindex++)
@@ -3151,8 +3140,8 @@ public int Native_Dynamic_SortMembers(Handle plugin, int params)
 		if (!GetTrieValue(offsetstrie, membernames[memberindex], offset))
 			continue;
 		
-		PushArrayString(members, membernames[memberindex]);
-		PushArrayCell(offsets, offset);
+		memberindex = PushArrayString(members, membernames[memberindex]);
+		SetArrayCell(members, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 	}
 	return 1;
 }
