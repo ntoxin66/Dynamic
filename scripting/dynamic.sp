@@ -169,6 +169,10 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, CreateTrie(), Dynamic_Offsets);
 	SetArrayCell(s_Collection, index, CreateArray(blocksize, startsize), Dynamic_Data);
 	SetArrayCell(s_Collection, index, CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell), Dynamic_Forwards);
+	
+	// Dynamic needs to reduce its handle count to allow larger datasets to load
+	// Dynamic_MemberOffsets can be combined into Dynamic_MemberNames
+	// Dynamic_MemberNames length = DYNAMIC_MEMBERNAME_MAXLEN + 1 and position 0 can hold the offset
 	SetArrayCell(s_Collection, index, CreateArray(DYNAMIC_MEMBERNAME_MAXLEN), Dynamic_MemberNames);
 	SetArrayCell(s_Collection, index, CreateArray(DYNAMIC_MEMBERNAME_MAXLEN), Dynamic_MemberOffsets);
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
