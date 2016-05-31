@@ -20,19 +20,18 @@ public Plugin myinfo =
 }
 
 #define Dynamic_Index						0
+// Size isn't yet implement for optimisation around ExpandIfRequired()
 #define Dynamic_Size						1
 #define Dynamic_Blocksize				2
 #define Dynamic_Offsets					3
 #define Dynamic_MemberNames				4
-//#define Dynamic_MemberOffsets			5
-#define Dynamic_Data						6
-#define Dynamic_Forwards					7
-#define Dynamic_NextOffset				8
-#define Dynamic_CallbackCount			9
-#define Dynamic_ParentObject				10
-// MemberCount needs to be implemented for member iterator performance
-#define Dynamic_MemberCount				11
-#define Dynamic_Field_Count				12
+#define Dynamic_Data						5
+#define Dynamic_Forwards					6
+#define Dynamic_NextOffset				7
+#define Dynamic_CallbackCount			8
+#define Dynamic_ParentObject				9
+#define Dynamic_MemberCount				10
+#define Dynamic_Field_Count				11
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -178,6 +177,7 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
+	SetArrayCell(s_Collection, index, 0, Dynamic_MemberCount);
 	
 	// Return the next index
 	return index;
@@ -225,7 +225,6 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Data));
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Forwards));
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberNames));
-	//CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberOffsets));
 	
 	// Remove all indicies from the end of the array which are empty (trimend array)
 	if (index + 1 == s_CollectionSize)
@@ -994,6 +993,9 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
 	int memberindex;
 	
+	// Increment member count
+	SetArrayCell(s_Collection, index, GetMemberCount(index), Dynamic_MemberCount);
+	
 	// Create new entry
 	if (newtype == DynamicType_String)
 	{
@@ -1044,6 +1046,9 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 {
 	int memberindex;
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
+	
+	// Increment member count
+	SetArrayCell(s_Collection, index, GetMemberCount(index), Dynamic_MemberCount);
 	
 	if (type == DynamicType_String)
 	{
@@ -1108,6 +1113,7 @@ stock bool RecalculateOffset(Handle array, int &position, int &offset, int block
 	{
 		// Expand array if offset is outside of array bounds
 		// Performance: Get array size should be replaced with an size counter
+		// The above needs a really good think!!
 		int size = GetArraySize(array);
 		while (size <= position)
 		{
@@ -1346,7 +1352,7 @@ stock int GetMemberCount(int index)
 {
 	// A simple way to ge the member count
 	// -> If performance is faster to store a count for the object this will be updated
-	return GetTrieSize(GetArrayCell(s_Collection, index, Dynamic_Offsets));
+	return GetArrayCell(s_Collection, index, Dynamic_MemberCount);
 }
 
 // native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue=-1);
@@ -3066,7 +3072,7 @@ public int Native_Dynamic_GetMemberNameByIndex(Handle plugin, int params)
 public bool GetMemberNameByIndex(int index, int memberindex, char[] buffer, int size)
 {
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	int membercount = GetArraySize(membernames);
+	int membercount = GetMemberCount(index);
 	
 	if (memberindex >= membercount)
 	{
@@ -3089,8 +3095,7 @@ public int Native_Dynamic_GetMemberNameByOffset(Handle plugin, int params)
 	int offset = GetNativeCell(2);
 	
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	// GetArraySize is expensive, we need to implement an internal member counter
-	int membercount = GetArraySize(membernames);
+	int membercount = GetMemberCount(index);
 	
 	for (int i = 0; i < membercount; i++)
 	{
@@ -3144,19 +3149,6 @@ public int Native_Dynamic_SortMembers(Handle plugin, int params)
 		SetArrayCell(members, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 	}
 	return 1;
-}
-
-stock int GetFieldIndex(Handle array, const char[] fieldname)
-{
-	int length = GetArraySize(array);
-	
-	for (int i; i < length; i++)
-	{
-		if (StrEqualEx(array, i, fieldname))
-			return i;
-	}
-	
-	return -1;
 }
 
 stock bool StrEqualEx(Handle array, int index, const char[] fieldname)
