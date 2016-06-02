@@ -626,7 +626,7 @@ public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 	}
 	
 	// Loop through file in blocks
-	char buffer[16];
+	char buffer[2048];
 	bool readingname = true;
 	bool readingstring = false;
 	bool readingvalue = false;
@@ -689,13 +689,22 @@ public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 					}
 					else
 					{
-						child = parent.GetObject(childname);
-						if (child == INVALID_DYNAMIC_OBJECT)
+						if (childname[0] == '\0')
 						{
 							child = Dynamic();
-							parent.SetObject(childname, child);
+							parent.PushObject(child);
+							parent = child;
 						}
-						parent = child;
+						else
+						{
+							child = parent.GetObject(childname);
+							if (child == INVALID_DYNAMIC_OBJECT)
+							{
+								child = Dynamic();
+								parent.SetObject(childname, child);
+							}
+							parent = child;
+						}
 					}
 					
 					readingname = true;
