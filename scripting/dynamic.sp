@@ -994,7 +994,7 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 	int memberindex;
 	
 	// Increment member count
-	SetArrayCell(s_Collection, index, GetMemberCount(index), Dynamic_MemberCount);
+	SetArrayCell(s_Collection, index, GetMemberCount(index)+1, Dynamic_MemberCount);
 	
 	// Create new entry
 	if (newtype == DynamicType_String)
