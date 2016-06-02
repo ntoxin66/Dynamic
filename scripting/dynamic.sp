@@ -2309,12 +2309,16 @@ public int Native_Dynamic_PushObject(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return INVALID_DYNAMIC_OFFSET;
 	
+	int value = GetNativeCell(2);
+	
 	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	SetArrayCell(s_Collection, value, index, Dynamic_ParentObject);
 	int position; int offset;
 	
 	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Object);
-	SetMemberDataInt(array, position, offset, blocksize, GetNativeCell(2));
+	SetMemberDataInt(array, position, offset, blocksize, value);
+	
 	//CallOnChangedForward(index, offset, "Pushed", DynamicType_Object);
 	return memberindex;
 }
