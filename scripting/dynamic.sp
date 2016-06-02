@@ -1048,7 +1048,7 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
 	
 	// Increment member count
-	SetArrayCell(s_Collection, index, GetMemberCount(index), Dynamic_MemberCount);
+	SetArrayCell(s_Collection, index, GetMemberCount(index)+1, Dynamic_MemberCount);
 	
 	if (type == DynamicType_String)
 	{
