@@ -477,9 +477,12 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 	
 	for (int i = 0; (byte = value[i]) != 0; i++)
 	{
-		// 48 = `0`, 57 = `9`, 46 = `.`
+		// 48 = `0`, 57 = `9`, 46 = `.`, 45 = `-`
 		if (byte < 48 || byte > 57)
 		{
+			if (byte == 45 && i == 0)
+				continue;
+			
 			canbeint = false;
 			
 			if (byte != 46)
