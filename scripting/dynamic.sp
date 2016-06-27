@@ -15,7 +15,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.15",
+	version = "0.0.16",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -79,6 +79,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_SetObjectByOffset", Native_Dynamic_SetObjectByOffset);
 	CreateNative("Dynamic_PushObject", Native_Dynamic_PushObject);
 	CreateNative("Dynamic_GetObjectByIndex", Native_Dynamic_GetObjectByIndex);
+	CreateNative("Dynamic_SetObjectByIndex", Native_Dynamic_SetObjectByIndex);
 	CreateNative("Dynamic_GetHandle", Native_Dynamic_GetHandle);
 	CreateNative("Dynamic_SetHandle", Native_Dynamic_SetHandle);
 	CreateNative("Dynamic_GetHandleByOffset", Native_Dynamic_GetHandleByOffset);
@@ -2349,6 +2350,24 @@ public int Native_Dynamic_GetObjectByIndex(Handle plugin, int params)
 		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	return view_as<int>(Dynamic_GetObjectByOffset(view_as<Dynamic>(index), offset));
+}
+
+// native bool Dynamic_SetObjectByIndex(Dynamic obj, int index, Dynamic value);
+public int Native_Dynamic_SetObjectByIndex(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index, true))
+		return false;
+	
+	int memberindex = GetNativeCell(2);
+	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return false;
+		
+	Dynamic value = GetNativeCell(3);
+	Dynamic_SetObjectByOffset(view_as<Dynamic>(index), offset, value);
+	return true;
 }
 
 // native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);

@@ -82,6 +82,7 @@ native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
 native int Dynamic_PushObject(Dynamic obj, Dynamic value);
 native Dynamic Dynamic_GetObjectByIndex(Dynamic obj, int index);
+native bool Dynamic_SetObjectByIndex(Dynamic obj, int index, Dynamic value);
 
 native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultvalue=false);
 native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
@@ -340,6 +341,11 @@ methodmap Dynamic
 		return Dynamic_GetObjectByIndex(this, index);
 	}
 	
+	public bool SetObjectByIndex(int index, Dynamic value)
+	{
+		return Dynamic_SetObjectByIndex(this, index, value);
+	}
+	
 	public Handle GetHandle(const char[] membername)
 	{
 		return Dynamic_GetHandle(this, membername);
@@ -491,6 +497,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetObjectByOffset");
 	MarkNativeAsOptional("Dynamic_PushObject");
 	MarkNativeAsOptional("Dynamic_GetObjectByIndex");
+	MarkNativeAsOptional("Dynamic_SetObjectByIndex");
 	MarkNativeAsOptional("Dynamic_GetHandle");
 	MarkNativeAsOptional("Dynamic_SetHandle");
 	MarkNativeAsOptional("Dynamic_GetHandleByOffset");
