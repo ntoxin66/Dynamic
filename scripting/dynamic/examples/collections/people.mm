@@ -47,4 +47,12 @@ methodmap People < Dynamic
 
 		return this.PushObject(item);
 	}
+	
+	public void RemoveItem(Dynamic item)
+	{
+		if (!item.IsValid)
+			return;
+		
+		item.Dispose();
+	}
 }
