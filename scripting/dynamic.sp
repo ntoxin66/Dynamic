@@ -467,10 +467,10 @@ stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList
 	GetArrayStackAsString(value, settingvalue, valuelength);
 	value.Clear();
 	
-	CreateMemberFromString(view_as<Dynamic>(index), settingname, settingvalue);
+	CreateMemberFromString(view_as<Dynamic>(index), settingname, settingvalue, maxlength);
 }
 
-stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] membername, const char[] value)
+stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] membername, const char[] value, int maxlength)
 {
 	bool canbeint = true;
 	bool canbefloat = true;
@@ -542,7 +542,7 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 			return DynamicType_Bool;
 		}
 		
-		obj.SetString(membername, value);
+		obj.SetString(membername, value, maxlength);
 		return DynamicType_String;
 	}	
 }
