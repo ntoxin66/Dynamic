@@ -475,6 +475,7 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 	bool canbeint = true;
 	bool canbefloat = true;
 	int byte;
+	int val;
 	
 	for (int i = 0; (byte = value[i]) != 0; i++)
 	{
@@ -496,8 +497,18 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 	
 	if (canbeint)
 	{
-		obj.SetInt(membername, StringToInt(value));
-		return DynamicType_Int;
+		// Longs need to be stored as strings
+		val = StringToInt(value);
+		if (val == -1 && StrEqual(value, "-1"))
+		{
+			obj.SetInt(membername, val);
+			return DynamicType_Int;
+		}
+		else
+		{
+			obj.SetString(membername, value, maxlength);
+			return DynamicType_String;
+		}
 	}
 	else if (canbefloat)
 	{
