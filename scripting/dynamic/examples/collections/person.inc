@@ -1,7 +1,7 @@
-#if defined _dynamic_methodmap_person_
+#if defined _dynamic_methodmap_person
   #endinput
 #endif
-#define _dynamic_methodmap_person_
+#define _dynamic_methodmap_person
 
 /*
 	This example demonstrates how to easily store data for your
