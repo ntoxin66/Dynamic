@@ -7,10 +7,10 @@ methodmap Collection < ArrayList
 {
 	public Collection()
 	{
-		return new ArrayList();
+		return view_as<Collection>(new ArrayList());
 	}
 	
-	public void Dispose(bool disposemembers=false)
+	public void Dispose(bool disposemembers=true)
 	{
 		if (disposemembers)
 		{
