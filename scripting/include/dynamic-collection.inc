@@ -10,8 +10,22 @@ methodmap Collection < ArrayList
 		return new ArrayList();
 	}
 	
-	public void Dispose()
+	public void Dispose(bool disposemembers=false)
 	{
+		if (disposemembers)
+		{
+			int count = this.Length;
+			Dynamic member;
+			for (int i = 0; i < count; i++)
+			{
+				member = view_as<Dynamic>(i);
+				if (!member.IsValid)
+					continue;
+					
+				member.Dispose();
+			}
+		}
+		
 		CloseHandle(this);
 	}
 	
