@@ -1,15 +1,15 @@
 #include <dynamic>
-#include "dynamic/examples/collections/person.mm"
-#include "dynamic/examples/collections/people.mm"
+#include "person.inc"
+#include "people.inc"
 #pragma newdecls required
 #pragma semicolon 1
 
 public void OnPluginStart()
 {
-	// New people collection as defined in `collection.inc`
-	People people = People();
+	// New people collection as defined in `people.inc`
+	People people = new People();
 	
-	// New person as defined in `methodmap.inc`
+	// New person as defined in `person.inc`
 	Person person = Person();
 	person.SetName("Neuro Toxin");
 	person.Age = 32;
@@ -27,10 +27,10 @@ public void OnPluginStart()
 	person.IsAlive = true;
 	people.AddItem(person);
 	
-	// Iterating people
-	for (int index = 0; index < people.MemberCount; index++)
+	// Iterating people in the collection
+	for (int index = 0; index < people.Count; index++)
 	{
-		person = view_as<Person>(people.Items(index));
+		person = people.Items(index);
 		if (!person.IsValid)
 			continue;
 		
