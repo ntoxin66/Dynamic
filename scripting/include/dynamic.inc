@@ -1,7 +1,7 @@
-#if defined _dynamic_included_
+#if defined _dynamic_included
   #endinput
 #endif
-#define _dynamic_included_
+#define _dynamic_included
 
 #define INVALID_DYNAMIC_OBJECT			view_as<Dynamic>(-1)
 #define INVALID_DYNAMIC_OFFSET			-1
@@ -524,6 +524,8 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SortMembers");
 }
 #endif
+
+#include <dynamic-collection>
 
 public SharedPlugin __pl_dynamic = 
 {
