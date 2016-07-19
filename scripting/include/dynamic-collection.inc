@@ -10,7 +10,7 @@ methodmap Collection < ArrayList
 		return view_as<Collection>(new ArrayList());
 	}
 	
-	public void Dispose(bool disposemembers=true)
+	public void Clear(bool disposemembers=true)
 	{
 		if (disposemembers)
 		{
@@ -25,6 +25,14 @@ methodmap Collection < ArrayList
 				member.Dispose();
 			}
 		}
+		
+		this.Clear();
+	}
+	
+	public void Dispose(bool disposemembers=true)
+	{
+		if (disposemembers)
+			this.Clear(true)
 		
 		CloseHandle(this);
 	}
@@ -64,6 +72,11 @@ methodmap Collection < ArrayList
 		if (index == -1)
 			return;
 			
+		this.Erase(index);
+	}
+	
+	public void RemoveIndex(int index)
+	{
 		this.Erase(index);
 	}
 }
