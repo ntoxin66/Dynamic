@@ -22,6 +22,15 @@
 #endif
 #define _dynamic_collection_included
 
+/*
+	This methodmap is used to store typed collections based on Dynamic methodmaps. Internally
+	an ArrayList is used for storage. This methodmap can be inherited by your own methodmaps
+	where you can override the Items method to return your custom methodmap type which MUST
+	inherit a Dynamic methodmap.
+	
+	Please see '\scripting\dynamic\examples\collections\' for an example usage of this methodmap
+*/
+
 methodmap Collection < ArrayList
 {
 	public Collection()
