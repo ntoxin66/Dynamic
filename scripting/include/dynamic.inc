@@ -545,6 +545,7 @@ public __pl_dynamic_SetNTVOptional()
 #endif
 
 #include <dynamic-collection>
+#include <dynamic-basic>
 
 public SharedPlugin __pl_dynamic = 
 {
