@@ -51,7 +51,8 @@ public Plugin myinfo =
 #define Dynamic_CallbackCount			8
 #define Dynamic_ParentObject				9
 #define Dynamic_MemberCount				10
-#define Dynamic_Field_Count				11
+#define Dynamic_OwnerPlugin				11
+#define Dynamic_Field_Count				12
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -163,6 +164,21 @@ public void OnPluginEnd()
 	}
 }
 
+public void OnMapStart()
+{
+	// Dispose all objects owned by terminated plugins
+	Handle plugin;
+	PluginStatus status;
+	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
+	{
+		plugin = GetArrayCell(s_Collection, i, Dynamic_OwnerPlugin);
+		status = GetPluginStatus(plugin);
+		
+		if (status == Plugin_Error || status == Plugin_Failed)
+			Dynamic_Dispose(i, false);
+	}
+}
+
 // native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0);
 public int Native_Dynamic_Initialise(Handle plugin, int params)
 {
@@ -194,11 +210,11 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, CreateArray(blocksize, startsize), Dynamic_Data);
 	SetArrayCell(s_Collection, index, CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell), Dynamic_Forwards);
 	SetArrayCell(s_Collection, index, CreateArray(g_iDynamic_MemberLookup_Offset+1), Dynamic_MemberNames);
-	//SetArrayCell(s_Collection, index, CreateArray(), Dynamic_MemberOffsets);
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
 	SetArrayCell(s_Collection, index, 0, Dynamic_MemberCount);
+	SetArrayCell(s_Collection, index, plugin, Dynamic_OwnerPlugin);
 	
 	// Return the next index
 	return index;
