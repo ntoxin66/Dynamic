@@ -171,6 +171,10 @@ public void OnMapStart()
 	PluginStatus status;
 	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
 	{
+		// Skip disposed objects
+		if (!Dynamic_IsValid(i, false))
+			continue;
+			
 		plugin = GetArrayCell(s_Collection, i, Dynamic_OwnerPlugin);
 		status = GetPluginStatus(plugin);
 		
