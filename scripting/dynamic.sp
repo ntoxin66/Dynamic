@@ -39,20 +39,21 @@ public Plugin myinfo =
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
-#define Dynamic_Index						0
+#define Dynamic_Index					0
 // Size isn't yet implement for optimisation around ExpandIfRequired()
-#define Dynamic_Size						1
+#define Dynamic_Size					1
 #define Dynamic_Blocksize				2
 #define Dynamic_Offsets					3
 #define Dynamic_MemberNames				4
-#define Dynamic_Data						5
-#define Dynamic_Forwards					6
+#define Dynamic_Data					5
+#define Dynamic_Forwards				6
 #define Dynamic_NextOffset				7
 #define Dynamic_CallbackCount			8
-#define Dynamic_ParentObject				9
+#define Dynamic_ParentObject			9
 #define Dynamic_MemberCount				10
 #define Dynamic_OwnerPlugin				11
-#define Dynamic_Field_Count				12
+#define Dynamic_Persistent				12
+#define Dynamic_Field_Count				13
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -64,6 +65,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Dynamic_SetName", Native_Dynamic_SetName);
 	CreateNative("Dynamic_FindByName", Native_Dynamic_FindByName);
 	CreateNative("Dynamic_GetParent", Native_Dynamic_GetParent);
+	CreateNative("Dynamic_GetPersistence", Native_Dynamic_GetPersistence);
+	CreateNative("Dynamic_SetPersistence", Native_Dynamic_SetPersistence);
 	CreateNative("Dynamic_ReadConfig", Native_Dynamic_ReadConfig);
 	CreateNative("Dynamic_WriteConfig", Native_Dynamic_WriteConfig);
 	CreateNative("Dynamic_ReadKeyValues", Native_Dynamic_ReadKeyValues);
@@ -175,6 +178,10 @@ public void OnMapStart()
 		if (!Dynamic_IsValid(i, false))
 			continue;
 			
+		// Skip persistent objects
+		if (GetArrayCell(s_Collection, i, Dynamic_Persistent))
+			continue;
+			
 		plugin = GetArrayCell(s_Collection, i, Dynamic_OwnerPlugin);
 		status = GetPluginStatus(plugin);
 		
@@ -183,11 +190,12 @@ public void OnMapStart()
 	}
 }
 
-// native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0);
+// native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0, bool persistent=false);
 public int Native_Dynamic_Initialise(Handle plugin, int params)
 {
 	int blocksize = GetNativeCell(1);
 	int startsize = GetNativeCell(2);
+	bool persistent = GetNativeCell(3);
 	int index = -1;
 	
 	// Always try to reuse a previously disposed index
@@ -219,6 +227,7 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
 	SetArrayCell(s_Collection, index, 0, Dynamic_MemberCount);
 	SetArrayCell(s_Collection, index, plugin, Dynamic_OwnerPlugin);
+	SetArrayCell(s_Collection, index, persistent, Dynamic_Persistent);
 	
 	// Return the next index
 	return index;
@@ -341,6 +350,29 @@ public int Native_Dynamic_GetParent(Handle plugin, int params)
 		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
 	return GetArrayCell(s_Collection, index, Dynamic_ParentObject);
+}
+
+// native bool Dynamic_GetPersistence(Dynamic obj);
+public int Native_Dynamic_GetPersistence(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+		
+	return GetArrayCell(s_Collection, index, Dynamic_Persistent);
+}
+
+// native bool Dynamic_SetPersistence(Dynamic obj, bool value);
+public int Native_Dynamic_SetPersistence(Handle plugin, int params)
+{
+	// Get and validate index
+	int index = GetNativeCell(1);
+	if (!Dynamic_IsValid(index))
+		return 0;
+		
+	SetArrayCell(s_Collection, index, GetNativeCell(2), Dynamic_Persistent);
+	return 1;
 }
 
 // native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs = false, bool valuelength=128);
