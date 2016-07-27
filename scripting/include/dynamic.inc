@@ -45,7 +45,7 @@ typeset DynamicHookCB
 
 native int Dynamic_GetCollectionSize();
 
-native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0);
+native Dynamic Dynamic_Initialise(int blocksize=64, int startsize = 0, bool persistent = false);
 native bool Dynamic_IsValid(int index, bool throwerror=false);
 native bool Dynamic_Dispose(int index, bool disposemembers);
 
@@ -53,11 +53,14 @@ native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
 native Dynamic Dynamic_FindByName(const char[] objectname);
 native Dynamic Dynamic_GetParent(Dynamic obj);
 
-native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs = false, int valuelength);
-native bool Dynamic_WriteConfig(Dynamic obj, const char[] path, bool use_valve_fs = false);
+native bool Dynamic_GetPersistence(Dynamic obj);
+native bool Dynamic_SetPersistence(Dynamic obj, bool value);
 
-native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false, int valuelength);
-native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false);
+native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength);
+native bool Dynamic_WriteConfig(Dynamic obj, const char[] path, bool use_valve_fs=false);
+
+native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength);
+native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, bool use_valve_fs=false);
 
 native int Dynamic_GetMemberCount(Dynamic obj);
 native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
@@ -126,9 +129,9 @@ native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float[3] vector);
 
 methodmap Dynamic
 {
-	public Dynamic(int blocksize=64, int startsize=0)
+	public Dynamic(int blocksize=64, int startsize=0, bool persistent=false)
 	{
-		return Dynamic_Initialise(blocksize, startsize);
+		return Dynamic_Initialise(blocksize, startsize, persistent);
 	}
 	
 	property int IsValid
@@ -136,6 +139,18 @@ methodmap Dynamic
 		public get()
 		{
 			return Dynamic_IsValid(view_as<int>(this), false);
+		}
+	}
+	
+	property bool Persistent
+	{
+		public get()
+		{
+			return Dynamic_GetPersistence(this);
+		}
+		public set(bool value)
+		{
+			Dynamic_SetPersistence(this, value);
 		}
 	}
 	
@@ -480,6 +495,8 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetName");
 	MarkNativeAsOptional("Dynamic_FindByName");
 	MarkNativeAsOptional("Dynamic_GetParent");
+	MarkNativeAsOptional("Dynamic_GetPersistence");
+	MarkNativeAsOptional("Dynamic_SetPersistence");
 	MarkNativeAsOptional("Dynamic_ReadConfig");
 	MarkNativeAsOptional("Dynamic_WriteConfig");
 	MarkNativeAsOptional("Dynamic_ReadKeyValues");
