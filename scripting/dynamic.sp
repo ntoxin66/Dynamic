@@ -195,7 +195,11 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 {
 	int blocksize = GetNativeCell(1);
 	int startsize = GetNativeCell(2);
-	bool persistent = GetNativeCell(3);
+	
+	bool persistent = true;
+	if (params > 2)
+		persistent = GetNativeCell(3);
+		
 	int index = -1;
 	
 	// Always try to reuse a previously disposed index
