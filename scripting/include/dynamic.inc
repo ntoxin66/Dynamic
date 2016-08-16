@@ -38,9 +38,13 @@ enum Dynamic_MemberType
 	DynamicType_Unknown = 7
 }
 
-typeset DynamicHookCB
+typeset Dynamic_HookType
 {
+	// HookChanges
 	function void (Dynamic obj, int offset, const char[] member, Dynamic_MemberType type);
+	
+	// DynamicReadKeyValue
+	function Action (Dynamic obj, const char[] member, int depth);
 }
 
 native int Dynamic_GetCollectionSize();
@@ -59,8 +63,8 @@ native bool Dynamic_SetPersistence(Dynamic obj, bool value);
 native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength);
 native bool Dynamic_WriteConfig(Dynamic obj, const char[] path, bool use_valve_fs=false);
 
-native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength);
-native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, bool use_valve_fs=false);
+native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, int valuelength, Dynamic_HookType callback=INVALID_FUNCTION);
+native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path);
 
 native int Dynamic_GetMemberCount(Dynamic obj);
 native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
@@ -72,8 +76,8 @@ native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset)
 native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
 
 native int Dynamic_CallbackCount(Dynamic obj);
-native bool Dynamic_HookChanges(Dynamic obj, DynamicHookCB callback);
-native bool Dynamic_UnHookChanges(Dynamic obj, DynamicHookCB callback);
+native bool Dynamic_HookChanges(Dynamic obj, Dynamic_HookType callback);
+native bool Dynamic_UnHookChanges(Dynamic obj, Dynamic_HookType callback);
 
 native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue=-1);
 native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
@@ -199,9 +203,9 @@ methodmap Dynamic
 		return Dynamic_WriteConfig(this, path);
 	}
 	
-	public bool ReadKeyValues(const char[] path, bool use_valve_fs = false, int valuelength = 256)
+	public bool ReadKeyValues(const char[] path, int valuelength = 256, Dynamic_HookType callback = INVALID_FUNCTION)
 	{
-		return Dynamic_ReadKeyValues(this, path, use_valve_fs, valuelength);
+		return Dynamic_ReadKeyValues(this, path, valuelength, callback);
 	}
 	
 	public bool WriteKeyValues(const char[] path)
@@ -444,12 +448,12 @@ methodmap Dynamic
 		return Dynamic_GetVectorByIndex(this, index, vector);
 	}
 	
-	public void HookChanges(DynamicHookCB callback)
+	public void HookChanges(Dynamic_HookType callback)
 	{
 		Dynamic_HookChanges(this, callback);	
 	}
 	
-	public void UnHookChanges(DynamicHookCB callback)
+	public void UnHookChanges(Dynamic_HookType callback)
 	{
 		Dynamic_UnHookChanges(this, callback);
 	}

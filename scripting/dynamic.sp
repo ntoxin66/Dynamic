@@ -35,6 +35,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
+	version = "0.0.17",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -684,7 +685,7 @@ public int Native_Dynamic_WriteConfig(Handle plugin, int params)
 	return 1;
 }
 
-// native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false, bool valuelength=128);
+// native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, bool valuelength=128, Dynamic_HookType hook=INVALID_FUNCTION);
 public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 {
 	// Get and validate index
@@ -697,289 +698,113 @@ public int Native_Dynamic_ReadKeyValues(Handle plugin, int params)
 	GetNativeStringLength(2, length);
 	char[] path = new char[length];
 	GetNativeString(2, path, length+1);
-	bool use_valve_fs = GetNativeCell(3);
-	int maxlength = GetNativeCell(4);
+	int maxlength = GetNativeCell(3);
+	Dynamic_HookType hook = GetNativeCell(4);
 	
 	// Check file exists
-	if (!FileExists(path, use_valve_fs))
+	if (!FileExists(path, false))
 	{
 		ThrowNativeError(0, "Filepath '%s' doesn't exist!", path);
 		return 0;
 	}
 	
-	// Open file for reading
-	File stream = OpenFile(path, "r", use_valve_fs);
-	
-	// Exit if failed to open
-	if (stream == null)
+	KeyValues kv = new KeyValues("");
+	if (!kv.ImportFromFile(path))
 	{
-		ThrowNativeError(0, "Unable to open file stream '%s'!", path);
+		delete kv;
 		return 0;
 	}
 	
-	// Loop through file in blocks
-	char buffer[2048];
-	bool readingname = true;
-	bool readingstring = false;
-	bool readingvalue = false;
-	int lastchar = 0;
-	bool skippingcomment = false;
-	ArrayList settingnamearray = CreateArray(1);
-	int settingnamelength = 0;
-	ArrayList settingvaluearray = CreateArray(1);
-	int settingvaluelength = 0;
-	
-	Dynamic child;
-	Dynamic parent = INVALID_DYNAMIC_OBJECT;
-	
-	bool waitingbrace = false;
-	
-	while ((length = stream.ReadString(buffer, sizeof(buffer))) > 0)
+	Handle callbackforward = null;
+	if (hook != INVALID_FUNCTION)
 	{
-		for (int i = 0; i < length; i++)
+		callbackforward = CreateForward(ET_Single, Param_Cell, Param_String, Param_Cell);
+		AddToForward(callbackforward, plugin, hook);
+	}
+	
+	IterateKeyValues(kv, view_as<Dynamic>(index), maxlength, callbackforward);
+	delete kv;
+	
+	if (callbackforward != null)
+	{
+		RemoveFromForward(callbackforward, plugin, hook);
+		delete callbackforward;
+	}
+	return 1;
+}
+
+stock void IterateKeyValues(KeyValues kv, Dynamic obj, int valuelength, Handle callbackforward, int depth=0)
+{
+	char key[512];
+	KvDataTypes type;
+	
+	do
+	{
+		kv.GetSectionName(key, sizeof(key));
+		if (kv.GotoFirstSubKey(false))
 		{
-			int byte = buffer[i];
-			
-			// open brace
-			if (byte == 123)
+			Action result;
+			if (callbackforward != null)
 			{
-				// continue if skipping comments
-				if (skippingcomment)
-					continue;
-			
-				if (readingstring)
-				{
-					if (readingvalue)
-					{
-						settingvaluearray.Push(byte);
-						settingvaluelength++;
-						waitingbrace = false;
-					}
-					else if (readingname)
-					{
-						settingnamearray.Push(byte);
-						settingnamelength++;
-						waitingbrace = false;
-					}
-				}
-				
-				else if (readingvalue && settingvaluelength > 0)
-				{
-					settingvaluearray.Push(byte);
-					settingvaluelength++;
-					waitingbrace = false;
-				}
-				
-				else if (readingname || waitingbrace)
-				{					
-					char[] childname = new char[settingnamelength];
-					GetArrayStackAsString(settingnamearray, childname, settingnamelength);
-					
-					if (parent == INVALID_DYNAMIC_OBJECT)
-					{
-						parent = view_as<Dynamic>(index);
-					}
-					else
-					{
-						if (childname[0] == '\0')
-						{
-							child = Dynamic();
-							parent.PushObject(child);
-							parent = child;
-						}
-						else
-						{
-							child = parent.GetObject(childname);
-							if (child == INVALID_DYNAMIC_OBJECT)
-							{
-								child = Dynamic();
-								parent.SetObject(childname, child);
-							}
-							parent = child;
-						}
-					}
-					
-					readingname = true;
-					waitingbrace = false;
-					readingstring = false;
-					readingvalue = false;
-					skippingcomment = false;
-					settingnamelength = 0;
-					settingvaluelength = 0;
-					settingnamearray.Clear();
-					settingvaluearray.Clear();
-				}
+				Call_StartForward(callbackforward);
+				Call_PushCell(obj);
+				Call_PushString(key);
+				Call_PushCell(depth);
+				Call_Finish(result);
 			}
 			
-			// close brace
-			else if (byte == 125)
+			if (result == Plugin_Continue)
 			{
-				if (readingstring)
+				Dynamic child = obj.GetObject(key);
+				if (!child.IsValid)
 				{
-					if (readingvalue)
-					{
-						settingvaluearray.Push(byte);
-						settingvaluelength++;
-						waitingbrace = false;
-					}
-					else if (readingname)
-					{
-						settingnamearray.Push(byte);
-						settingnamelength++;
-						waitingbrace = false;
-					}
+					child = Dynamic();
+					obj.SetObject(key, child);
 				}
 				
-				else if (readingvalue)
-				{
-					settingvaluearray.Push(byte);
-					settingvaluelength++;
-					waitingbrace = false;
-				}
-				
-				else
-				{
-					parent = parent.Parent;
-					skippingcomment = true;
-				}
+				IterateKeyValues(kv, child, valuelength, callbackforward, depth+1);
 			}
-			
-			// space and tabspace
-			else if (byte == 9 || byte == 32)
+			kv.GoBack();
+		}
+		else
+		{
+			type = kv.GetDataType(NULL_STRING);
+			switch(type)
 			{
-				// continue if skipping comments
-				if (skippingcomment)
-					continue;
-					
-				if (readingname)
+				case KvData_String:
 				{
-					if (readingstring)
-					{
-						settingnamearray.Push(byte);
-						settingnamelength++;
-						waitingbrace = false;
-					}
-					else
-					{
-						if (settingnamelength > 0)
-						{
-							readingname = false;
-							readingvalue = true;
-							waitingbrace = true;
-						}
-					}
+					char[] value = new char[valuelength];
+					kv.GetString(NULL_STRING, value, valuelength);
+					obj.SetString(key, value, valuelength);
 				}
-				
-				else if (readingvalue)
+				case KvData_Int:
 				{
-					if (readingstring)
-					{
-						settingvaluearray.Push(byte);
-						settingvaluelength++;
-						waitingbrace = false;
-					}
-					else
-					{
-						if (settingvaluelength > 0)
-							skippingcomment = true;
-					}
+					obj.SetInt(key, kv.GetNum(NULL_STRING));
 				}
-			}
-			
-			// new line
-			else if (byte == 10)
-			{
-				if (readingname)
+				case KvData_Float:
 				{
-					if (settingnamelength > 0)
-					{
-						readingname = false;
-						readingvalue = false;
-						waitingbrace = true;
-						continue;
-					}
+					obj.SetFloat(key, kv.GetFloat(NULL_STRING));
 				}
-				
-				readingname = true;
-				waitingbrace = false;
-				readingstring = false;
-				readingvalue = false;
-				
-				if (skippingcomment && settingvaluelength == 0)
+				case KvData_Ptr:
 				{
-					skippingcomment = false;
-					settingnamelength = 0;
-					settingvaluelength = 0;
-					settingnamearray.Clear();
-					settingvaluearray.Clear();
-					continue;
+					LogError("Type `KvData_Ptr` not yet supported!");
 				}
-				
-				if (settingvaluelength > 0)
+				case KvData_WString:
 				{
-					AddConfigSetting(view_as<int>(parent), settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, maxlength);
-					settingnamelength = 0;
-					settingvaluelength = 0;
+					LogError("Type `KvData_WString` not yet supported!");
 				}
-			}
-			
-			// quote
-			else if (byte == 34)
-			{
-				readingstring = !readingstring;
-				
-				if (!readingstring && readingvalue)
+				case KvData_Color:
 				{
-					AddConfigSetting(view_as<int>(parent), settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, maxlength);
-					settingnamelength = 0;
-					settingvaluelength = 0;
-					skippingcomment = true;
+					LogError("Type `KvData_Color` not yet supported!");
 				}
-			}
-			else
-			{
-				// continue if skipping a comment
-				if (skippingcomment)
-					continue;
-				
-				// skip double backslash comments
-				if (byte == 92 && lastchar == 92)
+				case KvData_UInt64:
 				{
-					skippingcomment = true;
-					settingnamearray.Clear();
-					settingnamelength = 0;
-					settingvaluelength = 0;
-					continue;
-				}
-				
-				lastchar = byte;
-				if (readingname)
-				{
-					char somestring[2];
-					somestring[0] = byte;
-					somestring[1] = 0;
-					
-					settingnamearray.Push(byte);
-					settingnamelength++;
-				}
-				else if (readingvalue)
-				{
-					char somestring[2];
-					somestring[0] = byte;
-					somestring[1] = 0;
-					
-					settingvaluearray.Push(byte);
-					settingvaluelength++;
-					waitingbrace = false;					
+					LogError("Type `KvData_UInt64` not yet supported!");
 				}
 			}
 		}
 	}
-	
-	delete stream;
-	delete settingnamearray;
-	delete settingvaluearray;
-	return 1;
+	while (kv.GotoNextKey(false));
 }
 
 // native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, bool use_valve_fs = false);
@@ -1006,9 +831,7 @@ public int Native_Dynamic_WriteKeyValues(Handle plugin, int params)
 		return 0;
 	}
 	
-	stream.WriteLine("{");
-	WriteObjectToKeyValues(stream, view_as<Dynamic>(index), 1);
-	stream.WriteLine("}");
+	WriteObjectToKeyValues(stream, view_as<Dynamic>(index), 0);
 	
 	delete stream;
 	return 1;
