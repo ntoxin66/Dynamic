@@ -35,7 +35,6 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.16",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -224,7 +223,7 @@ public int Native_Dynamic_Initialise(Handle plugin, int params)
 	SetArrayCell(s_Collection, index, blocksize, Dynamic_Blocksize);
 	SetArrayCell(s_Collection, index, CreateTrie(), Dynamic_Offsets);
 	SetArrayCell(s_Collection, index, CreateArray(blocksize, startsize), Dynamic_Data);
-	SetArrayCell(s_Collection, index, CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell), Dynamic_Forwards);
+	SetArrayCell(s_Collection, index, 0, Dynamic_Forwards);
 	SetArrayCell(s_Collection, index, CreateArray(g_iDynamic_MemberLookup_Offset+1), Dynamic_MemberNames);
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
@@ -277,7 +276,8 @@ public int Native_Dynamic_Dispose(Handle plugin, int params)
 	// Close dynamic object array handles
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Offsets));
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Data));
-	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Forwards));
+	if (GetArrayCell(s_Collection, index, Dynamic_Forwards) != 0)
+		CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Forwards));
 	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberNames));
 	
 	// Remove all indicies from the end of the array which are empty (trimend array)
@@ -423,6 +423,7 @@ public int Native_Dynamic_ReadConfig(Handle plugin, int params)
 	int settingnamelength = 0;
 	ArrayList settingvaluearray = CreateArray(1);
 	int settingvaluelength = 0;
+	
 	while ((length = stream.ReadString(buffer, sizeof(buffer))) > 0)
 	{
 		for (int i = 0; i < length; i++)
@@ -3051,8 +3052,15 @@ public int Native_Dynamic_HookChanges(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 	
+	Handle forwards = GetArrayCell(s_Collection, index, Dynamic_Forwards);
+	if (forwards == null)
+	{
+		forwards = CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell);
+		SetArrayCell(s_Collection, index, forwards, Dynamic_Forwards);
+	}
+	
 	// Add forward to objects forward list
-	AddToForward(GetArrayCell(s_Collection, index, Dynamic_Forwards), plugin, GetNativeCell(2));
+	AddToForward(forwards, plugin, GetNativeCell(2));
 	
 	// Store new callback count
 	int count = GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
@@ -3068,12 +3076,22 @@ public int Native_Dynamic_UnHookChanges(Handle plugin, int params)
 	if (!Dynamic_IsValid(index, true))
 		return 0;
 	
+	Handle forwards = GetArrayCell(s_Collection, index, Dynamic_Forwards);
+	if (forwards == null)
+		return 0;
+	
 	// Remove forward from objects forward list
-	RemoveFromForward(GetArrayCell(s_Collection, index, Dynamic_Forwards), plugin, GetNativeCell(2));
+	RemoveFromForward(forwards, plugin, GetNativeCell(2));
 	
 	// Store new callback count
 	int count = GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, --count, Dynamic_CallbackCount);
+	
+	if (count == 0)
+	{
+		CloseHandle(forwards);
+		SetArrayCell(s_Collection, index, 0, Dynamic_Forwards);
+	}
 	return 1;
 }
 
@@ -3288,7 +3306,11 @@ stock bool StrEqualEx(Handle array, int index, const char[] fieldname)
 
 stock void CallOnChangedForward(int index, int offset, const char[] member, Dynamic_MemberType type)
 {
-	Call_StartForward(GetArrayCell(s_Collection, index, Dynamic_Forwards));
+	Handle forwards = GetArrayCell(s_Collection, index, Dynamic_Forwards);
+	if (forwards == null)
+		return;
+		
+	Call_StartForward(forwards);
 	Call_PushCell(index);
 	Call_PushCell(offset);
 	Call_PushString(member);
