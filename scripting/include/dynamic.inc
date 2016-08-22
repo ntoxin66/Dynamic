@@ -49,19 +49,20 @@ typeset Dynamic_HookType
 
 native int Dynamic_GetCollectionSize();
 
-native Dynamic Dynamic_Initialise(int blocksize=64, int startsize = 0, bool persistent = false);
+native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0, bool persistent=false);
 native bool Dynamic_IsValid(int index, bool throwerror=false);
-native bool Dynamic_Dispose(int index, bool disposemembers);
+native bool Dynamic_Dispose(int index, bool disposemembers=true);
+native void Dynamic_ResetObject(int index, bool disposemembers=true);
 
-native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace);
+native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace=false);
 native Dynamic Dynamic_FindByName(const char[] objectname);
 native Dynamic Dynamic_GetParent(Dynamic obj);
 
 native bool Dynamic_GetPersistence(Dynamic obj);
 native bool Dynamic_SetPersistence(Dynamic obj, bool value);
 
-native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength);
-native bool Dynamic_WriteConfig(Dynamic obj, const char[] path, bool use_valve_fs=false);
+native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength=256);
+native bool Dynamic_WriteConfig(Dynamic obj, const char[] path);
 
 native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, int valuelength, Dynamic_HookType callback=INVALID_FUNCTION);
 native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path);
@@ -69,11 +70,12 @@ native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path);
 native int Dynamic_GetMemberCount(Dynamic obj);
 native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
 native int Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
-native bool Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, int size);
-native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int size);
+native bool Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, int length);
+native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int length);
 native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
 native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
 native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
+native Dynamic Dynamic_FindByMemberValue(Dynamic obj, Dynamic params);
 
 native int Dynamic_CallbackCount(Dynamic obj);
 native bool Dynamic_HookChanges(Dynamic obj, Dynamic_HookType callback);
@@ -97,10 +99,11 @@ native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffe
 native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
 native bool Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int length);
 native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
-native int Dynamic_PushString(Dynamic obj, const char[] value);
+native int Dynamic_PushString(Dynamic obj, const char[] value, int length=0);
 native bool Dynamic_GetStringByIndex(Dynamic obj, int index, char[] buffer, int length);
 native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
 native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
+native bool Dynamic_CompareString(Dynamic obj, const char[] membername, const char[] value, bool casesensitive=true);
 
 native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
 native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
@@ -124,12 +127,12 @@ native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
 native int Dynamic_PushHandle(Dynamic obj, Handle value);
 native Handle Dynamic_GetHandleByIndex(Dynamic obj, int index);
 
-native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float[3] vector);
-native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float[3] value);
-native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float[3] vector);
-native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float[3] value);
+native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float value[3]);
+native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float value[3]);
+native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float value[3]);
+native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float value[3]);
 native int Dynamic_PushVector(Dynamic obj, const float value[3]);
-native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float[3] vector);
+native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float value[3]);
 
 methodmap Dynamic
 {
@@ -170,6 +173,11 @@ methodmap Dynamic
 		}
 	}
 	
+	public bool GetName(char[] buffer, int length)
+	{
+		return Dynamic_GetString(this, "_name", buffer, length);
+	}
+	
 	property int MemberCount
 	{
 		public get()
@@ -183,6 +191,11 @@ methodmap Dynamic
 		Dynamic_Dispose(view_as<int>(this), disposemembers);
 	}
 	
+	public void Reset(bool disposemembers=true)
+	{
+		Dynamic_ResetObject(view_as<int>(this), disposemembers);
+	}
+	
 	public bool SetName(const char[] objectname, bool replace=false)
 	{
 		return Dynamic_SetName(this, objectname, replace);
@@ -193,7 +206,7 @@ methodmap Dynamic
 		return Dynamic_FindByName(objectname);
 	}
 	
-	public bool ReadConfig(const char[] path, bool use_valve_fs = false, int valuelength = 256)
+	public bool ReadConfig(const char[] path, bool use_valve_fs = false, int valuelength=256)
 	{
 		return Dynamic_ReadConfig(this, path, use_valve_fs, valuelength);
 	}
@@ -333,9 +346,9 @@ methodmap Dynamic
 		Dynamic_SetStringByOffset(this, offset, value, length);
 	}
 	
-	public int PushString(const char[] value, int length)
+	public int PushString(const char[] value, int length=0)
 	{
-		return Dynamic_PushString(this, value);
+		return Dynamic_PushString(this, value, length);
 	}
 	
 	public bool GetStringByIndex(int index, char[] buffer, int length)
@@ -351,6 +364,11 @@ methodmap Dynamic
 	public int GetStringLengthByOffset(int offset)
 	{
 		return Dynamic_GetStringLengthByOffset(this, offset);
+	}
+	
+	public bool CompareString(const char[] membername, const char[] value, bool casesensitive=true)
+	{
+		return Dynamic_CompareString(this, membername, value, casesensitive);
 	}
 	
 	public Dynamic GetObject(const char[] membername)
@@ -418,9 +436,9 @@ methodmap Dynamic
 		return Dynamic_GetHandleByIndex(this, index);
 	}
 	
-	public bool GetVector(const char[] membername, float[3] vector)
+	public bool GetVector(const char[] membername, float[3] value)
 	{
-		return Dynamic_GetVector(this, membername, vector);
+		return Dynamic_GetVector(this, membername, value);
 	}
 	
 	public int SetVector(const char[] membername, const float[3] value)
@@ -428,9 +446,9 @@ methodmap Dynamic
 		return Dynamic_SetVector(this, membername, value);
 	}
 	
-	public bool GetVectorByOffset(int offset, float[3] vector)
+	public bool GetVectorByOffset(int offset, float[3] value)
 	{
-		return Dynamic_GetVectorByOffset(this, offset, vector);
+		return Dynamic_GetVectorByOffset(this, offset, value);
 	}
 	
 	public void SetVectorByOffset(int offset, const float[3] value)
@@ -443,9 +461,9 @@ methodmap Dynamic
 		return Dynamic_PushVector(this, value);
 	}
 	
-	public bool GetVectorByIndex(int index, float[3] vector)
+	public bool GetVectorByIndex(int index, float[3] value)
 	{
-		return Dynamic_GetVectorByIndex(this, index, vector);
+		return Dynamic_GetVectorByIndex(this, index, value);
 	}
 	
 	public void HookChanges(Dynamic_HookType callback)
@@ -492,6 +510,11 @@ methodmap Dynamic
 	{
 		return Dynamic_SortMembers(this, order);
 	}
+	
+	public Dynamic FindByMemberValue(Dynamic params)
+	{
+		return Dynamic_FindByMemberValue(this, params);
+	}
 }
 
 #if !defined REQUIRE_PLUGIN
@@ -500,6 +523,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_Initialise");
 	MarkNativeAsOptional("Dynamic_IsValid");
 	MarkNativeAsOptional("Dynamic_Dispose");
+	MarkNativeAsOptional("Dynamic_ResetObject");
 	MarkNativeAsOptional("Dynamic_SetName");
 	MarkNativeAsOptional("Dynamic_FindByName");
 	MarkNativeAsOptional("Dynamic_GetParent");
@@ -535,6 +559,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_GetStringByIndex");
 	MarkNativeAsOptional("Dynamic_GetStringLength");
 	MarkNativeAsOptional("Dynamic_GetStringLengthByOffset");
+	MarkNativeAsOptional("Dynamic_CompareString");
 	MarkNativeAsOptional("Dynamic_GetObject");
 	MarkNativeAsOptional("Dynamic_SetObject");
 	MarkNativeAsOptional("Dynamic_GetObjectByOffset");
@@ -566,6 +591,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_GetMemberNameByIndex");
 	MarkNativeAsOptional("Dynamic_GetMemberNameByOffset");
 	MarkNativeAsOptional("Dynamic_SortMembers");
+	MarkNativeAsOptional("Dynamic_FindByMemberValue");
 }
 #endif
 

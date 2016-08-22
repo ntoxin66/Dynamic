@@ -1767,6 +1767,14 @@ stock int _Dynamic_GetStringLength(int index, const char[] membername)
 	return GetMemberStringLength(array, position, offset, blocksize);
 }
 
+stock bool _Dynamic_CompareString(int index, const char[] membername, const char[] value, bool casesensitive)
+{
+	int length = _Dynamic_GetStringLength(index, membername);
+	char[] buffer = new char[length];
+	_Dynamic_GetString(index, membername, buffer, length);
+	return StrEqual(value, buffer, casesensitive);	
+}
+
 stock int _Dynamic_GetStringLengthByOffset(int index, int offset)
 {
 	if (!_Dynamic_IsValid(index, true))

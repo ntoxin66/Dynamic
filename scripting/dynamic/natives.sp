@@ -394,6 +394,20 @@ public int Native_Dynamic_GetStringLength(Handle plugin, int params)
 	return _Dynamic_GetStringLength(index, membername);
 }
 
+// native bool Dynamic_CompareString(Dynamic obj, const char[] membername, const char[] value, bool casesensitive=true);
+public int Native_Dynamic_CompareString(Handle plugin, int params)
+{
+	int index = GetNativeCell(1);
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
+	int valuelength;
+	GetNativeStringLength(3, valuelength);
+	char[] value = new char[++valuelength];
+	GetNativeString(3, value, valuelength);
+	bool casesensitive = GetNativeCell(4);
+	return _Dynamic_CompareString(index, membername, value, casesensitive);
+}
+
 // native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetObject(Handle plugin, int params)
 {
@@ -719,6 +733,7 @@ stock void CreateNatives()
 	CreateNative("Dynamic_GetStringByIndex", Native_Dynamic_GetStringByIndex);
 	CreateNative("Dynamic_GetStringLengthByOffset", Native_Dynamic_GetStringLengthByOffset);
 	CreateNative("Dynamic_GetStringLength", Native_Dynamic_GetStringLength);
+	CreateNative("Dynamic_CompareString", Native_Dynamic_CompareString);
 	CreateNative("Dynamic_GetObject", Native_Dynamic_GetObject);
 	CreateNative("Dynamic_SetObject", Native_Dynamic_SetObject);
 	CreateNative("Dynamic_GetObjectByOffset", Native_Dynamic_GetObjectByOffset);
