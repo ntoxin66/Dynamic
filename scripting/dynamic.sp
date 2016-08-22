@@ -95,7 +95,7 @@ public void OnPluginEnd()
 	// Dispose of all objects in the collection pool
 	while (s_CollectionSize > 0)
 	{
-		Dynamic_Dispose(s_CollectionSize - 1, false);
+		_Dynamic_Dispose(s_CollectionSize - 1, false);
 	}
 }
 
@@ -118,11 +118,11 @@ public void OnMapStart()
 		status = GetPluginStatus(plugin);
 		
 		if (status == Plugin_Error || status == Plugin_Failed)
-			Dynamic_Dispose(i, false);
+			_Dynamic_Dispose(i, false);
 	}
 }
 
-stock int _Dynamic_Initialise(Handle plugin, int blocksize, int startsize, bool persistent)
+stock int _Dynamic_Initialise(Handle plugin, int blocksize=64, int startsize=0, bool persistent=false)
 {
 	int index = -1;
 	
@@ -186,7 +186,7 @@ stock bool _Dynamic_Dispose(int index, bool disposemembers)
 			{
 				disposablemember = GetMemberDataInt(data, position, offset, blocksize);
 				if (_Dynamic_IsValid(disposablemember))
-					Dynamic_Dispose(disposablemember, true);
+					_Dynamic_Dispose(disposablemember, true);
 			}
 			else if (membertype == DynamicType_Handle)
 			{
@@ -430,10 +430,10 @@ stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList
 	GetArrayStackAsString(value, settingvalue, valuelength);
 	value.Clear();
 	
-	CreateMemberFromString(view_as<Dynamic>(index), settingname, settingvalue, maxlength);
+	CreateMemberFromString(index, settingname, settingvalue, maxlength);
 }
 
-stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] membername, const char[] value, int maxlength)
+stock Dynamic_MemberType CreateMemberFromString(int index, const char[] membername, const char[] value, int maxlength)
 {
 	bool canbeint = true;
 	bool canbefloat = true;
@@ -464,18 +464,18 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 		val = StringToInt(value);
 		if (val == -1 && StrEqual(value, "-1"))
 		{
-			obj.SetInt(membername, val);
+			_Dynamic_SetInt(index, membername, val);
 			return DynamicType_Int;
 		}
 		else
 		{
-			obj.SetString(membername, value, maxlength);
+			_Dynamic_SetString(index, membername, value, maxlength, maxlength);
 			return DynamicType_String;
 		}
 	}
 	else if (canbefloat)
 	{
-		obj.SetFloat(membername, StringToFloat(value));
+		_Dynamic_SetFloat(index, membername, StringToFloat(value));
 		return DynamicType_Float;
 	}
 	else
@@ -500,23 +500,23 @@ stock Dynamic_MemberType CreateMemberFromString(Dynamic obj, const char[] member
 			GetRegexSubString(g_sRegex_Vector, 3, matchbuffer, sizeof(matchbuffer));
 			vec[2] = StringToFloat(matchbuffer);
 			
-			obj.SetVector(membername, vec);
+			_Dynamic_SetVector(index, membername, vec);
 			return DynamicType_Vector;
 		}
 		
 		// check for bool last
 		if (StrEqual(value, "true", false))
 		{
-			obj.SetBool(membername, true);
+			_Dynamic_SetBool(index, membername, true);
 			return DynamicType_Bool;
 		}
 		else if (StrEqual(value, "false", false))
 		{
-			obj.SetBool(membername, false);
+			_Dynamic_SetBool(index, membername, false);
 			return DynamicType_Bool;
 		}
 		
-		obj.SetString(membername, value, maxlength);
+		_Dynamic_SetString(index, membername, value, maxlength, maxlength);
 		return DynamicType_String;
 	}	
 }
@@ -554,7 +554,7 @@ stock bool _Dynamic_WriteConfig(int index, const char[] path)
 		_Dynamic_GetMemberNameByIndex(index, i, membername, sizeof(membername));
 		length = GetStringLengthByOffset(index, memberoffset);
 		char[] membervalue = new char[length];
-		Dynamic_GetStringByOffset(view_as<Dynamic>(index), memberoffset, membervalue, length);
+		_Dynamic_GetStringByOffset(index, memberoffset, membervalue, length);
 		stream.WriteLine("%s\t\"%s\"", membername, membervalue);
 	}
 	
@@ -588,7 +588,7 @@ stock bool _Dynamic_ReadKeyValues(Handle plugin, int index, const char[] path, i
 		AddToForward(callbackforward, plugin, hook);
 	}
 	
-	IterateKeyValues(kv, view_as<Dynamic>(index), valuelength, callbackforward);
+	IterateKeyValues(kv, index, valuelength, callbackforward);
 	delete kv;
 	
 	if (callbackforward != null)
@@ -599,7 +599,7 @@ stock bool _Dynamic_ReadKeyValues(Handle plugin, int index, const char[] path, i
 	return true;
 }
 
-stock void IterateKeyValues(KeyValues kv, Dynamic obj, int valuelength, Handle callbackforward, int depth=0)
+stock void IterateKeyValues(KeyValues kv, int index, int valuelength, Handle callbackforward, int depth=0)
 {
 	char key[512];
 	KvDataTypes type;
@@ -613,7 +613,7 @@ stock void IterateKeyValues(KeyValues kv, Dynamic obj, int valuelength, Handle c
 			if (callbackforward != null)
 			{
 				Call_StartForward(callbackforward);
-				Call_PushCell(obj);
+				Call_PushCell(index);
 				Call_PushString(key);
 				Call_PushCell(depth);
 				Call_Finish(result);
@@ -621,11 +621,11 @@ stock void IterateKeyValues(KeyValues kv, Dynamic obj, int valuelength, Handle c
 			
 			if (result == Plugin_Continue)
 			{
-				Dynamic child = obj.GetObject(key);
-				if (!child.IsValid)
+				int child = _Dynamic_GetObject(index, key);
+				if (!_Dynamic_IsValid(child))
 				{
-					child = Dynamic();
-					obj.SetObject(key, child);
+					child = _Dynamic_Initialise(null);
+					_Dynamic_SetObject(index, key, child);
 				}
 				
 				IterateKeyValues(kv, child, valuelength, callbackforward, depth+1);
@@ -641,15 +641,15 @@ stock void IterateKeyValues(KeyValues kv, Dynamic obj, int valuelength, Handle c
 				{
 					char[] value = new char[valuelength];
 					kv.GetString(NULL_STRING, value, valuelength);
-					obj.SetString(key, value, valuelength);
+					_Dynamic_SetString(index, key, value, valuelength, valuelength);
 				}
 				case KvData_Int:
 				{
-					obj.SetInt(key, kv.GetNum(NULL_STRING));
+					_Dynamic_SetInt(index, key, kv.GetNum(NULL_STRING));
 				}
 				case KvData_Float:
 				{
-					obj.SetFloat(key, kv.GetFloat(NULL_STRING));
+					_Dynamic_SetFloat(index, key, kv.GetFloat(NULL_STRING));
 				}
 				case KvData_Ptr:
 				{
@@ -688,13 +688,13 @@ stock bool _Dynamic_WriteKeyValues(int index, const char[] path)
 		return false;
 	}
 	
-	WriteObjectToKeyValues(stream, view_as<Dynamic>(index), 0);
+	WriteObjectToKeyValues(stream, index, 0);
 	
 	delete stream;
 	return true;
 }
 
-stock void WriteObjectToKeyValues(File stream, Dynamic obj, int indent)
+stock void WriteObjectToKeyValues(File stream, int index, int indent)
 {
 	// Create indent
 	char indextext[16];
@@ -703,27 +703,27 @@ stock void WriteObjectToKeyValues(File stream, Dynamic obj, int indent)
 	indextext[indent] = 0;
 	int length = 1024;
 
-	int count = _Dynamic_GetMemberCount(view_as<int>(obj));
+	int count = _Dynamic_GetMemberCount(view_as<int>(index));
 	int memberoffset;
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	for (int i = 0; i < count; i++)
 	{
-		memberoffset = _Dynamic_GetMemberOffsetByIndex(view_as<int>(obj), i);
-		_Dynamic_GetMemberNameByIndex(view_as<int>(obj), i, membername, sizeof(membername));
-		Dynamic_MemberType type = Dynamic_GetMemberTypeByOffset(obj, memberoffset);
+		memberoffset = _Dynamic_GetMemberOffsetByIndex(view_as<int>(index), i);
+		_Dynamic_GetMemberNameByIndex(index, i, membername, sizeof(membername));
+		Dynamic_MemberType type = _Dynamic_GetMemberTypeByOffset(index, memberoffset);
 		
 		if (type == DynamicType_Object)
 		{
 			stream.WriteLine("%s\"%s\"", indextext, membername);
 			stream.WriteLine("%s{", indextext);
-			WriteObjectToKeyValues(stream, obj.GetObjectByOffset(memberoffset), indent+1);
+			WriteObjectToKeyValues(stream, _Dynamic_GetObjectByOffset(index, memberoffset), indent+1);
 			stream.WriteLine("%s}", indextext);
 		}
 		else
 		{
-			//length = GetStringLengthByOffset(view_as<int>(obj), memberoffset);
+			//length = GetStringLengthByOffset(view_as<int>(index), memberoffset);
 			char[] membervalue = new char[length];
-			Dynamic_GetStringByOffset(obj, memberoffset, membervalue, length);
+			_Dynamic_GetStringByOffset(index, memberoffset, membervalue, length);
 			stream.WriteLine("%s\"%s\"\t\"%s\"", indextext, membername, membervalue);
 		}
 	}
@@ -1306,11 +1306,11 @@ stock int _Dynamic_GetIntByIndex(int index, int memberindex, int defaultvalue=-1
 	if (!_Dynamic_IsValid(index, true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return defaultvalue;
 	
-	return Dynamic_GetIntByOffset(view_as<Dynamic>(index), offset, defaultvalue);
+	return _Dynamic_GetIntByOffset(index, offset, defaultvalue);
 }
 
 stock float _Dynamic_GetFloat(int index, const char[] membername, float defaultvalue=-1.0)
@@ -1486,7 +1486,7 @@ stock float _Dynamic_GetFloatByIndex(int index, int memberindex, float defaultva
 	if (!_Dynamic_IsValid(index, true))
 		return defaultvalue;
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return defaultvalue;
 	
@@ -1736,7 +1736,7 @@ stock bool _Dynamic_GetStringByIndex(int index, int memberindex, char[] buffer, 
 		return false;
 	}
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 	{
 		buffer[0] = '\0';
@@ -1833,7 +1833,7 @@ stock int _Dynamic_SetObject(int index, const char[] membername, int value)
 		
 		// set value and name
 		SetMemberDataInt(array, position, offset, blocksize, value);
-		Dynamic_SetString(view_as<Dynamic>(index), "_name", membername); // naughty call back through native
+		_Dynamic_SetString(index, "_name", membername, DYNAMIC_MEMBERNAME_MAXLEN, DYNAMIC_MEMBERNAME_MAXLEN);
 		
 		// set parent only on first attempt
 		// the only time a parent can be reset is after the parenting member is set to INVALID_DYNAMIC_OBJECT
@@ -1923,11 +1923,11 @@ stock int _Dynamic_GetObjectByIndex(int index, int memberindex)
 	if (!_Dynamic_IsValid(index, true))
 		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return view_as<int>(INVALID_DYNAMIC_OBJECT);
 	
-	return view_as<int>(Dynamic_GetObjectByOffset(view_as<Dynamic>(index), offset));
+	return _Dynamic_GetObjectByOffset(index, offset);
 }
 
 stock bool _Dynamic_SetObjectByIndex(int index, int memberindex, int value)
@@ -1935,7 +1935,7 @@ stock bool _Dynamic_SetObjectByIndex(int index, int memberindex, int value)
 	if (!_Dynamic_IsValid(index, true))
 		return false;
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 	
@@ -2055,7 +2055,7 @@ stock int _Dynamic_GetHandleByIndex(int index, int memberindex)
 	if (!_Dynamic_IsValid(index, true))
 		return 0;
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return 0;
 	
@@ -2178,7 +2178,7 @@ stock bool _Dynamic_GetVectorByIndex(int index, int memberindex, float value[3])
 	if (!_Dynamic_IsValid(index, true))
 		return false;
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 	
@@ -2389,11 +2389,11 @@ stock bool _Dynamic_GetBoolByIndex(int index, int memberindex, bool defaultvalue
 	if (!_Dynamic_IsValid(index, true))
 		return false;
 	
-	int offset = Dynamic_GetMemberOffsetByIndex(view_as<Dynamic>(index), memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return defaultvalue;
 	
-	return Dynamic_GetBoolByOffset(view_as<Dynamic>(index), offset, defaultvalue);
+	return _Dynamic_GetBoolByOffset(index, offset, defaultvalue);
 }
 
 stock int _Dynamic_GetCollectionSize()
@@ -2643,7 +2643,7 @@ stock void CallOnChangedForwardByOffset(int index, int offset, Dynamic_MemberTyp
 	if (GetArrayCell(s_Collection, index, Dynamic_CallbackCount) > 0)
 	{
 		char membername[DYNAMIC_MEMBERNAME_MAXLEN];
-		Dynamic_GetMemberNameByOffset(view_as<Dynamic>(index), offset, membername, sizeof(membername));
+		_Dynamic_GetMemberNameByOffset(index, offset, membername, sizeof(membername));
 		CallOnChangedForward(index, offset, membername, type);
 	}
 }
