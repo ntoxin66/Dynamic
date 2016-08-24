@@ -23,6 +23,7 @@
 #define _dynamic_included
 
 #define INVALID_DYNAMIC_OBJECT			view_as<Dynamic>(-1)
+#define Invalid_Dynamic_Object			-1
 #define INVALID_DYNAMIC_OFFSET			-1
 #define DYNAMIC_MEMBERNAME_MAXLEN		64
 
@@ -52,7 +53,8 @@ native int Dynamic_GetCollectionSize();
 native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0, bool persistent=false);
 native bool Dynamic_IsValid(int index, bool throwerror=false);
 native bool Dynamic_Dispose(int index, bool disposemembers=true);
-native void Dynamic_ResetObject(int index, bool disposemembers=true);
+native bool Dynamic_ResetObject(int index, bool disposemembers=true, int blocksize=0, int startsize=0);
+native Handle Dynamic_GetOwnerPlugin(Dynamic obj);
 
 native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace=false);
 native Dynamic Dynamic_FindByName(const char[] objectname);
@@ -85,21 +87,21 @@ native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue
 native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
 native int Dynamic_GetIntByOffset(Dynamic obj, int offset, int defaultvalue=-1);
 native bool Dynamic_SetIntByOffset(Dynamic obj, int offset, int value);
-native int Dynamic_PushInt(Dynamic obj, int value);
+native int Dynamic_PushInt(Dynamic obj, int value, const char[] name="");
 native int Dynamic_GetIntByIndex(Dynamic obj, int index, int defaultvalue=-1);
 
 native float Dynamic_GetFloat(Dynamic obj, const char[] membername, float defaultvalue=-1.0);
 native int Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
 native float Dynamic_GetFloatByOffset(Dynamic obj, int offset, float defaultvalue=-1.0);
 native bool Dynamic_SetFloatByOffset(Dynamic obj, int offset, float value);
-native int Dynamic_PushFloat(Dynamic obj, float value);
+native int Dynamic_PushFloat(Dynamic obj, float value, const char[] name="");
 native float Dynamic_GetFloatByIndex(Dynamic obj, int index, float defaultvalue=-1.0);
 
 native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int length);
 native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
 native bool Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int length);
 native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
-native int Dynamic_PushString(Dynamic obj, const char[] value, int length=0);
+native int Dynamic_PushString(Dynamic obj, const char[] value, int length=0, const char[] name="");
 native bool Dynamic_GetStringByIndex(Dynamic obj, int index, char[] buffer, int length);
 native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
 native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
@@ -109,7 +111,7 @@ native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
 native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
 native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
-native int Dynamic_PushObject(Dynamic obj, Dynamic value);
+native int Dynamic_PushObject(Dynamic obj, Dynamic value, const char[] name="");
 native Dynamic Dynamic_GetObjectByIndex(Dynamic obj, int index);
 native bool Dynamic_SetObjectByIndex(Dynamic obj, int index, Dynamic value);
 
@@ -117,21 +119,21 @@ native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultva
 native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
 native bool Dynamic_GetBoolByOffset(Dynamic obj, int offset, bool defaultvalue=false);
 native bool Dynamic_SetBoolByOffset(Dynamic obj, int offset, bool value);
-native int Dynamic_PushBool(Dynamic obj, bool value);
+native int Dynamic_PushBool(Dynamic obj, bool value, const char[] name="");
 native bool Dynamic_GetBoolByIndex(Dynamic obj, int index, bool defaultvalue=false);
 
 native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);
 native int Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
 native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
 native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
-native int Dynamic_PushHandle(Dynamic obj, Handle value);
+native int Dynamic_PushHandle(Dynamic obj, Handle value, const char[] name="");
 native Handle Dynamic_GetHandleByIndex(Dynamic obj, int index);
 
 native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float value[3]);
 native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float value[3]);
 native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float value[3]);
 native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float value[3]);
-native int Dynamic_PushVector(Dynamic obj, const float value[3]);
+native int Dynamic_PushVector(Dynamic obj, const float value[3], const char[] name="");
 native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float value[3]);
 
 methodmap Dynamic
@@ -191,9 +193,17 @@ methodmap Dynamic
 		Dynamic_Dispose(view_as<int>(this), disposemembers);
 	}
 	
-	public void Reset(bool disposemembers=true)
+	public bool Reset(bool disposemembers=true, int blocksize=0, int startsize=0)
 	{
-		Dynamic_ResetObject(view_as<int>(this), disposemembers);
+		return Dynamic_ResetObject(view_as<int>(this), disposemembers, blocksize, startsize);
+	}
+	
+	property Handle OwnerPlugin
+	{
+		public get()
+		{
+			return Dynamic_GetOwnerPlugin(this);
+		}
 	}
 	
 	public bool SetName(const char[] objectname, bool replace=false)
@@ -256,9 +266,9 @@ methodmap Dynamic
 		Dynamic_SetIntByOffset(this, offset, value);
 	}
 	
-	public int PushInt(int value)
+	public int PushInt(int value, const char[] name="")
 	{
-		return Dynamic_PushInt(this, value);
+		return Dynamic_PushInt(this, value, name);
 	}
 	
 	public int GetIntByIndex(int index, int defaultvalue=-1)
@@ -286,9 +296,9 @@ methodmap Dynamic
 		Dynamic_SetBoolByOffset(this, offset, value);
 	}
 	
-	public int PushBool(bool value)
+	public int PushBool(bool value, const char[] name="")
 	{
-		return Dynamic_PushBool(this, value);
+		return Dynamic_PushBool(this, value, name);
 	}
 	
 	public bool GetBoolByIndex(int index, bool defaultvalue = false)
@@ -316,9 +326,9 @@ methodmap Dynamic
 		Dynamic_SetFloatByOffset(this, offset, value);
 	}
 	
-	public int PushFloat(float value)
+	public int PushFloat(float value, const char[] name="")
 	{
-		return Dynamic_PushFloat(this, value);
+		return Dynamic_PushFloat(this, value, name);
 	}
 	
 	public float GetFloatByIndex(int index, float defaultvalue=-1.0)
@@ -346,9 +356,9 @@ methodmap Dynamic
 		Dynamic_SetStringByOffset(this, offset, value, length);
 	}
 	
-	public int PushString(const char[] value, int length=0)
+	public int PushString(const char[] value, int length=0, const char[] name="")
 	{
-		return Dynamic_PushString(this, value, length);
+		return Dynamic_PushString(this, value, length, name);
 	}
 	
 	public bool GetStringByIndex(int index, char[] buffer, int length)
@@ -391,9 +401,9 @@ methodmap Dynamic
 		Dynamic_SetObjectByOffset(this, offset, value);
 	}
 	
-	public int PushObject(Dynamic value)
+	public int PushObject(Dynamic value, const char[] name="")
 	{
-		return Dynamic_PushObject(this, value);
+		return Dynamic_PushObject(this, value, name);
 	}
 	
 	public Dynamic GetObjectByIndex(int index)
@@ -426,9 +436,9 @@ methodmap Dynamic
 		Dynamic_SetHandleByOffset(this, offset, value);
 	}
 	
-	public int PushHandle(Handle value)
+	public int PushHandle(Handle value, const char[] name="")
 	{
-		return Dynamic_PushHandle(this, value);
+		return Dynamic_PushHandle(this, value, name);
 	}
 	
 	public Handle GetHandleByIndex(int index)
@@ -436,12 +446,12 @@ methodmap Dynamic
 		return Dynamic_GetHandleByIndex(this, index);
 	}
 	
-	public bool GetVector(const char[] membername, float[3] value)
+	public bool GetVector(const char[] membername, float value[3])
 	{
 		return Dynamic_GetVector(this, membername, value);
 	}
 	
-	public int SetVector(const char[] membername, const float[3] value)
+	public int SetVector(const char[] membername, const float value[3])
 	{
 		return Dynamic_SetVector(this, membername, value);
 	}
@@ -456,9 +466,9 @@ methodmap Dynamic
 		Dynamic_SetVectorByOffset(this, offset, value);
 	}
 	
-	public int PushVector(const float value[3])
+	public int PushVector(const float value[3], const char[] name="")
 	{
-		return Dynamic_PushVector(this, value);
+		return Dynamic_PushVector(this, value, name);
 	}
 	
 	public bool GetVectorByIndex(int index, float[3] value)
@@ -478,7 +488,7 @@ methodmap Dynamic
 	
 	public int CallbackCount()
 	{
-		Dynamic_CallbackCount(this);
+		return Dynamic_CallbackCount(this);
 	}
 	
 	public int GetMemberOffset(const char[] membername)
@@ -524,6 +534,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_IsValid");
 	MarkNativeAsOptional("Dynamic_Dispose");
 	MarkNativeAsOptional("Dynamic_ResetObject");
+	MarkNativeAsOptional("Dynamic_GetOwnerPlugin");
 	MarkNativeAsOptional("Dynamic_SetName");
 	MarkNativeAsOptional("Dynamic_FindByName");
 	MarkNativeAsOptional("Dynamic_GetParent");

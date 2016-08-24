@@ -345,7 +345,7 @@ stock void BenchmarkTest()
 	start = GetEngineTime();
 	for (int i=0; i<objectcount; i++)
 	{
-		someobject = view_as<Dynamic>(i);
+		someobject = objects[i];
 		someobject.Dispose();
 	}
 	PrintToServer("Disposed %d dynamic object(s) in %f second(s)", objectcount, GetEngineTime() - start);
