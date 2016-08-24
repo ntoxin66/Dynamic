@@ -37,7 +37,8 @@
 #define Dynamic_MemberCount				10
 #define Dynamic_OwnerPlugin				11
 #define Dynamic_Persistent				12
-#define Dynamic_Field_Count				13
+#define Dynamic_ParentOffset			13
+#define Dynamic_Field_Count				14
 
 Handle s_Collection = null;
 int s_CollectionSize = 0;
@@ -167,6 +168,7 @@ stock int _Dynamic_Initialise(Handle plugin, int blocksize=64, int startsize=0, 
 	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
 	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
+	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OFFSET, Dynamic_ParentOffset);
 	SetArrayCell(s_Collection, index, 0, Dynamic_MemberCount);
 	SetArrayCell(s_Collection, index, plugin, Dynamic_OwnerPlugin);
 	SetArrayCell(s_Collection, index, persistent, Dynamic_Persistent);
@@ -307,6 +309,23 @@ stock int _Dynamic_GetParent(int index)
 		return Invalid_Dynamic_Object;
 	
 	return GetArrayCell(s_Collection, index, Dynamic_ParentObject);
+}
+
+stock bool _Dynamic_GetName(int index, char[] buffer, int length)
+{
+	if (!_Dynamic_IsValid(index))
+		return false;
+
+	int parent = GetArrayCell(s_Collection, index, Dynamic_ParentObject);
+	if (!_Dynamic_IsValid(parent))
+		return false;
+	
+	int offset = GetArrayCell(s_Collection, index, Dynamic_ParentOffset);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return false;
+		
+	_Dynamic_GetMemberNameByOffset(parent, offset, buffer, length);
+	return true;	
 }
 
 stock bool _Dynamic_GetPersistence(int index)

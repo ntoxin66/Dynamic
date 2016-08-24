@@ -59,6 +59,8 @@ native Handle Dynamic_GetOwnerPlugin(Dynamic obj);
 native bool Dynamic_SetName(Dynamic obj, const char[] objectname, bool replace=false);
 native Dynamic Dynamic_FindByName(const char[] objectname);
 native Dynamic Dynamic_GetParent(Dynamic obj);
+native bool Dynamic_GetName(Dynamic obj, char[] buffer, int length);
+
 
 native bool Dynamic_GetPersistence(Dynamic obj);
 native bool Dynamic_SetPersistence(Dynamic obj, bool value);
@@ -177,7 +179,7 @@ methodmap Dynamic
 	
 	public bool GetName(char[] buffer, int length)
 	{
-		return Dynamic_GetString(this, "_name", buffer, length);
+		return Dynamic_GetName(this, buffer, length);
 	}
 	
 	property int MemberCount
@@ -538,6 +540,7 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetName");
 	MarkNativeAsOptional("Dynamic_FindByName");
 	MarkNativeAsOptional("Dynamic_GetParent");
+	MarkNativeAsOptional("Dynamic_GetName");
 	MarkNativeAsOptional("Dynamic_GetPersistence");
 	MarkNativeAsOptional("Dynamic_SetPersistence");
 	MarkNativeAsOptional("Dynamic_ReadConfig");

@@ -73,6 +73,17 @@ public int Native_Dynamic_GetParent(Handle plugin, int params)
 	return _Dynamic_GetParent(index);
 }
 
+// native bool Dynamic_GetName(Dynamic obj, char[] buffer, int length);
+public int Native_Dynamic_GetName(Handle plugin, int params)
+{
+	int index = GetNativeCell(1);
+	int length = GetNativeCell(3);
+	char[] buffer = new char[length];
+	bool result = _Dynamic_GetName(index, buffer, length);
+	SetNativeString(2, buffer, length);
+	return result;
+}
+
 // native bool Dynamic_GetPersistence(Dynamic obj);
 public int Native_Dynamic_GetPersistence(Handle plugin, int params)
 {
@@ -749,6 +760,7 @@ stock void CreateNatives()
 	CreateNative("Dynamic_SetName", Native_Dynamic_SetName);
 	CreateNative("Dynamic_FindByName", Native_Dynamic_FindByName);
 	CreateNative("Dynamic_GetParent", Native_Dynamic_GetParent);
+	CreateNative("Dynamic_GetName", Native_Dynamic_GetName);
 	CreateNative("Dynamic_GetPersistence", Native_Dynamic_GetPersistence);
 	CreateNative("Dynamic_SetPersistence", Native_Dynamic_SetPersistence);
 	CreateNative("Dynamic_ReadConfig", Native_Dynamic_ReadConfig);

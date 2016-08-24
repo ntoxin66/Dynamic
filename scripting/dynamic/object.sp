@@ -42,11 +42,11 @@ stock Dynamic_MemberType _SetObject(int index, ArrayList data, int position, int
 		// set value and name
 		SetMemberDataInt(data, position, offset, blocksize, value);
 		
-		if (membername[0] != '\0')
-			_Dynamic_SetString(value, "_name", membername, DYNAMIC_MEMBERNAME_MAXLEN, DYNAMIC_MEMBERNAME_MAXLEN);
-		
 		if (value != Invalid_Dynamic_Object)
+		{
 			SetArrayCell(s_Collection, value, index, Dynamic_ParentObject);
+			SetArrayCell(s_Collection, value, offset, Dynamic_ParentOffset);
+		}
 		
 		return DynamicType_Object;
 	}
