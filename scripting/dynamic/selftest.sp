@@ -389,9 +389,9 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	
 	// Vector test
 	float vvalue[2][3];
-	vvalue[0][0] = GetRandomFloat(0.0, 1.0);
-	vvalue[0][1] = GetRandomFloat(0.0, 1.0);
-	vvalue[0][2] = GetRandomFloat(0.0, 1.0);
+	vvalue[0][0] = GetRandomFloat(1.0, 32000.0);
+	vvalue[0][1] = GetRandomFloat(1.0, 32000.0);
+	vvalue[0][2] = GetRandomFloat(1.0, 32000.0);
 	char vbuffer[2][256];
 	Format(vbuffer[0], sizeof(vbuffer[]), "{%f, %f, %f}", vvalue[0][0], vvalue[0][1], vvalue[0][2]);
 	test.SetString("val", vbuffer[0]);
@@ -405,9 +405,7 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x13");
 		PrintToConsole(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vvalue[0][0], vvalue[0][1], vvalue[0][2], vvalue[1][0], vvalue[1][1], vvalue[1][2]);
-		// let this continue as i've posted this
-		// > https://forums.alliedmods.net/showthread.php?t=286748
-		// return false;
+		return false;
 	}
 	test.SetVector("val", vvalue[0]);
 	if (!test.GetString("val", vbuffer[1], sizeof(vbuffer[])))
@@ -686,9 +684,9 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 {
 	// Test value
 	float value[3];
-	value[0] = GetRandomFloat(0.0, 1.0);
-	value[1] = GetRandomFloat(0.0, 1.0);
-	value[2] = GetRandomFloat(0.0, 1.0);
+	value[0] = GetRandomFloat(1.0, 32000.0);
+	value[1] = GetRandomFloat(1.0, 32000.0);
+	value[2] = GetRandomFloat(1.0, 32000.0);
 	
 	// Offset test
 	int offset = test.SetVector("val", value);
@@ -743,9 +741,7 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	{
 		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x7");
 		PrintToConsole(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vector[0], vector[1], vector[2], value[0], value[1], value[2]);
-		// let this continue as i've posted this
-		// > https://forums.alliedmods.net/showthread.php?t=286748
-		// return false; 
+		return false; 
 	}
 	
 	// Boolean not supported - no test required
