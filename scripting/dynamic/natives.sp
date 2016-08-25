@@ -192,7 +192,7 @@ public int Native_Dynamic_PushInt(Handle plugin, int params)
 	int value = GetNativeCell(2);
 	int length;
 	GetNativeStringLength(3, length);
-	char[] name = new char[length];
+	char[] name = new char[++length];
 	GetNativeString(3, name, length);
 	return _Dynamic_PushInt(index, value, name);
 }
@@ -251,7 +251,7 @@ public int Native_Dynamic_PushBool(Handle plugin, int params)
 	bool value = GetNativeCell(2);
 	int length;
 	GetNativeStringLength(3, length);
-	char[] name = new char[length];
+	char[] name = new char[++length];
 	GetNativeString(3, name, length);
 	return _Dynamic_PushBool(index, value, name);
 }
@@ -310,7 +310,7 @@ public int Native_Dynamic_PushFloat(Handle plugin, int params)
 	float value = GetNativeCell(2);
 	int length;
 	GetNativeStringLength(3, length);
-	char[] name = new char[length];
+	char[] name = new char[++length];
 	GetNativeString(3, name, length);
 	return _Dynamic_PushFloat(index, value, name);
 }
@@ -478,7 +478,7 @@ public int Native_Dynamic_PushObject(Handle plugin, int params)
 	int value = GetNativeCell(2);
 	int length;
 	GetNativeStringLength(3, length);
-	char[] name = new char[length];
+	char[] name = new char[++length];
 	GetNativeString(3, name, length);
 	return _Dynamic_PushObject(index, value, name);
 }
@@ -543,7 +543,7 @@ public int Native_Dynamic_PushHandle(Handle plugin, int params)
 	int value = GetNativeCell(2);
 	int length;
 	GetNativeStringLength(3, length);
-	char[] name = new char[length];
+	char[] name = new char[++length];
 	GetNativeString(3, name, length);
 	return _Dynamic_PushHandle(index, value, name);
 }
@@ -607,7 +607,7 @@ public int Native_Dynamic_PushVector(Handle plugin, int params)
 	GetNativeArray(2, value, sizeof(value));
 	int length;
 	GetNativeStringLength(3, length);
-	char[] name = new char[length];
+	char[] name = new char[++length];
 	GetNativeString(3, name, length);
 	return _Dynamic_PushVector(index, value, name);
 }
@@ -725,12 +725,12 @@ public int Native_Dynamic_SortMembers(Handle plugin, int params)
 	return _Dynamic_SortMembers(index, order);
 }
 
-// native Dynamic Dynamic_FindByMemberValue(Dynamic obj, Dynamic params);
+// native ArrayList Dynamic_FindByMemberValue(Dynamic obj, Dynamic params);
 public int Native_Dynamic_FindByMemberValue(Handle plugin, int params)
 {
 	int index = GetNativeCell(1);
 	int dparams = GetNativeCell(2);
-	return _Dynamic_FindByMemberValue(plugin, index, dparams);
+	return _Dynamic_FindByMemberValue(index, dparams);
 }
 
 // native bool Dynamic_ResetObject(int index, bool disposemembers=true, int blocksize=0, int startsize=0);

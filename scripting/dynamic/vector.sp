@@ -127,7 +127,7 @@ stock int _Dynamic_PushVector(int index, const float value[3], const char[] name
 	ArrayList array = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Vector);
+	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, name, DynamicType_Vector);
 	SetMemberDataVector(array, position, offset, blocksize, value);
 	_Dynamic_SetMemberNameByIndex(index, memberindex, name);
 	//CallOnChangedForward(index, offset, membername, DynamicType_Vector);

@@ -61,7 +61,6 @@ native Dynamic Dynamic_FindByName(const char[] objectname);
 native Dynamic Dynamic_GetParent(Dynamic obj);
 native bool Dynamic_GetName(Dynamic obj, char[] buffer, int length);
 
-
 native bool Dynamic_GetPersistence(Dynamic obj);
 native bool Dynamic_SetPersistence(Dynamic obj, bool value);
 
@@ -79,7 +78,7 @@ native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer
 native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
 native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
 native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
-native Dynamic Dynamic_FindByMemberValue(Dynamic obj, Dynamic params);
+native ArrayList Dynamic_FindByMemberValue(Dynamic obj, Dynamic params);
 
 native int Dynamic_CallbackCount(Dynamic obj);
 native bool Dynamic_HookChanges(Dynamic obj, Dynamic_HookType callback);
@@ -523,7 +522,7 @@ methodmap Dynamic
 		return Dynamic_SortMembers(this, order);
 	}
 	
-	public Dynamic FindByMemberValue(Dynamic params)
+	public ArrayList FindByMemberValue(Dynamic params)
 	{
 		return Dynamic_FindByMemberValue(this, params);
 	}

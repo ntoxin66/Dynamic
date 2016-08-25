@@ -88,6 +88,24 @@ public void _Dynamic_SelfTest(any userid)
 	}
 	PrintToConsole(client, "> DynamicType_Vector test completed");
 	
+	// Dynamic.GetMemberNameByIndex(Dynamic params) Test
+	test.Reset();
+	if (!_Dynamic_GetMemberNameByIndexTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	PrintToConsole(client, "> Dynamic_GetMemberNameByIndex test completed"); 
+	
+	// Dynamic.FindByMemberValue(Dynamic params) Test
+	test.Reset();
+	if (!_Dynamic_FindByMemberValueTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	PrintToConsole(client, "> Dynamic_FindByMemberValue test completed");
+	
 	test.Dispose();
 }
  
@@ -748,6 +766,259 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	// Object not supported - no test required
 	// Vector not supported - no test required
 	
+	return true;
+}
+
+stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
+{
+	// Test GetMemberNameByIndex for Set/PushInt
+	test.SetInt("index0", 0);
+	char buffer[128];
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x1");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushInt(1, "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x2");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	// Test GetMemberNameByIndex for Set/PushFloat
+	test.SetFloat("index0", 0.0);
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x3");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushFloat(1.0, "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x4");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	// Test GetMemberNameByIndex for Set/PushBool
+	test.SetBool("index0", false);
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x5");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushBool(true, "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x6");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	// Test GetMemberNameByIndex for Set/PushString
+	test.SetString("index0", "0");
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x7");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushString("1", 0, "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x8");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	// Test GetMemberNameByIndex for Set/PushObject
+	test.SetObject("index0", Dynamic());
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x9");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushObject(Dynamic(), "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x10");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	// Test GetMemberNameByIndex for Set/PushHandle
+	test.SetHandle("index0", null);
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x11");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushHandle(null, "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x12");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	// Test GetMemberNameByIndex for Set/PushVector
+	test.SetVector("index0", NULL_VECTOR);
+	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index0"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x13");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.PushVector(NULL_VECTOR, "index1");
+	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "index1"))
+	{
+		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x14");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		return false; 
+	}
+	test.Reset();
+	
+	return true;
+}
+
+stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
+{
+	// Create some stuff to find
+	Dynamic child = Dynamic();
+	child.SetString("class", "Plant");
+	child.SetString("name", "Tree");
+	test.PushObject(child, "Tree");
+	child = Dynamic();
+	child.SetString("class", "Plant");
+	child.SetString("name", "Shrub");
+	test.PushObject(child, "Shrub");
+	child = Dynamic();
+	child.SetString("class", "Animal");
+	child.SetString("name", "Cat");
+	test.PushObject(child, "Cat");
+	child = Dynamic();
+	child.SetString("class", "Animal");
+	child.SetString("name", "Dog");
+	test.PushObject(child, "Dog");
+	
+	// Search for plants
+	Dynamic params = Dynamic();
+	params.PushString("Plant", 0, "class");
+	Collection results = view_as<Collection>(test.FindByMemberValue(params));
+	params.Reset();
+	
+	// Check plant results
+	if (results == null)
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x1");
+		PrintToConsole(client, "> null should equal notnull", results.Length, 2);
+		return false;
+	}
+	if (results.Length != 2)
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x1");
+		PrintToConsole(client, "> %d should equal %d", results.Length, 2);
+		return false; 
+	}
+	char buffer[32];
+	if (!results.Items(0).GetString("name", buffer, sizeof(buffer)))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x2");
+		PrintToConsole(client, "> %d should equal %d", results.Items(0).GetString("name", buffer, sizeof(buffer)), true);
+		return false; 
+	}
+	if (!StrEqual(buffer, "Tree"))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x3");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		return false; 
+	}
+	if (!results.Items(1).GetString("name", buffer, sizeof(buffer)))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x4");
+		PrintToConsole(client, "> %d should equal %d", results.Items(1).GetString("name", buffer, sizeof(buffer)), true);
+		return false; 
+	}
+	if (!StrEqual(buffer, "Shrub"))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x5");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		return false; 
+	}
+	delete results;
+	
+	// Search for animals
+	params.PushString("Animal", 0, "class");
+	results = view_as<Collection>(test.FindByMemberValue(params));
+	params.Reset();
+	
+	// Check animal results
+	if (results == null)
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x6");
+		PrintToConsole(client, "> null should equal notnull", results.Length, 2);
+		return false;
+	}
+	if (results.Length != 2)
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x7");
+		PrintToConsole(client, "> %d should equal %d", results.Length, 2);
+		return false; 
+	}
+	if (!results.Items(0).GetString("name", buffer, sizeof(buffer)))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x8");
+		PrintToConsole(client, "> %d should equal %d", results.Items(0).GetString("name", buffer, sizeof(buffer)), true);
+		return false; 
+	}
+	if (!StrEqual(buffer, "Cat"))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x9");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		return false; 
+	}
+	if (!results.Items(1).GetString("name", buffer, sizeof(buffer)))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x10");
+		PrintToConsole(client, "> %d should equal %d", results.Items(1).GetString("name", buffer, sizeof(buffer)), true);
+		return false; 
+	}
+	if (!StrEqual(buffer, "Dog"))
+	{
+		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x11");
+		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		return false; 
+	}
+	delete results;
+	
+	params.Dispose();
 	return true;
 }
 

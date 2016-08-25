@@ -141,7 +141,7 @@ stock int _Dynamic_PushFloat(int index, float value, const char[] name="")
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
 	
-	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, DynamicType_Float);
+	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_Float);
 	SetMemberDataFloat(data, position, offset, blocksize, value);
 	_Dynamic_SetMemberNameByIndex(index, memberindex, name);
 	//CallOnChangedForward(index, offset, membername, DynamicType_Float);

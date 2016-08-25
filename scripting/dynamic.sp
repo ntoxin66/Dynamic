@@ -929,7 +929,7 @@ stock bool GetMemberOffset(Handle array, int index, const char[] membername, boo
 	}
 }
 
-stock int CreateMemberOffset(Handle array, int index, int &position, int &offset, int blocksize, Dynamic_MemberType type, int stringlength=0)
+stock int CreateMemberOffset(Handle array, int index, int &position, int &offset, int blocksize, const char[] membername, Dynamic_MemberType type, int stringlength=0)
 {
 	int memberindex;
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
@@ -937,6 +937,10 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 	// Increment member count
 	SetArrayCell(s_Collection, index, _Dynamic_GetMemberCount(index)+1, Dynamic_MemberCount);
 	
+	offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
+	memberindex = PushArrayString(membernames, membername);
+	SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
+		
 	if (type == DynamicType_String)
 	{
 		if (stringlength == 0)
@@ -944,10 +948,6 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 			ThrowNativeError(SP_ERROR_NATIVE, "You must set a strings length when you initialise it");
 			return false;
 		}
-		
-		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-		memberindex = PushArrayString(membernames, "");
-		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
 		
 		ExpandIfRequired(array, position, offset, blocksize, ByteCountToCells(stringlength));
 		SetMemberType(array, position, offset, blocksize, type);
@@ -957,10 +957,6 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 	}
 	else if (type == DynamicType_Vector)
 	{
-		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-		memberindex = PushArrayString(membernames, "");
-		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
-		
 		ExpandIfRequired(array, position, offset, blocksize, 3);
 		SetMemberType(array, position, offset, blocksize, type);
 		SetArrayCell(s_Collection, index, offset + 4, Dynamic_NextOffset);
@@ -968,10 +964,6 @@ stock int CreateMemberOffset(Handle array, int index, int &position, int &offset
 	}
 	else
 	{
-		offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-		memberindex = PushArrayString(membernames, "");
-		SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
-		
 		ExpandIfRequired(array, position, offset, blocksize, 1);
 		SetMemberType(array, position, offset, blocksize, type);
 		SetArrayCell(s_Collection, index, offset + 2, Dynamic_NextOffset);
@@ -1369,7 +1361,7 @@ stock bool _Dynamic_GetMemberNameByIndex(int index, int memberindex, char[] buff
 
 stock bool _Dynamic_SetMemberNameByIndex(int index, int memberindex, const char[] membername)
 {
-	if (!_Dynamic_IsValid(index, true))
+	/*if (!_Dynamic_IsValid(index, true))
 		return false;
 	
 	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
@@ -1378,7 +1370,9 @@ stock bool _Dynamic_SetMemberNameByIndex(int index, int memberindex, const char[
 	if (memberindex >= membercount)
 		return false;
 	
-	SetArrayString(membernames, memberindex, membername);
+	PrintToChatAll("> _Dynamic_SetMemberNameByIndex{name='%s'}", membername);
+	
+	SetArrayString(membernames, memberindex, membername);*/
 	return true;
 }
 
@@ -1438,55 +1432,69 @@ stock bool _Dynamic_SortMembers(int index, SortOrder order)
 	return true;
 }
 
-stock int _Dynamic_FindByMemberValue(Handle plugin, int index, int params)
+stock int _Dynamic_FindByMemberValue(int index, int params)
 {
 	if (!_Dynamic_IsValid(index, true))
-		return Invalid_Dynamic_Object;
+		return 0;
 		
 	// Iterate through child dynamic objects
-	int count = _Dynamic_GetMemberCount(index);
-	if (count == 0)
-		return Invalid_Dynamic_Object;
+	int membercount = _Dynamic_GetMemberCount(index);
+	if (membercount == 0)
+		return 0;
 	
-	int results = _Dynamic_Initialise(plugin);
-	int currentobject;
-	
-	char paramname[DYNAMIC_MEMBERNAME_MAXLEN];
+	// All the required stuff
+	ArrayList results = new ArrayList();
+	int member;
 	int paramcount = _Dynamic_GetMemberCount(params);
-	int paramoffset;
-	Dynamic_MemberType paramtype;
-	
 	bool matched = true;
 	int resultcount = 0;
 	int memberoffset;
-	char paramvalue[1024];
-	int length = 1024;
 	
-	for (int i = 0; i < count; i++)
+	// Compile params
+	char[][] param_name = new char[paramcount][DYNAMIC_MEMBERNAME_MAXLEN];
+	Dynamic_MemberType[] param_type = new Dynamic_MemberType[paramcount];
+	int[] param_offset = new int[paramcount];
+	int[] param_length = new int[paramcount];
+	int param_maxlength;
+	for (int param=0; param<paramcount; param++)
 	{
+		param_offset[param] = _Dynamic_GetMemberOffsetByIndex(params, param);
+		_Dynamic_GetMemberNameByIndex(params, param, param_name[param], DYNAMIC_MEMBERNAME_MAXLEN);
+		param_type[param] = _Dynamic_GetMemberTypeByOffset(params, param_offset[param]);
+		if (param_type[param] == DynamicType_String)
+		{
+			param_length[param] = _Dynamic_GetStringLengthByOffset(params, param_offset[param]);
+			if (param_length[param] > param_maxlength)
+				param_maxlength = param_length[param];
+		}
+	}
+	char[] paramvalue = new char[param_maxlength];
+	
+	// Loop members in object
+	for (int i = 0; i < membercount; i++)
+	{
+		// Get member offset and check its a dynamic object
 		memberoffset = _Dynamic_GetMemberOffsetByIndex(index, i);
 		if (_Dynamic_GetMemberTypeByOffset(index, memberoffset) != DynamicType_Object)
 			continue;
 		
-		currentobject = _Dynamic_GetObjectByOffset(index, memberoffset);
-		if (!_Dynamic_IsValid(currentobject))
+		// Get member and check its valid
+		member = _Dynamic_GetObjectByOffset(index, memberoffset);
+		if (!_Dynamic_IsValid(member))
 			continue;
 		
-		matched = true;
-		
 		// Iterate through each param and check for matches
-		for (int x=0; x < paramcount; x++)
-		{
-			paramoffset = _Dynamic_GetMemberOffsetByIndex(params, x);
-			_Dynamic_GetMemberNameByIndex(params, x, paramname, sizeof(paramname));
-			paramtype = _Dynamic_GetMemberTypeByOffset(params, paramoffset);
-			
-			switch (paramtype)
+		matched = true;
+		for (int param=0; param < paramcount; param++)
+		{			
+			switch (param_type[param])
 			{
 				case DynamicType_String:
 				{
-					_Dynamic_GetStringByOffset(params, paramoffset, paramvalue, length);
-					if (!_Dynamic_CompareStringByOffset(currentobject, memberoffset, paramvalue, true))
+					_Dynamic_GetStringByOffset(params, param_offset[param], paramvalue, param_length[param]);
+					memberoffset = _Dynamic_GetMemberOffset(member, param_name[param]);
+					
+					if (!_Dynamic_CompareStringByOffset(member, memberoffset, paramvalue, true))
 					{
 						matched = false;
 						break;
@@ -1494,8 +1502,8 @@ stock int _Dynamic_FindByMemberValue(Handle plugin, int index, int params)
 				}
 				default:
 				{
-					ThrowError("Dynamic_MemberType:%d is not yet supported", paramtype);
-					return Invalid_Dynamic_Object;
+					ThrowError("Dynamic_MemberType:%d is not yet supported", param_type[param]);
+					return 0;
 				}
 			}
 		}
@@ -1504,17 +1512,17 @@ stock int _Dynamic_FindByMemberValue(Handle plugin, int index, int params)
 		if (!matched)
 			continue;
 		
-		_Dynamic_PushObject(results, currentobject);
+		results.Push(member);
 		resultcount++;
 	}
 	
 	if (resultcount == 0)
 	{
-		_Dynamic_Dispose(results, true);
-		return Invalid_Dynamic_Object;
+		delete results;
+		return 0;
 	}
 	
-	return results;
+	return view_as<int>(results);
 }
 
 stock bool StrEqualEx(Handle array, int index, const char[] fieldname)

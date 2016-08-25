@@ -130,7 +130,7 @@ stock int _Dynamic_PushObject(int index, int value, const char[] name="")
 	SetArrayCell(s_Collection, value, index, Dynamic_ParentObject);
 	int position; int offset;
 	
-	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, DynamicType_Object);
+	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, name, DynamicType_Object);
 	SetMemberDataInt(array, position, offset, blocksize, value);
 	_Dynamic_SetMemberNameByIndex(index, memberindex, name);
 	//CallOnChangedForward(index, offset, "Pushed", DynamicType_Object);

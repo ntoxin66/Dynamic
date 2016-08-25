@@ -141,6 +141,8 @@ stock int _Dynamic_SetString(int index, const char[] membername, const char[] va
 	if (!GetMemberOffset(data, index, membername, true, position, offset, blocksize, DynamicType_String, length))
 		return INVALID_DYNAMIC_OFFSET;
 	
+	
+	
 	Dynamic_MemberType type = _SetString(data, position, offset, blocksize, value);
 	CallOnChangedForward(index, offset, membername, type);
 	return offset;
@@ -185,7 +187,7 @@ stock bool _Dynamic_SetStringByOffset(int index, int offset, const char[] value,
 	return true;
 }
 
-stock int _Dynamic_PushString(int index, const char[] value, int length, int valuelength, const char[] name="")
+stock int _Dynamic_PushString(int index, const char[] value, int length, int valuelength, const char[] name)
 {
 	if (!_Dynamic_IsValid(index, true))
 		return INVALID_DYNAMIC_OFFSET;
@@ -196,12 +198,11 @@ stock int _Dynamic_PushString(int index, const char[] value, int length, int val
 		length = ++valuelength;
 	
 	int position; int offset;
-	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, DynamicType_String, length);
+	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_String, length);
 	
 	length+=2; // this can probably be removed (review Native_Dynamic_SetString for removal also)
 	SetMemberDataString(data, position, offset, blocksize, value);
 	_Dynamic_SetMemberNameByIndex(index, memberindex, name);
-	
 	//CallOnChangedForward(index, offset, membername, DynamicType_String);
 	return memberindex;
 }
@@ -244,16 +245,19 @@ stock int _Dynamic_GetStringLength(int index, const char[] membername)
 
 stock bool _Dynamic_CompareString(int index, const char[] membername, const char[] value, bool casesensitive)
 {
-	static char buffer[2048];
-	_Dynamic_GetString(index, membername, buffer, sizeof(buffer));
-	PrintToServer("> Compare '%s' == '%s'", value, buffer);
-	return StrEqual(value, buffer, casesensitive);	
+	int offset = _Dynamic_GetMemberOffset(index, membername);
+	if (offset == INVALID_DYNAMIC_OFFSET)
+		return false;
+	
+	return _Dynamic_CompareStringByOffset(index, offset,  value, casesensitive);
 }
 
 stock bool _Dynamic_CompareStringByOffset(int index, int offset, const char[] value, bool casesensitive)
 {
-	static char buffer[2048];
-	_Dynamic_GetStringByOffset(index, offset, buffer, sizeof(buffer));
+	int length = _Dynamic_GetStringLengthByOffset(index, offset);
+	char[] buffer = new char[length];
+	_Dynamic_GetStringByOffset(index, offset, buffer, length);
+	
 	PrintToServer("> Compare '%s' == '%s'", value, buffer);
 	return StrEqual(value, buffer, casesensitive);	
 }
