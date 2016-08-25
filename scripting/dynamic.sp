@@ -136,6 +136,11 @@ public void OnMapStart()
 	}
 }
 
+stock void OnClientDisconnect_Post(int client)
+{
+	_Dynamic_ResetObject(client);
+}
+
 stock int _Dynamic_Initialise(Handle plugin, int blocksize=64, int startsize=0, bool persistent=false)
 {
 	int index = -1;
