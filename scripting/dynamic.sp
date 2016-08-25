@@ -74,6 +74,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 
+public void OnLibraryRemoved(const char[] name)
+{
+	_Dynamic_CollectGarbage();
+}
+
 public void OnPluginStart()
 {
 	// Initialise static plugin data
@@ -115,25 +120,7 @@ public void OnPluginEnd()
 
 public void OnMapStart()
 {
-	// Dispose all objects owned by terminated plugins
-	Handle plugin;
-	PluginStatus status;
-	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
-	{
-		// Skip disposed objects
-		if (!_Dynamic_IsValid(i, false))
-			continue;
-			
-		// Skip persistent objects
-		if (GetArrayCell(s_Collection, i, Dynamic_Persistent))
-			continue;
-			
-		plugin = GetArrayCell(s_Collection, i, Dynamic_OwnerPlugin);
-		status = GetPluginStatus(plugin);
-		
-		if (status == Plugin_Error || status == Plugin_Failed)
-			_Dynamic_Dispose(i, false);
-	}
+	_Dynamic_CollectGarbage();
 }
 
 stock void OnClientDisconnect_Post(int client)
@@ -264,6 +251,29 @@ stock bool _Dynamic_Dispose(int index, bool disposemembers, bool reuse=false, in
 		PushStackCell(s_FreeIndicies, index);
 	}
 	return true;
+}
+
+stock void _Dynamic_CollectGarbage()
+{
+	// Dispose all objects owned by terminated plugins
+	Handle plugin;
+	PluginStatus status;
+	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
+	{
+		// Skip disposed objects
+		if (!_Dynamic_IsValid(i, false))
+			continue;
+			
+		// Skip persistent objects
+		if (GetArrayCell(s_Collection, i, Dynamic_Persistent))
+			continue;
+			
+		plugin = GetArrayCell(s_Collection, i, Dynamic_OwnerPlugin);
+		status = GetPluginStatus(plugin);
+		
+		if (status == Plugin_Error || status == Plugin_Failed)
+			_Dynamic_Dispose(i, false);
+	}
 }
 
 stock bool _Dynamic_ResetObject(int index, bool disposemembers, int blocksize=0, int startsize=0)
