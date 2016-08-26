@@ -19,14 +19,14 @@
 
 stock bool _GetVector(ArrayList data, int position, int offset, int blocksize, float value[3])
 {
-	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
+	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Vector)
-		return GetMemberDataVector(data, position, offset, blocksize, value);
+		return _Dynamic_GetMemberDataVector(data, position, offset, blocksize, value);
 	else if (type == DynamicType_String)
 	{
-		int length = GetMemberStringLength(data, position, offset, blocksize);
+		int length = _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 		char[] buffer = new char[length];
-		GetMemberDataString(data, position, offset, blocksize, buffer, length);
+		_Dynamic_GetMemberDataString(data, position, offset, blocksize, buffer, length);
 		return GetVectorFromString(buffer, value);
 	}
 	else
@@ -38,17 +38,17 @@ stock bool _GetVector(ArrayList data, int position, int offset, int blocksize, f
 
 stock Dynamic_MemberType _SetVector(ArrayList data, int position, int offset, int blocksize, const float value[3], const char[] membername="")
 {
-	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
+	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Vector)
 	{
-		SetMemberDataVector(data, position, offset, blocksize, value);
+		_Dynamic_SetMemberDataVector(data, position, offset, blocksize, value);
 		return DynamicType_Vector;
 	}
 	else if (type == DynamicType_String)
 	{
 		char buffer[192];
 		Format(buffer, sizeof(buffer), "{%f, %f, %f}", value[0], value[1], value[2]);
-		SetMemberDataString(data, position, offset, blocksize, buffer);
+		_Dynamic_SetMemberDataString(data, position, offset, blocksize, buffer);
 		return DynamicType_String;
 	}
 	else
@@ -66,7 +66,7 @@ stock bool _Dynamic_GetVector(int index, const char[] membername, float[3] vecto
 	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	if (!GetMemberOffset(data, index, membername, false, position, offset, blocksize, DynamicType_Vector))
+	if (!_Dynamic_GetMemberDataOffset(data, index, membername, false, position, offset, blocksize, DynamicType_Vector))
 		return false;
 		
 	return _GetVector(data, position, offset, blocksize, vector);
@@ -80,7 +80,7 @@ stock int _Dynamic_SetVector(int index, const char[] membername, const float val
 	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	if (!GetMemberOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Vector))
+	if (!_Dynamic_GetMemberDataOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Vector))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = _SetVector(data, position, offset, blocksize, value, membername);
@@ -96,7 +96,7 @@ stock bool _Dynamic_GetVectorByOffset(int index, int offset, float[3] value)
 	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position;
-	if (!ValidateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return false;
 	
 	return _GetVector(data, position, offset, blocksize, value);
@@ -111,7 +111,7 @@ stock bool _Dynamic_SetVectorByOffset(int index, int offset, const float value[3
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	
 	int position;
-	if (!ValidateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetVector(data, position, offset, blocksize, value);
@@ -124,17 +124,15 @@ stock int _Dynamic_PushVector(int index, const float value[3], const char[] name
 	if (!_Dynamic_IsValid(index, true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList array = GetArrayCell(s_Collection, index, Dynamic_Data);
+	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	int memberindex = CreateMemberOffset(array, index, position, offset, blocksize, name, DynamicType_Vector);
-	SetMemberDataVector(array, position, offset, blocksize, value);
-	_Dynamic_SetMemberNameByIndex(index, memberindex, name);
-	//CallOnChangedForward(index, offset, membername, DynamicType_Vector);
+	int memberindex = _Dynamic_CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_Vector);
+	_Dynamic_SetMemberDataVector(data, position, offset, blocksize, value);
+	CallOnChangedForward(index, offset, name, DynamicType_Vector);
 	return memberindex;
 }
 
-// native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float value[3]);
 stock bool _Dynamic_GetVectorByIndex(int index, int memberindex, float value[3])
 {
 	if (!_Dynamic_IsValid(index, true))
@@ -145,4 +143,37 @@ stock bool _Dynamic_GetVectorByIndex(int index, int memberindex, float value[3])
 		return false;
 	
 	return _Dynamic_GetVectorByOffset(index, offset, value);
+}
+
+stock bool _Dynamic_GetMemberDataVector(Handle array, int position, int offset, int blocksize, float vector[3])
+{
+	// A vector has 3 cells of data to be retrieved
+	for (int i=0; i<3; i++)
+	{
+		// Move the offset forward by one cell as this is where the value is stored
+		offset++;
+		
+		// Calculate internal data array index and cell position
+		_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+		
+		// Get the value
+		vector[i] = GetArrayCell(array, position, offset);
+	}
+	return true;
+}
+
+stock void _Dynamic_SetMemberDataVector(ArrayList data, int position, int offset, int blocksize, const float value[3])
+{
+	// A vector has 3 cells of data to be stored
+	for (int i=0; i<3; i++)
+	{
+		// Move the offset forward by one cell as this is where the value is stored
+		offset++;
+		
+		// Calculate internal data array index and cell position
+		_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+		
+		// Set the value
+		SetArrayCell(data, position, value[i], offset);
+	}
 }

@@ -19,9 +19,9 @@
 
 stock int _GetHandle(ArrayList data, int position, int offset, int blocksize)
 {
-	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
+	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Handle)
-		return GetMemberDataInt(data, position, offset, blocksize);
+		return _Dynamic_GetMemberDataInt(data, position, offset, blocksize);
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
@@ -31,10 +31,10 @@ stock int _GetHandle(ArrayList data, int position, int offset, int blocksize)
 
 stock Dynamic_MemberType _SetHandle(ArrayList data, int position, int offset, int blocksize, int value, const char[] membername="")
 {
-	Dynamic_MemberType type = GetMemberType(data, position, offset, blocksize);
+	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Handle)
 	{
-		SetMemberDataInt(data, position, offset, blocksize, view_as<int>(value));
+		_Dynamic_SetMemberDataInt(data, position, offset, blocksize, view_as<int>(value));
 		return DynamicType_Handle;
 	}
 	else
@@ -52,7 +52,7 @@ stock int _Dynamic_GetHandle(int index, const char[] membername)
 	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	if (!GetMemberOffset(data, index, membername, false, position, offset, blocksize, DynamicType_Handle))
+	if (!_Dynamic_GetMemberDataOffset(data, index, membername, false, position, offset, blocksize, DynamicType_Handle))
 		return 0;
 		
 	return _GetHandle(data, position, offset, blocksize);
@@ -67,7 +67,7 @@ stock int _Dynamic_SetHandle(int index, const char[] membername, int value)
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	
 	int position; int offset;
-	if (!GetMemberOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Handle))
+	if (!_Dynamic_GetMemberDataOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Handle))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = _SetHandle(data, position, offset, blocksize, value);
@@ -83,7 +83,7 @@ stock int _Dynamic_GetHandleByOffset(int index, int offset)
 	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position;
-	if (!ValidateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return 0;
 	
 	return _GetHandle(data, position, offset, blocksize);
@@ -97,7 +97,7 @@ stock bool _Dynamic_SetHandleByOffset(int index, int offset, int value)
 	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position;
-	if (!ValidateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetHandle(data, position, offset, blocksize, value);
@@ -114,10 +114,9 @@ stock int _Dynamic_PushHandle(int index, int value, const char[] name="")
 	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
 	
-	int memberindex = CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_Object);
-	SetMemberDataInt(data, position, offset, blocksize, value);
-	_Dynamic_SetMemberNameByIndex(index, memberindex, name);
-	//CallOnChangedForward(index, offset, membername, DynamicType_Int);
+	int memberindex = _Dynamic_CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_Object);
+	_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value);
+	CallOnChangedForward(index, offset, name, DynamicType_Handle);
 	return memberindex;
 }
 
