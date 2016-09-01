@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_datatypes_vector
+  #endinput
+#endif
+#define _dynamic_system_datatypes_vector
+
 stock bool _GetVector(ArrayList data, int position, int offset, int blocksize, float value[3])
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);

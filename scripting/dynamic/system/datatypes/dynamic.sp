@@ -17,10 +17,15 @@
  *
  */
 
+#if defined _dynamic_system_datatypes_dynamic
+  #endinput
+#endif
+#define _dynamic_system_datatypes_dynamic
+
 stock DynamicObject _GetDynamic(ArrayList data, int position, int offset, int blocksize)
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
-	if (type == DynamicType_Object)
+	if (type == DynamicType_Dynamic)
 		return view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
 	else
 	{
@@ -32,23 +37,26 @@ stock DynamicObject _GetDynamic(ArrayList data, int position, int offset, int bl
 stock Dynamic_MemberType _SetDynamic(DynamicObject dynamic, ArrayList data, int position, int offset, int blocksize, DynamicObject value, const char[] membername="")
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
-	if (type == DynamicType_Object)
+	if (type == DynamicType_Dynamic)
 	{
 		// remove parent from current value
 		DynamicObject currentvalue = view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
 		if (currentvalue != INVALID_DYNAMIC_OBJECT)
+		{
 			currentvalue.Parent = INVALID_DYNAMIC_OBJECT;
+			currentvalue.ParentOffset = INVALID_DYNAMIC_OFFSET;
+		}
 		
 		// set value and name
 		_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value.Index);
 		
+		// set parent
 		if (value != INVALID_DYNAMIC_OBJECT)
 		{
 			value.Parent = dynamic;
 			value.ParentOffset = offset;
 		}
-		
-		return DynamicType_Object;
+		return DynamicType_Dynamic;
 	}
 	else
 	{
@@ -66,7 +74,7 @@ stock DynamicObject _Dynamic_GetDynamic(DynamicObject dynamic, const char[] memb
 	int blocksize = dynamic.BlockSize;
 	
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Object))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Dynamic))
 		return INVALID_DYNAMIC_OBJECT;
 		
 	return _GetDynamic(data, position, offset, blocksize);
@@ -80,7 +88,7 @@ stock int _Dynamic_SetDynamic(DynamicObject dynamic, const char[] membername, Dy
 	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Object))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Dynamic))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = _SetDynamic(dynamic, data, position, offset, blocksize, value, membername);
@@ -119,17 +127,23 @@ stock bool _Dynamic_SetDynamicByOffset(DynamicObject dynamic, int offset, Dynami
 	return true;
 }
 
-stock int _Dynamic_PushDynamic(DynamicObject dynamic, int value, const char[] name="")
+stock int _Dynamic_PushDynamic(DynamicObject dynamic, DynamicObject value, const char[] name="")
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	SetArrayCell(s_Collection, value, dynamic.Index, Dynamic_ParentObject);
-	int position; int offset;
+	int position; int offset;	
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Dynamic);
+	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, dynamic.BlockSize, value.Index);
 	
-	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Object);
-	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, dynamic.BlockSize, value);
-	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Object);
+	// set parent
+	if (value != INVALID_DYNAMIC_OBJECT)
+	{
+		value.Parent = dynamic;
+		value.ParentOffset = offset;
+	}
+	
+	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Dynamic);
 	return memberindex;
 }
 

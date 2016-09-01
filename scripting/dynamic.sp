@@ -18,7 +18,7 @@
  */
 #define dynamic_use_local_methodmap 1
 #include <dynamic>
-#include <dynamic-collection>
+//#include <dynamic-collection>
 #include <regex>
 #pragma newdecls required
 #pragma semicolon 1
@@ -31,24 +31,25 @@ Handle g_sRegex_Vector = null;
 int g_iDynamic_MemberLookup_Offset;
 
 // Dynamics internal methodmap
-#include "dynamic/methodmaps/dynamicobject"
+#include "dynamic/system/methodmaps/dynamicobject.sp"
 
 // Dynamic datatypes
-#include "dynamic/bool.sp"
-#include "dynamic/dynamic.sp"
-#include "dynamic/float.sp"
-#include "dynamic/handle.sp"
-#include "dynamic/int.sp"
-#include "dynamic/natives.sp"
-#include "dynamic/string.sp"
-#include "dynamic/vector.sp"
+#include "dynamic/system/datatypes/bool.sp"
+#include "dynamic/system/datatypes/dynamic.sp"
+#include "dynamic/system/datatypes/float.sp"
+#include "dynamic/system/datatypes/handle.sp"
+#include "dynamic/system/datatypes/int.sp"
+
+#include "dynamic/system/datatypes/string.sp"
+#include "dynamic/system/datatypes/vector.sp"
 
 // Other features
-#include "dynamic/commands.sp"
-#include "dynamic/flatconfigs.sp"
-#include "dynamic/hooks.sp"
-#include "dynamic/keyvalues.sp"
-#include "dynamic/selftest.sp"
+#include "dynamic/system/commands.sp"
+#include "dynamic/system/flatconfigs.sp"
+#include "dynamic/system/hooks.sp"
+#include "dynamic/system/keyvalues.sp"
+#include "dynamic/system/natives.sp"
+#include "dynamic/system/selftest.sp"
 
 public Plugin myinfo =
 {
@@ -173,7 +174,7 @@ stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reu
 			offset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
 			membertype = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 			
-			if (membertype == DynamicType_Object)
+			if (membertype == DynamicType_Dynamic)
 			{
 				disposableobject = view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
 				if (!disposableobject.IsValid(false))
@@ -383,10 +384,11 @@ stock bool _Dynamic_GetMemberDataOffset(DynamicObject dynamic, const char[] memb
 		return true;
 	}
 	
-	// Return false if offset was not found and we dont need to create a new member
+	// Return false if offset was not found
 	if (!create)
 		return false;
 	
+	// We need to create a new member
 	_Dynamic_CreateMemberOffset(dynamic, position, offset, membername, type, stringlength);
 	return true;
 }
@@ -668,7 +670,7 @@ stock Collection _Dynamic_FindByMemberValue(DynamicObject dynamic, DynamicObject
 	{
 		// Get member offset and check its a dynamic object
 		memberoffset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
-		if (_Dynamic_GetMemberTypeByOffset(dynamic, memberoffset) != DynamicType_Object)
+		if (_Dynamic_GetMemberTypeByOffset(dynamic, memberoffset) != DynamicType_Dynamic)
 			continue;
 		
 		// Get member and check its valid

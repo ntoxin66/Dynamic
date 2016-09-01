@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_flatconfigs
+  #endinput
+#endif
+#define _dynamic_system_flatconfigs
+
 stock bool _Dynamic_ReadConfig(DynamicObject dynamic, const char[] path, bool use_valve_fs=false, int valuelength=128)
 {
 	if (!dynamic.IsValid(true))

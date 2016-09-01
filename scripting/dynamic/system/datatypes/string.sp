@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_datatypes_string
+  #endinput
+#endif
+#define _dynamic_system_datatypes_string
+
 stock bool _GetString(ArrayList data, int position, int offset, int blocksize, char[] buffer, int length)
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);

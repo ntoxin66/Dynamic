@@ -17,47 +17,46 @@
  *
  */
 
-stock bool _Dynamic_HookChanges(int index, Dynamic_HookType callback, Handle plugin)
+#if defined _dynamic_system_hooks
+  #endinput
+#endif
+#define _dynamic_system_hooks
+
+stock bool _Dynamic_HookChanges(DynamicObject dynamic, Dynamic_HookType callback, Handle plugin)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	Handle forwards = GetArrayCell(s_Collection, index, Dynamic_Forwards);
+	Handle forwards = dynamic.Forwards;
 	if (forwards == null)
-	{
-		forwards = CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell);
-		SetArrayCell(s_Collection, index, forwards, Dynamic_Forwards);
-	}
+		dynamic.Forwards = forwards = CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell);
 	
 	// Add forward to objects forward list
 	AddToForward(forwards, plugin, callback);
 	
-	// Store new callback count
-	int count = GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
-	SetArrayCell(s_Collection, index, ++count, Dynamic_CallbackCount);
+	// Increment callback count
+	dynamic.HookCount++;
 	return true;
 }
 
-stock bool _Dynamic_UnHookChanges(int index, Dynamic_HookType callback, Handle plugin)
+stock bool _Dynamic_UnHookChanges(DynamicObject dynamic, Dynamic_HookType callback, Handle plugin)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	Handle forwards = GetArrayCell(s_Collection, index, Dynamic_Forwards);
+	Handle forwards = dynamic.Forwards;
 	if (forwards == null)
-		return false;
+		dynamic.Forwards = forwards = CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_String, Param_Cell);
 	
 	// Remove forward from objects forward list
 	RemoveFromForward(forwards, plugin, callback);
 	
-	// Store new callback count
-	int count = GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
-	SetArrayCell(s_Collection, index, --count, Dynamic_CallbackCount);
-	
-	if (count == 0)
+	// Decrement callback count
+	if (--dynamic.HookCount == 0)
 	{
+		// Remove unused handle
 		CloseHandle(forwards);
-		SetArrayCell(s_Collection, index, 0, Dynamic_Forwards);
+		dynamic.Forwards = null;
 	}
 	return true;
 }

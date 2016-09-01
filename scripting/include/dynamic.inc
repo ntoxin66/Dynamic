@@ -37,6 +37,7 @@ enum Dynamic_MemberType
 	DynamicType_Float = 1,
 	DynamicType_String = 2,
 	DynamicType_Object = 3,
+	DynamicType_Dynamic = 3,
 	DynamicType_Bool = 4,
 	DynamicType_Handle = 5,
 	DynamicType_Vector = 6,
@@ -167,12 +168,15 @@ methodmap Dynamic
 {
 #if defined dynamic_persistent
 	public Dynamic(int blocksize=64, int startsize=0, bool persistent=true)
-#else
-	public Dynamic(int blocksize=64, int startsize=0, bool persistent=false)
-#endif
 	{
 		return Dynamic_Initialise(blocksize, startsize, persistent);
 	}
+#else
+	public Dynamic(int blocksize=64, int startsize=0, bool persistent=false)
+	{
+		return Dynamic_Initialise(blocksize, startsize, persistent);
+	}
+#endif
 	
 	property int IsValid
 	{
@@ -408,36 +412,43 @@ methodmap Dynamic
 		return Dynamic_CompareString(this, membername, value, casesensitive);
 	}
 	
+	#pragma deprecated Use .GetDynamic() instead
 	public Dynamic GetObject(const char[] membername)
 	{
 		return Dynamic_GetDynamic(this, membername);
 	}
 	
+	#pragma deprecated Use .SetDynamic() instead
 	public int SetObject(const char[] membername, Dynamic value)
 	{
 		return Dynamic_SetDynamic(this, membername, value);
 	}
 	
+	#pragma deprecated Use .SetDynamicByOffset() instead
 	public Dynamic GetObjectByOffset(int offset)
 	{
 		return Dynamic_GetDynamicByOffset(this, offset);
 	}
 	
+	#pragma deprecated Use .SetDynamicByOffset() instead
 	public void SetObjectByOffset(int offset, Dynamic value)
 	{
 		Dynamic_SetDynamicByOffset(this, offset, value);
 	}
 	
+	#pragma deprecated Use .PushDynamic() instead
 	public int PushObject(Dynamic value, const char[] name="")
 	{
 		return Dynamic_PushDynamic(this, value, name);
 	}
 	
+	#pragma deprecated Use .GetDynamicByIndex() instead
 	public Dynamic GetObjectByIndex(int index)
 	{
 		return Dynamic_GetDynamicByIndex(this, index);
 	}
 	
+	#pragma deprecated Use .SetDynamicByIndex() instead
 	public bool SetObjectByIndex(int index, Dynamic value)
 	{
 		return Dynamic_SetDynamicByIndex(this, index, value);
@@ -589,6 +600,11 @@ methodmap Dynamic
 	}
 }
 
+#include <dynamic-collection>
+#if !defined dynamic_use_local_methodmap
+	#include <dynamic-basic>
+#endif
+
 #if !defined REQUIRE_PLUGIN
 public __pl_dynamic_SetNTVOptional()
 {
@@ -676,11 +692,6 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SortMembers");
 	MarkNativeAsOptional("Dynamic_FindByMemberValue");
 }
-#endif
-
-#if !defined dynamic_use_local_methodmap
-	#include <dynamic-collection>
-	#include <dynamic-basic>
 #endif
 
 public SharedPlugin __pl_dynamic = 

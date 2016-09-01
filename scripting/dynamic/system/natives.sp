@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_natives
+  #endinput
+#endif
+#define _dynamic_system_natives
+
 // native Dynamic Dynamic_Initialise(int blocksize=64, int startsize=0, bool persistent=false);
 public int Native_Dynamic_Initialise(Handle plugin, int params)
 {
@@ -475,7 +480,7 @@ public int Native_Dynamic_SetDynamicByOffset(Handle plugin, int params)
 public int Native_Dynamic_PushDynamic(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int value = GetNativeCell(2);
+	DynamicObject value = GetNativeCell(2);
 	int length;
 	GetNativeStringLength(3, length);
 	char[] name = new char[++length];
@@ -641,7 +646,7 @@ public int Native_Dynamic_HookChanges(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	Dynamic_HookType callback = GetNativeCell(2);
-	return _Dynamic_HookChanges(dynamic.Index, callback, plugin);
+	return _Dynamic_HookChanges(dynamic, callback, plugin);
 }
 
 // native bool Dynamic_UnHookChanges(Dynamic obj, Dynamic_HookType callback);
@@ -649,7 +654,7 @@ public int Native_Dynamic_UnHookChanges(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	Dynamic_HookType callback = GetNativeCell(2);
-	return _Dynamic_UnHookChanges(dynamic.Index, callback, plugin);
+	return _Dynamic_UnHookChanges(dynamic, callback, plugin);
 }
 
 // native int Dynamic_CallbackCount(Dynamic obj);

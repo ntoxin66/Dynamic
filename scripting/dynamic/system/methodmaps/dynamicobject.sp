@@ -1,3 +1,27 @@
+/**
+ * =============================================================================
+ * Dynamic for SourceMod (C)2016 Matthew J Dunn.   All rights reserved.
+ * =============================================================================
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#if defined _dynamic_system_methomaps_dynamicobject
+  #endinput
+#endif
+#define _dynamic_system_methomaps_dynamicobject
+ 
 #define Dynamic_Index					0
 // Size isn't yet implement for optimisation around _Dynamic_ExpandIfRequired()
 #define Dynamic_Size					1
@@ -141,6 +165,10 @@ methodmap DynamicObject
 		{
 			return GetArrayCell(s_Collection, me, Dynamic_Forwards);
 		}
+		public set(Handle value)
+		{
+			return SetArrayCell(s_Collection, me, value, Dynamic_Forwards);
+		}
 	}
 	
 	property int NextOffset
@@ -160,6 +188,10 @@ methodmap DynamicObject
 		public get()
 		{
 			return GetArrayCell(s_Collection, me, Dynamic_CallbackCount);
+		}
+		public set(int value)
+		{
+			return SetArrayCell(s_Collection, me, value, Dynamic_CallbackCount);
 		}
 	}
 	

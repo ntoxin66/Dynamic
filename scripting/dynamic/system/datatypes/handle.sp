@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_datatypes_handle
+  #endinput
+#endif
+#define _dynamic_system_datatypes_handle
+
 stock int _GetHandle(ArrayList data, int position, int offset, int blocksize)
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
@@ -111,7 +116,7 @@ stock int _Dynamic_PushHandle(DynamicObject dynamic, int value, const char[] nam
 		return INVALID_DYNAMIC_OFFSET;
 	
 	int position; int offset;
-	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Object);
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Dynamic);
 	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Handle);
 	return memberindex;

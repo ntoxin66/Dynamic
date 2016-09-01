@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_keyvalues
+  #endinput
+#endif
+#define _dynamic_system_keyvalues
+
 stock bool _Dynamic_ReadKeyValues(Handle plugin, DynamicObject dynamic, const char[] path, int valuelength=128, Dynamic_HookType hook=INVALID_FUNCTION)
 {
 	if (!dynamic.IsValid(true))
@@ -170,7 +175,7 @@ stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent
 		_Dynamic_GetMemberNameByIndex(dynamic, i, membername, sizeof(membername));
 		Dynamic_MemberType type = _Dynamic_GetMemberTypeByOffset(dynamic, memberoffset);
 		
-		if (type == DynamicType_Object)
+		if (type == DynamicType_Dynamic)
 		{
 			stream.WriteLine("%s\"%s\"", indextext, membername);
 			stream.WriteLine("%s{", indextext);

@@ -60,7 +60,7 @@ methodmap Collection < ArrayList
 	public void Dispose(bool disposemembers=true)
 	{
 		if (disposemembers)
-			this.Clear(true);
+			this.Clear(true)
 		
 		CloseHandle(this);
 	}

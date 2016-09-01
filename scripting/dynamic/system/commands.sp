@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_commands
+  #endinput
+#endif
+#define _dynamic_system_commands
+
 stock void RegisterCommands()
 {
 	RegAdminCmd("sm_dynamic_selftest", OnDynamicSelfTestCommand, ADMFLAG_RCON, "performs a Dynamic SelfTest to verify Dynamic is running properly");

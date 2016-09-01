@@ -16,8 +16,12 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <profiler>
- 
+
+#if defined _dynamic_system_selftest
+  #endinput
+#endif
+#define _dynamic_system_selftest
+
 public void _Dynamic_SelfTest(any userid)
 {
 	int client = GetClientOfUserId(userid);
@@ -26,7 +30,7 @@ public void _Dynamic_SelfTest(any userid)
 	
 	// Test offset alignments (initialisation offset vs findmemberoffset)
 	
-	// Test dynamic object creation
+	// Test dynamic dynamic creation
 	Dynamic test;
 	if (!_Dynamic_InitialiseTest(client, test))
 	{
@@ -70,14 +74,14 @@ public void _Dynamic_SelfTest(any userid)
 	}
 	PrintToConsole(client, "> DynamicType_Bool test completed");
 	
-	// DynamicType_Object Test
+	// DynamicType_Dynamic Test
 	test.Reset();
-	if (!_Dynamic_ObjectTest(client, test))
+	if (!_Dynamic_DynamicTest(client, test))
 	{
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Object test completed");
+	PrintToConsole(client, "> DynamicType_Dynamic test completed");
 	
 	// DynamicType_Handle Test
 	test.Reset();
@@ -120,7 +124,7 @@ public void _Dynamic_SelfTest(any userid)
 
 stock bool _Dynamic_InitialiseTest(int client, Dynamic &test)
 {
-	// Check initial test object is valid
+	// Check initial test dynamic is valid
 	test = Dynamic();
 	if (!test.IsValid)
 	{
@@ -193,7 +197,7 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 		return false;
 	}
 	
-	// Object not supported - no test required
+	// Dynamic not supported - no test required
 	
 	// Boolean test
 	test.SetInt("val", 0);
@@ -293,7 +297,7 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 		return false;
 	}
 	
-	// Object not supported - no test required
+	// Dynamic not supported - no test required
 	
 	// Boolean test
 	test.SetFloat("val", 0.0);
@@ -393,7 +397,7 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		return false;
 	}
 	
-	// Object not supported - no test required
+	// Dynamic not supported - no test required
 	// Add support for this as Get/SetString -> Read/WriteKeyValues
 	
 	// Boolean test
@@ -566,41 +570,41 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 		return false;
 	}
 	
-	// Object not supported - no test required
+	// Dynamic not supported - no test required
 	// Handle not supported - no test required
 	// Vector not supported - no test required
 	
 	return true;
 }
 
-stock bool _Dynamic_ObjectTest(int client, Dynamic test)
+stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 {
 	// Test value
 	Dynamic value = Dynamic();
 	
 	// Offset test
-	int offset = test.SetObject("val", value);
+	int offset = test.SetDynamic("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x1");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x1");
 		PrintToConsole(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
-	// Object test
-	if (test.GetObject("val") != value)
+	// Dynamic test
+	if (test.GetDynamic("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x2");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x2");
 		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), value);
 		return false;
 	}
 	
 	// Test parent is accurate
 	Dynamic child = Dynamic();
-	value.SetObject("child", child);
+	value.SetDynamic("child", child);
 	if (child.Parent != value)
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x3");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x3");
 		PrintToConsole(client, "> %d should equal %d", child.Parent, value);
 		return false;
 	}
@@ -609,22 +613,22 @@ stock bool _Dynamic_ObjectTest(int client, Dynamic test)
 	char buffer[32];
 	if (!child.GetName(buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x4");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x4");
 		PrintToConsole(client, "> Couldn't read `_name` as string");
 		return false;
 	}
 	if (!StrEqual(buffer, "child"))
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x5");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x5");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "child");
 	}
 	
-	// Test parent follows most recent SetObject
+	// Test parent follows most recent SetDynamic
 	Dynamic value2 = Dynamic();
-	value2.SetObject("child2", child);
+	value2.SetDynamic("child2", child);
 	if (child.Parent != value2)
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x6");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x6");
 		PrintToConsole(client, "> %d should equal %d", child.Parent, value2);
 		return false;
 	}
@@ -632,13 +636,13 @@ stock bool _Dynamic_ObjectTest(int client, Dynamic test)
 	// Test _name setter follows most recent change
 	if (!child.GetName(buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x7");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x7");
 		PrintToConsole(client, "> Couldn't read `_name` as string");
 		return false;
 	}
 	if (!StrEqual(buffer, "child2"))
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x8");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x8");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "child2");
 		return false;
 	}
@@ -647,7 +651,7 @@ stock bool _Dynamic_ObjectTest(int client, Dynamic test)
 	value.Dispose();
 	if (!child.IsValid)
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x9");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x9");
 		PrintToConsole(client, "> '%d' should equal '%d'", child.IsValid, true);
 		return false;
 	}
@@ -656,7 +660,7 @@ stock bool _Dynamic_ObjectTest(int client, Dynamic test)
 	value2.Dispose();
 	if (child.IsValid)
 	{
-		PrintToConsole(client, "DynamicType_Object test failed: ErrorCode 4x10");
+		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x10");
 		PrintToConsole(client, "> '%d' should equal '%d'", child.IsValid, false);
 		return false;
 	}
@@ -715,7 +719,7 @@ stock bool _Dynamic_HandleTest(int client, Dynamic test)
 	// Float not supported - no test required
 	// String not supported - no test required
 	// Boolean not supported - no test required
-	// Object not supported - no test required
+	// Dynamic not supported - no test required
 	// Vector not supported - no test required
 	
 	return true;
@@ -786,7 +790,7 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	}
 	
 	// Boolean not supported - no test required
-	// Object not supported - no test required
+	// Dynamic not supported - no test required
 	// Vector not supported - no test required
 	
 	return true;
@@ -871,8 +875,8 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	}
 	test.Reset();
 	
-	// Test GetMemberNameByIndex for Set/PushObject
-	test.SetObject("index0", Dynamic());
+	// Test GetMemberNameByIndex for Set/PushDynamic
+	test.SetDynamic("index0", Dynamic());
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
@@ -880,7 +884,7 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
-	test.PushObject(Dynamic(), "index1");
+	test.PushDynamic(Dynamic(), "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
@@ -937,19 +941,19 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	Dynamic child = Dynamic();
 	child.SetString("class", "Plant");
 	child.SetString("name", "Tree");
-	test.PushObject(child, "Tree");
+	test.PushDynamic(child, "Tree");
 	child = Dynamic();
 	child.SetString("class", "Plant");
 	child.SetString("name", "Shrub");
-	test.PushObject(child, "Shrub");
+	test.PushDynamic(child, "Shrub");
 	child = Dynamic();
 	child.SetString("class", "Animal");
 	child.SetString("name", "Cat");
-	test.PushObject(child, "Cat");
+	test.PushDynamic(child, "Cat");
 	child = Dynamic();
 	child.SetString("class", "Animal");
 	child.SetString("name", "Dog");
-	test.PushObject(child, "Dog");
+	test.PushDynamic(child, "Dog");
 	
 	// Search for plants
 	Dynamic params = Dynamic();
@@ -957,7 +961,7 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	param.SetString("MemberName", "class");
 	param.SetInt("Operator", view_as<int>(DynamicOperator_Equals));
 	param.SetString("Value", "Plant");
-	params.PushObject(param);
+	params.PushDynamic(param);
 	Collection results = view_as<Collection>(test.FindByMemberValue(params));
 	params.Reset(true);
 	
@@ -1007,7 +1011,7 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	param.SetString("MemberName", "class");
 	param.SetInt("Operator", view_as<int>(DynamicOperator_NotEquals));
 	param.SetString("Value", "Plant");
-	params.PushObject(param);
+	params.PushDynamic(param);
 	results = view_as<Collection>(test.FindByMemberValue(params));
 	params.Reset(true);
 	
