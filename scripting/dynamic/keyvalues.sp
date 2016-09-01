@@ -77,13 +77,13 @@ stock void IterateKeyValues(Handle plugin, KeyValues kv, DynamicObject dynamic, 
 			
 			if (result == Plugin_Continue)
 			{
-				DynamicObject child = _Dynamic_GetObject(dynamic, key);
+				DynamicObject child = _Dynamic_GetDynamic(dynamic, key);
 				if (!child.IsValid(false))
 				{
 					child = DynamicObject();
 					child.Initialise(plugin);
 					
-					_Dynamic_SetObject(dynamic, key, child);
+					_Dynamic_SetDynamic(dynamic, key, child);
 				}
 				
 				IterateKeyValues(plugin, kv, child, valuelength, callbackforward, depth+1);
@@ -174,7 +174,7 @@ stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent
 		{
 			stream.WriteLine("%s\"%s\"", indextext, membername);
 			stream.WriteLine("%s{", indextext);
-			WriteObjectToKeyValues(stream, _Dynamic_GetObjectByOffset(dynamic, memberoffset), indent+1);
+			WriteObjectToKeyValues(stream, _Dynamic_GetDynamicByOffset(dynamic, memberoffset), indent+1);
 			stream.WriteLine("%s}", indextext);
 		}
 		else

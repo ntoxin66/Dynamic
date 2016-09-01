@@ -30,16 +30,16 @@ StringMap s_tObjectNames = null;
 Handle g_sRegex_Vector = null;
 int g_iDynamic_MemberLookup_Offset;
 
-// Dynamics internal methodmaps
+// Dynamics internal methodmap
 #include "dynamic/methodmaps/dynamicobject"
 
 // Dynamic datatypes
 #include "dynamic/bool.sp"
+#include "dynamic/dynamic.sp"
 #include "dynamic/float.sp"
 #include "dynamic/handle.sp"
 #include "dynamic/int.sp"
 #include "dynamic/natives.sp"
-#include "dynamic/object.sp"
 #include "dynamic/string.sp"
 #include "dynamic/vector.sp"
 
@@ -647,7 +647,7 @@ stock Collection _Dynamic_FindByMemberValue(DynamicObject dynamic, DynamicObject
 	DynamicObject paramater;
 	for (int i=0; i<paramcount; i++)
 	{
-		paramater = _Dynamic_GetObjectByIndex(params, i);
+		paramater = _Dynamic_GetDynamicByIndex(params, i);
 		param_object[i] = paramater;
 		_Dynamic_GetString(paramater, "MemberName", param_name[i], DYNAMIC_MEMBERNAME_MAXLEN);
 		param_operator[i] = _Dynamic_GetInt(paramater, "Operator");
@@ -672,7 +672,7 @@ stock Collection _Dynamic_FindByMemberValue(DynamicObject dynamic, DynamicObject
 			continue;
 		
 		// Get member and check its valid
-		member = _Dynamic_GetObjectByOffset(dynamic, memberoffset);
+		member = _Dynamic_GetDynamicByOffset(dynamic, memberoffset);
 		if (!member.IsValid(false))
 			continue;
 		

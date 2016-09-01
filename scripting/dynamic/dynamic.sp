@@ -17,7 +17,7 @@
  *
  */
 
-stock DynamicObject _GetObject(ArrayList data, int position, int offset, int blocksize)
+stock DynamicObject _GetDynamic(ArrayList data, int position, int offset, int blocksize)
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Object)
@@ -29,7 +29,7 @@ stock DynamicObject _GetObject(ArrayList data, int position, int offset, int blo
 	}
 }
 
-stock Dynamic_MemberType _SetObject(DynamicObject dynamic, ArrayList data, int position, int offset, int blocksize, DynamicObject value, const char[] membername="")
+stock Dynamic_MemberType _SetDynamic(DynamicObject dynamic, ArrayList data, int position, int offset, int blocksize, DynamicObject value, const char[] membername="")
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Object)
@@ -57,7 +57,7 @@ stock Dynamic_MemberType _SetObject(DynamicObject dynamic, ArrayList data, int p
 	}
 }
 
-stock DynamicObject _Dynamic_GetObject(DynamicObject dynamic, const char[] membername)
+stock DynamicObject _Dynamic_GetDynamic(DynamicObject dynamic, const char[] membername)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OBJECT;
@@ -69,10 +69,10 @@ stock DynamicObject _Dynamic_GetObject(DynamicObject dynamic, const char[] membe
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Object))
 		return INVALID_DYNAMIC_OBJECT;
 		
-	return _GetObject(data, position, offset, blocksize);
+	return _GetDynamic(data, position, offset, blocksize);
 }
 
-stock int _Dynamic_SetObject(DynamicObject dynamic, const char[] membername, DynamicObject value)
+stock int _Dynamic_SetDynamic(DynamicObject dynamic, const char[] membername, DynamicObject value)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
@@ -83,13 +83,12 @@ stock int _Dynamic_SetObject(DynamicObject dynamic, const char[] membername, Dyn
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Object))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetObject(dynamic, data, position, offset, blocksize, value, membername);
+	Dynamic_MemberType type = _SetDynamic(dynamic, data, position, offset, blocksize, value, membername);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
-// native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
-stock DynamicObject _Dynamic_GetObjectByOffset(DynamicObject dynamic, int offset)
+stock DynamicObject _Dynamic_GetDynamicByOffset(DynamicObject dynamic, int offset)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OBJECT;
@@ -100,10 +99,10 @@ stock DynamicObject _Dynamic_GetObjectByOffset(DynamicObject dynamic, int offset
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return INVALID_DYNAMIC_OBJECT;
 	
-	return _GetObject(data, position, offset, blocksize);
+	return _GetDynamic(data, position, offset, blocksize);
 }
 
-stock bool _Dynamic_SetObjectByOffset(DynamicObject dynamic, int offset, DynamicObject value)
+stock bool _Dynamic_SetDynamicByOffset(DynamicObject dynamic, int offset, DynamicObject value)
 {
 	if (!dynamic.IsValid(true))
 		return false;
@@ -115,12 +114,12 @@ stock bool _Dynamic_SetObjectByOffset(DynamicObject dynamic, int offset, Dynamic
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetObject(dynamic, data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetDynamic(dynamic, data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
 
-stock int _Dynamic_PushObject(DynamicObject dynamic, int value, const char[] name="")
+stock int _Dynamic_PushDynamic(DynamicObject dynamic, int value, const char[] name="")
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
@@ -134,7 +133,7 @@ stock int _Dynamic_PushObject(DynamicObject dynamic, int value, const char[] nam
 	return memberindex;
 }
 
-stock DynamicObject _Dynamic_GetObjectByIndex(DynamicObject dynamic, int memberindex)
+stock DynamicObject _Dynamic_GetDynamicByIndex(DynamicObject dynamic, int memberindex)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OBJECT;
@@ -143,10 +142,10 @@ stock DynamicObject _Dynamic_GetObjectByIndex(DynamicObject dynamic, int memberi
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return INVALID_DYNAMIC_OBJECT;
 	
-	return _Dynamic_GetObjectByOffset(dynamic, offset);
+	return _Dynamic_GetDynamicByOffset(dynamic, offset);
 }
 
-stock bool _Dynamic_SetObjectByIndex(DynamicObject dynamic, int memberindex, DynamicObject value)
+stock bool _Dynamic_SetDynamicByIndex(DynamicObject dynamic, int memberindex, DynamicObject value)
 {
 	if (!dynamic.IsValid(true))
 		return false;
@@ -155,5 +154,5 @@ stock bool _Dynamic_SetObjectByIndex(DynamicObject dynamic, int memberindex, Dyn
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 	
-	return _Dynamic_SetObjectByOffset(dynamic, offset, value);
+	return _Dynamic_SetDynamicByOffset(dynamic, offset, value);
 }

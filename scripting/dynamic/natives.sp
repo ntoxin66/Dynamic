@@ -435,44 +435,44 @@ public int Native_Dynamic_CompareString(Handle plugin, int params)
 	return _Dynamic_CompareString(dynamic, membername, value, casesensitive);
 }
 
-// native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
-public int Native_Dynamic_GetObject(Handle plugin, int params)
+// native Dynamic Dynamic_GetDynamic(Dynamic obj, const char[] membername);
+public int Native_Dynamic_GetDynamic(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
-	return view_as<int>(_Dynamic_GetObject(dynamic, membername));
+	return view_as<int>(_Dynamic_GetDynamic(dynamic, membername));
 }
 
-// native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
-public int Native_Dynamic_SetObject(Handle plugin, int params)
+// native int Dynamic_SetDynamic(Dynamic obj, const char[] membername, Dynamic value);
+public int Native_Dynamic_SetDynamic(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	DynamicObject value = GetNativeCell(3);
-	return _Dynamic_SetObject(dynamic, membername, value);
+	return _Dynamic_SetDynamic(dynamic, membername, value);
 }
 
-// native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
-public int Native_Dynamic_GetObjectByOffset(Handle plugin, int params)
+// native Dynamic Dynamic_GetDynamicByOffset(Dynamic obj, int offset);
+public int Native_Dynamic_GetDynamicByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	int offset = GetNativeCell(2);
-	return view_as<int>(_Dynamic_GetObjectByOffset(dynamic, offset));
+	return view_as<int>(_Dynamic_GetDynamicByOffset(dynamic, offset));
 }
 
-// native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
-public int Native_Dynamic_SetObjectByOffset(Handle plugin, int params)
+// native bool Dynamic_SetDynamicByOffset(Dynamic obj, int offset, Dynamic value);
+public int Native_Dynamic_SetDynamicByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	int offset = GetNativeCell(2);
 	DynamicObject value = GetNativeCell(3);
-	return _Dynamic_SetObjectByOffset(dynamic, offset, value);
+	return _Dynamic_SetDynamicByOffset(dynamic, offset, value);
 }
 
-// native int Dynamic_PushObject(Dynamic obj, Dynamic value, const char[] name="");
-public int Native_Dynamic_PushObject(Handle plugin, int params)
+// native int Dynamic_PushDynamic(Dynamic obj, Dynamic value, const char[] name="");
+public int Native_Dynamic_PushDynamic(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	int value = GetNativeCell(2);
@@ -480,24 +480,24 @@ public int Native_Dynamic_PushObject(Handle plugin, int params)
 	GetNativeStringLength(3, length);
 	char[] name = new char[++length];
 	GetNativeString(3, name, length);
-	return _Dynamic_PushObject(dynamic, value, name);
+	return _Dynamic_PushDynamic(dynamic, value, name);
 }
 
-// native Dynamic Dynamic_GetObjectByIndex(Dynamic obj, int index);
-public int Native_Dynamic_GetObjectByIndex(Handle plugin, int params)
+// native Dynamic Dynamic_GetDynamicByIndex(Dynamic obj, int index);
+public int Native_Dynamic_GetDynamicByIndex(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	int memberindex = GetNativeCell(2);
-	return view_as<int>(_Dynamic_GetObjectByIndex(dynamic, memberindex));
+	return view_as<int>(_Dynamic_GetDynamicByIndex(dynamic, memberindex));
 }
 
-// native bool Dynamic_SetObjectByIndex(Dynamic obj, int index, Dynamic value);
-public int Native_Dynamic_SetObjectByIndex(Handle plugin, int params)
+// native bool Dynamic_SetDynamicByIndex(Dynamic obj, int index, Dynamic value);
+public int Native_Dynamic_SetDynamicByIndex(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	int memberindex = GetNativeCell(2);
 	DynamicObject value = GetNativeCell(3);
-	return _Dynamic_SetObjectByIndex(dynamic, memberindex, value);
+	return _Dynamic_SetDynamicByIndex(dynamic, memberindex, value);
 }
 
 // native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);
@@ -794,13 +794,13 @@ stock void CreateNatives()
 	CreateNative("Dynamic_GetStringLengthByOffset", Native_Dynamic_GetStringLengthByOffset);
 	CreateNative("Dynamic_GetStringLength", Native_Dynamic_GetStringLength);
 	CreateNative("Dynamic_CompareString", Native_Dynamic_CompareString);
-	CreateNative("Dynamic_GetObject", Native_Dynamic_GetObject);
-	CreateNative("Dynamic_SetObject", Native_Dynamic_SetObject);
-	CreateNative("Dynamic_GetObjectByOffset", Native_Dynamic_GetObjectByOffset);
-	CreateNative("Dynamic_SetObjectByOffset", Native_Dynamic_SetObjectByOffset);
-	CreateNative("Dynamic_PushObject", Native_Dynamic_PushObject);
-	CreateNative("Dynamic_GetObjectByIndex", Native_Dynamic_GetObjectByIndex);
-	CreateNative("Dynamic_SetObjectByIndex", Native_Dynamic_SetObjectByIndex);
+	CreateNative("Dynamic_GetDynamic", Native_Dynamic_GetDynamic);
+	CreateNative("Dynamic_SetDynamic", Native_Dynamic_SetDynamic);
+	CreateNative("Dynamic_GetDynamicByOffset", Native_Dynamic_GetDynamicByOffset);
+	CreateNative("Dynamic_SetDynamicByOffset", Native_Dynamic_SetDynamicByOffset);
+	CreateNative("Dynamic_PushDynamic", Native_Dynamic_PushDynamic);
+	CreateNative("Dynamic_GetDynamicByIndex", Native_Dynamic_GetDynamicByIndex);
+	CreateNative("Dynamic_SetDynamicByIndex", Native_Dynamic_SetDynamicByIndex);
 	CreateNative("Dynamic_GetHandle", Native_Dynamic_GetHandle);
 	CreateNative("Dynamic_SetHandle", Native_Dynamic_SetHandle);
 	CreateNative("Dynamic_GetHandleByOffset", Native_Dynamic_GetHandleByOffset);
@@ -826,4 +826,13 @@ stock void CreateNatives()
 	CreateNative("Dynamic_GetMemberNameByOffset", Native_Dynamic_GetMemberNameByOffset);
 	CreateNative("Dynamic_SortMembers", Native_Dynamic_SortMembers);
 	CreateNative("Dynamic_FindByMemberValue", Native_Dynamic_FindByMemberValue);
+	
+	// These are deprecated until removed
+	CreateNative("Dynamic_GetObject", Native_Dynamic_GetDynamic);
+	CreateNative("Dynamic_SetObject", Native_Dynamic_SetDynamic);
+	CreateNative("Dynamic_GetObjectByOffset", Native_Dynamic_GetDynamicByOffset);
+	CreateNative("Dynamic_SetObjectByOffset", Native_Dynamic_SetDynamicByOffset);
+	CreateNative("Dynamic_PushObject", Native_Dynamic_PushDynamic);
+	CreateNative("Dynamic_GetObjectByIndex", Native_Dynamic_GetDynamicByIndex);
+	CreateNative("Dynamic_SetObjectByIndex", Native_Dynamic_SetDynamicByIndex);
 }

@@ -118,13 +118,29 @@ native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
 native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
 native bool Dynamic_CompareString(Dynamic obj, const char[] membername, const char[] value, bool casesensitive=true);
 
+// This can be removed at some point in the future
+#pragma deprecated Use Dynamic_GetDynamic() instead
 native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
+#pragma deprecated Use Dynamic_SetDynamic() instead
 native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
+#pragma deprecated Use Dynamic_GetDynamicByOffset() instead
 native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
+#pragma deprecated Use Dynamic_SetDynamicByOffset() instead
 native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
+#pragma deprecated Use Dynamic_PushDynamic() instead
 native int Dynamic_PushObject(Dynamic obj, Dynamic value, const char[] name="");
+#pragma deprecated Use Dynamic_GetDynamicByIndex() instead
 native Dynamic Dynamic_GetObjectByIndex(Dynamic obj, int index);
+#pragma deprecated Use Dynamic_SetDynamicByIndex() instead
 native bool Dynamic_SetObjectByIndex(Dynamic obj, int index, Dynamic value);
+
+native Dynamic Dynamic_GetDynamic(Dynamic obj, const char[] membername);
+native int Dynamic_SetDynamic(Dynamic obj, const char[] membername, Dynamic value);
+native Dynamic Dynamic_GetDynamicByOffset(Dynamic obj, int offset);
+native bool Dynamic_SetDynamicByOffset(Dynamic obj, int offset, Dynamic value);
+native int Dynamic_PushDynamic(Dynamic obj, Dynamic value, const char[] name="");
+native Dynamic Dynamic_GetDynamicByIndex(Dynamic obj, int index);
+native bool Dynamic_SetDynamicByIndex(Dynamic obj, int index, Dynamic value);
 
 native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultvalue=false);
 native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
@@ -394,37 +410,72 @@ methodmap Dynamic
 	
 	public Dynamic GetObject(const char[] membername)
 	{
-		return Dynamic_GetObject(this, membername);
+		return Dynamic_GetDynamic(this, membername);
 	}
 	
 	public int SetObject(const char[] membername, Dynamic value)
 	{
-		return Dynamic_SetObject(this, membername, value);
+		return Dynamic_SetDynamic(this, membername, value);
 	}
 	
 	public Dynamic GetObjectByOffset(int offset)
 	{
-		return Dynamic_GetObjectByOffset(this, offset);
+		return Dynamic_GetDynamicByOffset(this, offset);
 	}
 	
 	public void SetObjectByOffset(int offset, Dynamic value)
 	{
-		Dynamic_SetObjectByOffset(this, offset, value);
+		Dynamic_SetDynamicByOffset(this, offset, value);
 	}
 	
 	public int PushObject(Dynamic value, const char[] name="")
 	{
-		return Dynamic_PushObject(this, value, name);
+		return Dynamic_PushDynamic(this, value, name);
 	}
 	
 	public Dynamic GetObjectByIndex(int index)
 	{
-		return Dynamic_GetObjectByIndex(this, index);
+		return Dynamic_GetDynamicByIndex(this, index);
 	}
 	
 	public bool SetObjectByIndex(int index, Dynamic value)
 	{
-		return Dynamic_SetObjectByIndex(this, index, value);
+		return Dynamic_SetDynamicByIndex(this, index, value);
+	}
+	
+	public Dynamic GetDynamic(const char[] membername)
+	{
+		return Dynamic_GetDynamic(this, membername);
+	}
+	
+	public int SetDynamic(const char[] membername, Dynamic value)
+	{
+		return Dynamic_SetDynamic(this, membername, value);
+	}
+	
+	public Dynamic GetDynamicByOffset(int offset)
+	{
+		return Dynamic_GetDynamicByOffset(this, offset);
+	}
+	
+	public void SetDynamicByOffset(int offset, Dynamic value)
+	{
+		Dynamic_SetDynamicByOffset(this, offset, value);
+	}
+	
+	public int PushDynamic(Dynamic value, const char[] name="")
+	{
+		return Dynamic_PushDynamic(this, value, name);
+	}
+	
+	public Dynamic GetDynamicByIndex(int index)
+	{
+		return Dynamic_GetDynamicByIndex(this, index);
+	}
+	
+	public bool SetDynamicByIndex(int index, Dynamic value)
+	{
+		return Dynamic_SetDynamicByIndex(this, index, value);
 	}
 	
 	public Handle GetHandle(const char[] membername)
@@ -590,6 +641,15 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_PushObject");
 	MarkNativeAsOptional("Dynamic_GetObjectByIndex");
 	MarkNativeAsOptional("Dynamic_SetObjectByIndex");
+	
+	MarkNativeAsOptional("Dynamic_GetDynamic");
+	MarkNativeAsOptional("Dynamic_SetDynamic");
+	MarkNativeAsOptional("Dynamic_GetDynamicByOffset");
+	MarkNativeAsOptional("Dynamic_SetDynamicByOffset");
+	MarkNativeAsOptional("Dynamic_PushDynamic");
+	MarkNativeAsOptional("Dynamic_GetDynamicByIndex");
+	MarkNativeAsOptional("Dynamic_SetDynamicByIndex");
+	
 	MarkNativeAsOptional("Dynamic_GetHandle");
 	MarkNativeAsOptional("Dynamic_SetHandle");
 	MarkNativeAsOptional("Dynamic_GetHandleByOffset");
