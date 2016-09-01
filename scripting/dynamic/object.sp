@@ -17,35 +17,35 @@
  *
  */
 
-stock int _GetObject(ArrayList data, int position, int offset, int blocksize)
+stock DynamicObject _GetObject(ArrayList data, int position, int offset, int blocksize)
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Object)
-		return _Dynamic_GetMemberDataInt(data, position, offset, blocksize);
+		return view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
 	else
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Unsupported member datatype (%d)", type);
-		return Invalid_Dynamic_Object;
+		return INVALID_DYNAMIC_OBJECT;
 	}
 }
 
-stock Dynamic_MemberType _SetObject(int index, ArrayList data, int position, int offset, int blocksize, int value, const char[] membername="")
+stock Dynamic_MemberType _SetObject(DynamicObject dynamic, ArrayList data, int position, int offset, int blocksize, DynamicObject value, const char[] membername="")
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 	if (type == DynamicType_Object)
 	{
 		// remove parent from current value
-		int currentvalue = _Dynamic_GetMemberDataInt(data, position, offset, blocksize);
-		if (currentvalue != Invalid_Dynamic_Object)
-			SetArrayCell(s_Collection, currentvalue, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
+		DynamicObject currentvalue = view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
+		if (currentvalue != INVALID_DYNAMIC_OBJECT)
+			currentvalue.Parent = INVALID_DYNAMIC_OBJECT;
 		
 		// set value and name
-		_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value);
+		_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value.Index);
 		
-		if (value != Invalid_Dynamic_Object)
+		if (value != INVALID_DYNAMIC_OBJECT)
 		{
-			SetArrayCell(s_Collection, value, index, Dynamic_ParentObject);
-			SetArrayCell(s_Collection, value, offset, Dynamic_ParentOffset);
+			value.Parent = dynamic;
+			value.ParentOffset = offset;
 		}
 		
 		return DynamicType_Object;
@@ -57,105 +57,103 @@ stock Dynamic_MemberType _SetObject(int index, ArrayList data, int position, int
 	}
 }
 
-stock int _Dynamic_GetObject(int index, const char[] membername)
+stock DynamicObject _Dynamic_GetObject(DynamicObject dynamic, const char[] membername)
 {
-	if (!_Dynamic_IsValid(index, true))
-		return Invalid_Dynamic_Object;
+	if (!dynamic.IsValid(true))
+		return INVALID_DYNAMIC_OBJECT;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, false, position, offset, blocksize, DynamicType_Object))
-		return Invalid_Dynamic_Object;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Object))
+		return INVALID_DYNAMIC_OBJECT;
 		
 	return _GetObject(data, position, offset, blocksize);
 }
 
-stock int _Dynamic_SetObject(int index, const char[] membername, int value)
+stock int _Dynamic_SetObject(DynamicObject dynamic, const char[] membername, DynamicObject value)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Object))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Object))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetObject(index, data, position, offset, blocksize, value, membername);
-	CallOnChangedForward(index, offset, membername, type);
+	Dynamic_MemberType type = _SetObject(dynamic, data, position, offset, blocksize, value, membername);
+	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
 // native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
-stock int _Dynamic_GetObjectByOffset(int index, int offset)
+stock DynamicObject _Dynamic_GetObjectByOffset(DynamicObject dynamic, int offset)
 {
-	if (!_Dynamic_IsValid(index, true))
-		return Invalid_Dynamic_Object;
+	if (!dynamic.IsValid(true))
+		return INVALID_DYNAMIC_OBJECT;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
-		return Invalid_Dynamic_Object;
+		return INVALID_DYNAMIC_OBJECT;
 	
 	return _GetObject(data, position, offset, blocksize);
 }
 
-stock bool _Dynamic_SetObjectByOffset(int index, int offset, int value)
+stock bool _Dynamic_SetObjectByOffset(DynamicObject dynamic, int offset, DynamicObject value)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	
 	int position;
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetObject(index, data, position, offset, blocksize, value);
-	CallOnChangedForwardByOffset(index, offset, type);
+	Dynamic_MemberType type = _SetObject(dynamic, data, position, offset, blocksize, value);
+	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
 
-stock int _Dynamic_PushObject(int index, int value, const char[] name="")
+stock int _Dynamic_PushObject(DynamicObject dynamic, int value, const char[] name="")
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList array = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
-	SetArrayCell(s_Collection, value, index, Dynamic_ParentObject);
+	SetArrayCell(s_Collection, value, dynamic.Index, Dynamic_ParentObject);
 	int position; int offset;
 	
-	int memberindex = _Dynamic_CreateMemberOffset(array, index, position, offset, blocksize, name, DynamicType_Object);
-	_Dynamic_SetMemberDataInt(array, position, offset, blocksize, value);
-	CallOnChangedForward(index, offset, name, DynamicType_Object);
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Object);
+	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, dynamic.BlockSize, value);
+	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Object);
 	return memberindex;
 }
 
-stock int _Dynamic_GetObjectByIndex(int index, int memberindex)
+stock DynamicObject _Dynamic_GetObjectByIndex(DynamicObject dynamic, int memberindex)
 {
-	if (!_Dynamic_IsValid(index, true))
-		return Invalid_Dynamic_Object;
+	if (!dynamic.IsValid(true))
+		return INVALID_DYNAMIC_OBJECT;
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
-		return Invalid_Dynamic_Object;
+		return INVALID_DYNAMIC_OBJECT;
 	
-	return _Dynamic_GetObjectByOffset(index, offset);
+	return _Dynamic_GetObjectByOffset(dynamic, offset);
 }
 
-stock bool _Dynamic_SetObjectByIndex(int index, int memberindex, int value)
+stock bool _Dynamic_SetObjectByIndex(DynamicObject dynamic, int memberindex, DynamicObject value)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 	
-	return _Dynamic_SetObjectByOffset(index, offset, value);
+	return _Dynamic_SetObjectByOffset(dynamic, offset, value);
 }

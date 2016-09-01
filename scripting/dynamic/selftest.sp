@@ -16,17 +16,26 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include <profiler>
  
 public void _Dynamic_SelfTest(any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (!IsClientConnected(client))
 		return;
-		
+	
 	// Test offset alignments (initialisation offset vs findmemberoffset)
 	
+	// Test dynamic object creation
+	Dynamic test;
+	if (!_Dynamic_InitialiseTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	
 	// DynamicType_Int Test
-	Dynamic test = Dynamic();
+	test.Reset();
 	if (!_Dynamic_IntTest(client, test))
 	{
 		test.Dispose();
@@ -95,7 +104,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> Dynamic_GetMemberNameByIndex test completed"); 
+	PrintToConsole(client, "> Dynamic_GetMemberNameByIndex test completed");
 	
 	// Dynamic.FindByMemberValue(Dynamic params) Test
 	test.Reset();
@@ -108,7 +117,21 @@ public void _Dynamic_SelfTest(any userid)
 	
 	test.Dispose();
 }
- 
+
+stock bool _Dynamic_InitialiseTest(int client, Dynamic &test)
+{
+	// Check initial test object is valid
+	test = Dynamic();
+	if (!test.IsValid)
+	{
+		PrintToConsole(client, "Dynamic_Initialise test failed: ErrorCode Ax1");
+		PrintToConsole(client, "> %d should equal %d", test.IsValid, true);
+		PrintToConsole(client, "> test=%d", test);
+		return false;
+	}
+	return true;
+}
+
 stock bool _Dynamic_IntTest(int client, Dynamic test)
 {
 	// Test value
@@ -930,9 +953,13 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	
 	// Search for plants
 	Dynamic params = Dynamic();
-	params.PushString("Plant", 0, "class");
+	Dynamic param = Dynamic();
+	param.SetString("MemberName", "class");
+	param.SetInt("Operator", view_as<int>(DynamicOperator_Equals));
+	param.SetString("Value", "Plant");
+	params.PushObject(param);
 	Collection results = view_as<Collection>(test.FindByMemberValue(params));
-	params.Reset();
+	params.Reset(true);
 	
 	// Check plant results
 	if (results == null)
@@ -975,9 +1002,14 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	delete results;
 	
 	// Search for animals
-	params.PushString("Animal", 0, "class");
+	params = Dynamic();
+	param = Dynamic();
+	param.SetString("MemberName", "class");
+	param.SetInt("Operator", view_as<int>(DynamicOperator_NotEquals));
+	param.SetString("Value", "Plant");
+	params.PushObject(param);
 	results = view_as<Collection>(test.FindByMemberValue(params));
-	params.Reset();
+	params.Reset(true);
 	
 	// Check animal results
 	if (results == null)

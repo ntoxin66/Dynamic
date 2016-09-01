@@ -16,56 +16,46 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#define dynamic_use_local_methodmap 1
 #include <dynamic>
 #include <dynamic-collection>
 #include <regex>
 #pragma newdecls required
 #pragma semicolon 1
- 
-#define Dynamic_Index					0
-// Size isn't yet implement for optimisation around _Dynamic_ExpandIfRequired()
-#define Dynamic_Size					1
-#define Dynamic_Blocksize				2
-#define Dynamic_Offsets					3
-#define Dynamic_MemberNames				4
-#define Dynamic_Data					5
-#define Dynamic_Forwards				6
-#define Dynamic_NextOffset				7
-#define Dynamic_CallbackCount			8
-#define Dynamic_ParentObject			9
-#define Dynamic_MemberCount				10
-#define Dynamic_OwnerPlugin				11
-#define Dynamic_Persistent				12
-#define Dynamic_ParentOffset			13
-#define Dynamic_Field_Count				14
 
-Handle s_Collection = null;
+// Public data
 int s_CollectionSize = 0;
 Handle s_FreeIndicies = null;
-Handle s_tObjectNames = null;
+StringMap s_tObjectNames = null;
 Handle g_sRegex_Vector = null;
 int g_iDynamic_MemberLookup_Offset;
 
+// Dynamics internal methodmaps
+#include "dynamic/methodmaps/dynamicobject"
+
+// Dynamic datatypes
 #include "dynamic/bool.sp"
-#include "dynamic/commands.sp"
-#include "dynamic/flatconfigs.sp"
 #include "dynamic/float.sp"
 #include "dynamic/handle.sp"
-#include "dynamic/hooks.sp"
 #include "dynamic/int.sp"
-#include "dynamic/keyvalues.sp"
 #include "dynamic/natives.sp"
 #include "dynamic/object.sp"
-#include "dynamic/selftest.sp"
 #include "dynamic/string.sp"
 #include "dynamic/vector.sp"
+
+// Other features
+#include "dynamic/commands.sp"
+#include "dynamic/flatconfigs.sp"
+#include "dynamic/hooks.sp"
+#include "dynamic/keyvalues.sp"
+#include "dynamic/selftest.sp"
 
 public Plugin myinfo =
 {
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.18",
+	version = "0.0.19",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -87,11 +77,12 @@ public void OnPluginStart()
 	s_Collection = CreateArray(Dynamic_Field_Count);
 	s_CollectionSize = 0;
 	s_FreeIndicies = CreateStack();
-	s_tObjectNames = CreateTrie();
+	s_tObjectNames = new StringMap();
 	g_iDynamic_MemberLookup_Offset = ByteCountToCells(DYNAMIC_MEMBERNAME_MAXLEN)+1;
 	
 	// Reserve first object index for global settings
-	Dynamic settings = Dynamic();
+	DynamicObject settings = DynamicObject();
+	settings.Initialise(null);
 	
 	// Ensure settings is assigned index 0
 	if (view_as<int>(settings) != 0)
@@ -100,7 +91,8 @@ public void OnPluginStart()
 	// Reserve first object indicies for player objects
 	for (int client = 1; client < MAXPLAYERS; client++)
 	{
-		settings = Dynamic();
+		settings = DynamicObject();
+		settings.Initialise(null);
 		
 		// This is a check to ensure the index matches the client
 		if (view_as<int>(settings) != client)
@@ -116,7 +108,7 @@ public void OnPluginEnd()
 	// Dispose of all objects in the collection pool
 	while (s_CollectionSize > 0)
 	{
-		_Dynamic_Dispose(s_CollectionSize - 1, false);
+		_Dynamic_Dispose(view_as<DynamicObject>(s_CollectionSize - 1), false);
 	}
 }
 
@@ -133,105 +125,85 @@ stock void OnClientDisconnect_Post(int client)
 stock int _Dynamic_Initialise(Handle plugin, int blocksize=64, int startsize=0, bool persistent=false)
 {
 	int index = -1;
+	DynamicObject member;
 	
-	if (index == -1)
 	// Always try to reuse a previously disposed index
 	while (PopStackCell(s_FreeIndicies, index))
 	{
 		if (index < s_CollectionSize)
+		{
+			member = view_as<DynamicObject>(index);
 			break;
-			
+		}
 		index = -1;
 	}
 	
+	// Create a new index if required
 	if (index == -1)
-	{
-		// Create a new index
-		index = PushArrayCell(s_Collection, -1);
-		s_CollectionSize++;
-	}
+		member = DynamicObject();
 	
-	// Initialise dynamic object
-	SetArrayCell(s_Collection, index, index, Dynamic_Index);
-	SetArrayCell(s_Collection, index, 0, Dynamic_Size);
-	SetArrayCell(s_Collection, index, blocksize, Dynamic_Blocksize);
-	SetArrayCell(s_Collection, index, CreateTrie(), Dynamic_Offsets);
-	SetArrayCell(s_Collection, index, CreateArray(blocksize, startsize), Dynamic_Data);
-	SetArrayCell(s_Collection, index, 0, Dynamic_Forwards);
-	SetArrayCell(s_Collection, index, CreateArray(g_iDynamic_MemberLookup_Offset+1), Dynamic_MemberNames);
-	SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
-	SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
-	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
-	SetArrayCell(s_Collection, index, INVALID_DYNAMIC_OFFSET, Dynamic_ParentOffset);
-	SetArrayCell(s_Collection, index, 0, Dynamic_MemberCount);
-	SetArrayCell(s_Collection, index, plugin, Dynamic_OwnerPlugin);
-	SetArrayCell(s_Collection, index, persistent, Dynamic_Persistent);
+	// Initial 
+	member.Initialise(plugin, blocksize, startsize, persistent);
 	
-	// Return the next index
-	return index;
+	// Return the index
+	return member.Index;
 }
 
-stock bool _Dynamic_Dispose(int index, bool disposemembers, bool reuse=false, int startsize=0)
+stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reuse=false, int startsize=0)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	int blocksize = dynamic.BlockSize;
 	
 	// Dispose of child members if disposemembers is set
 	if (disposemembers)
 	{
-		Handle data = GetArrayCell(s_Collection, index, Dynamic_Data);
-		int count = _Dynamic_GetMemberCount(index);
-		int offset; int position; int disposablemember;
+		Handle data = dynamic.Data;
+		int count = dynamic.MemberCount;
+		int offset; int position;
+		DynamicObject disposableobject;
+		Handle disposablehandle;
+		
 		Dynamic_MemberType membertype;
 		
 		for (int i = 0; i < count; i++)
 		{
 			position = 0;
-			offset = _Dynamic_GetMemberOffsetByIndex(index, i);
+			offset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
 			membertype = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
 			
 			if (membertype == DynamicType_Object)
 			{
-				disposablemember = _Dynamic_GetMemberDataInt(data, position, offset, blocksize);
-				if (!_Dynamic_IsValid(disposablemember))
+				disposableobject = view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
+				if (!disposableobject.IsValid(false))
 					continue;
 					
 				// Check if member hasnt been referenced to another object
-				if (_Dynamic_GetParent(disposablemember) == index)
-					_Dynamic_Dispose(disposablemember, true);
+				if (disposableobject.Parent == dynamic)
+					_Dynamic_Dispose(disposableobject, true);
 			}
 			else if (membertype == DynamicType_Handle)
 			{
-				disposablemember = _Dynamic_GetMemberDataInt(data, position, offset, blocksize);
+				disposablehandle = view_as<Handle>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
 				_Dynamic_SetMemberDataInt(data, position, offset, blocksize, 0);
-				CloseHandle(view_as<Handle>(disposablemember));
+				CloseHandle(disposablehandle);
 			}
 		}
 	}
 	
 	// Close dynamic object array handles
-	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Offsets));
-	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Data));
-	if (GetArrayCell(s_Collection, index, Dynamic_Forwards) != 0)
-		CloseHandle(GetArrayCell(s_Collection, index, Dynamic_Forwards));
-	CloseHandle(GetArrayCell(s_Collection, index, Dynamic_MemberNames));
+	dynamic.Dispose(reuse);
 	
 	if (reuse)
 	{
-		SetArrayCell(s_Collection, index, CreateTrie(), Dynamic_Offsets);
-		SetArrayCell(s_Collection, index, CreateArray(blocksize, startsize), Dynamic_Data);
-		SetArrayCell(s_Collection, index, 0, Dynamic_Forwards);
-		SetArrayCell(s_Collection, index, CreateArray(g_iDynamic_MemberLookup_Offset+1), Dynamic_MemberNames);
-		SetArrayCell(s_Collection, index, 0, Dynamic_NextOffset);
-		SetArrayCell(s_Collection, index, 0, Dynamic_CallbackCount);
-		SetArrayCell(s_Collection, index, 0, Dynamic_Size);
-		SetArrayCell(s_Collection, index, 0, Dynamic_MemberCount);
+		// Reset the dynamic object so it can be used straight
+		dynamic.Reset();
 		return true;
 	}
 	
 	// Remove all indicies from the end of the array which are empty (trimend array)
+	int index = dynamic.Index;
 	if (index + 1 == s_CollectionSize)
 	{
 		RemoveFromArray(s_Collection, index);
@@ -239,7 +211,7 @@ stock bool _Dynamic_Dispose(int index, bool disposemembers, bool reuse=false, in
 		
 		for (int i = index - 1; i >= 0; i--)
 		{
-			if (GetArrayCell(s_Collection, i, Dynamic_Index) > -1)
+			if (GetArrayCell(s_Collection, i, Dynamic_Index) != Invalid_Dynamic_Object)
 				break;
 			
 			RemoveFromArray(s_Collection, i);
@@ -249,8 +221,7 @@ stock bool _Dynamic_Dispose(int index, bool disposemembers, bool reuse=false, in
 	else
 	{
 		// Mark the index as diposed and report the free index for reusage
-		SetArrayCell(s_Collection, index, -1, Dynamic_Index);
-		PushStackCell(s_FreeIndicies, index);
+		PushStackCell(s_FreeIndicies, dynamic);
 	}
 	return true;
 }
@@ -258,86 +229,89 @@ stock bool _Dynamic_Dispose(int index, bool disposemembers, bool reuse=false, in
 stock void _Dynamic_CollectGarbage()
 {
 	// Dispose all objects owned by terminated plugins
-	Handle plugin;
-	PluginStatus status;
+	DynamicObject dynamic;
 	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
 	{
+		dynamic = view_as<DynamicObject>(i);
+		
 		// Skip disposed objects
-		if (!_Dynamic_IsValid(i, false))
+		if (!dynamic.IsValid(false))
 			continue;
 			
 		// Skip persistent objects
-		if (GetArrayCell(s_Collection, i, Dynamic_Persistent))
+		if (dynamic.Persistent)
 			continue;
 			
-		plugin = GetArrayCell(s_Collection, i, Dynamic_OwnerPlugin);
-		status = GetPluginStatus(plugin);
-		
-		if (status == Plugin_Error || status == Plugin_Failed)
-			_Dynamic_Dispose(i, false);
+		switch(GetPluginStatus(dynamic.OwnerPlugin))
+		{
+			case Plugin_Error, Plugin_Failed:
+			{
+				dynamic.Dispose(false);
+			}
+		}
 	}
 }
 
-stock bool _Dynamic_ResetObject(int index, bool disposemembers, int blocksize=0, int startsize=0)
+stock bool _Dynamic_ResetObject(DynamicObject dynamic, bool disposemembers, int blocksize=0, int startsize=0)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	if (blocksize > 0)
-		SetArrayCell(s_Collection, index, blocksize, Dynamic_Blocksize);
+	if (blocksize == 0)
+		blocksize = dynamic.BlockSize;
 	
-	return _Dynamic_Dispose(index, disposemembers, true, startsize);
+	return _Dynamic_Dispose(dynamic, disposemembers, true, startsize);
 }
 
-stock int _Dynamic_GetOwnerPlugin(int index)
+stock Handle _Dynamic_GetOwnerPlugin(DynamicObject dynamic)
 {
-	if (!_Dynamic_IsValid(index, true))
-		return 0;
+	if (!dynamic.IsValid(true))
+		return null;
 	
-	return GetArrayCell(s_Collection, index, Dynamic_OwnerPlugin);
+	return dynamic.OwnerPlugin;
 }
 
-stock bool _Dynamic_SetName(int index, const char[] objectname, bool replace)
+stock bool _Dynamic_SetName(DynamicObject dynamic, const char[] objectname, bool replace)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	return SetTrieValue(s_tObjectNames, objectname, index, replace);
+	return s_tObjectNames.SetValue(objectname, dynamic, replace);
 }
 
-stock int _Dynamic_FindByName(const char[] objectname)
+stock DynamicObject _Dynamic_FindByName(const char[] objectname)
 {
 	// Find name in object names trie
-	int index;
-	if (!GetTrieValue(s_tObjectNames, objectname, index))
-		return Invalid_Dynamic_Object;
+	DynamicObject dynamic;
+	if (!s_tObjectNames.GetValue(objectname, dynamic))
+		return INVALID_DYNAMIC_OBJECT;
 	
 	// Check object is still valid
-	if (!_Dynamic_IsValid(index))
-		return Invalid_Dynamic_Object;
+	if (!dynamic.IsValid(true))
+		return INVALID_DYNAMIC_OBJECT;
 	
 	// Return object index
-	return index;
+	return dynamic;
 }
 
-stock int _Dynamic_GetParent(int index)
+stock DynamicObject _Dynamic_GetParent(DynamicObject dynamic)
 {
-	if (!_Dynamic_IsValid(index))
-		return Invalid_Dynamic_Object;
+	if (!dynamic.IsValid(true))
+		return INVALID_DYNAMIC_OBJECT;
 	
-	return GetArrayCell(s_Collection, index, Dynamic_ParentObject);
+	return dynamic.Parent;
 }
 
-stock bool _Dynamic_GetName(int index, char[] buffer, int length)
+stock bool _Dynamic_GetName(DynamicObject dynamic, char[] buffer, int length)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 
-	int parent = GetArrayCell(s_Collection, index, Dynamic_ParentObject);
-	if (!_Dynamic_IsValid(parent))
+	DynamicObject parent = dynamic.Parent;
+	if (!parent.IsValid(false))
 		return false;
 	
-	int offset = GetArrayCell(s_Collection, index, Dynamic_ParentOffset);
+	int offset = dynamic.ParentOffset;
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 		
@@ -363,7 +337,7 @@ stock bool _Dynamic_SetPersistence(int index, bool value)
 }
 
 stock bool _Dynamic_IsValid(int index, bool throwerror=false)
-{
+{	
 	// Check if object index is valid
 	if (index < 0 || index >= s_CollectionSize)
 	{
@@ -382,13 +356,13 @@ stock bool _Dynamic_IsValid(int index, bool throwerror=false)
 	return true;
 }
 
-stock int _Dynamic_GetMemberOffset(int index, const char[] membername)
+stock int _Dynamic_GetMemberOffset(DynamicObject dynamic, const char[] membername)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	// Find and return offset for member
-	Handle offsets = GetArrayCell(s_Collection, index, Dynamic_Offsets);
+	StringMap offsets = dynamic.Offsets;
 	int offset;
 	if (GetTrieValue(offsets, membername, offset))
 		return offset;
@@ -397,16 +371,15 @@ stock int _Dynamic_GetMemberOffset(int index, const char[] membername)
 	return INVALID_DYNAMIC_OFFSET;
 }
 
-stock bool _Dynamic_GetMemberDataOffset(Handle array, int index, const char[] membername, bool create, int &position, int &offset, int blocksize, Dynamic_MemberType type, int stringlength=0)
+stock bool _Dynamic_GetMemberDataOffset(DynamicObject dynamic, const char[] membername, bool create, int &position, int &offset, Dynamic_MemberType type, int stringlength=0)
 {
 	position = 0;
 	offset = 0;
-	Handle offsets = GetArrayCell(s_Collection, index, Dynamic_Offsets);
 	
 	// Find and return member offset
-	if (GetTrieValue(offsets, membername, offset))
+	if (dynamic.Offsets.GetValue(membername, offset))
 	{
-		_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+		_Dynamic_RecalculateOffset(dynamic.Data, position, offset, dynamic.BlockSize);
 		return true;
 	}
 	
@@ -414,27 +387,29 @@ stock bool _Dynamic_GetMemberDataOffset(Handle array, int index, const char[] me
 	if (!create)
 		return false;
 	
-	_Dynamic_CreateMemberOffset(array, index, position, offset, blocksize, membername, type, stringlength, offsets);
+	_Dynamic_CreateMemberOffset(dynamic, position, offset, membername, type, stringlength);
 	return true;
 }
 
-stock int _Dynamic_CreateMemberOffset(Handle array, int index, int &position, int &offset, int blocksize, const char[] membername, Dynamic_MemberType type, int stringlength=0, Handle offsets=null)
+stock int _Dynamic_CreateMemberOffset(DynamicObject dynamic, int &position, int &offset, const char[] membername, Dynamic_MemberType type, int stringlength=0, StringMap offsets=null)
 {
 	int memberindex;
-	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
+	ArrayList membernames = dynamic.MemberNames;
 	
 	// Increment member count
-	SetArrayCell(s_Collection, index, _Dynamic_GetMemberCount(index)+1, Dynamic_MemberCount);
+	dynamic.MemberCount++;
 	
 	// Get offsets if required
 	if (offsets == null)
-		offsets = GetArrayCell(s_Collection, index, Dynamic_Offsets);
+		offsets = dynamic.Offsets;
 	
-	offset = GetArrayCell(s_Collection, index, Dynamic_NextOffset);
-	SetTrieValue(offsets, membername, offset);
-	memberindex = PushArrayString(membernames, membername);
-	SetArrayCell(membernames, memberindex, offset, g_iDynamic_MemberLookup_Offset);
-		
+	offset = dynamic.NextOffset;
+	offsets.SetValue(membername, offset);
+	memberindex = membernames.PushString(membername);
+	membernames.Set(memberindex, offset, g_iDynamic_MemberLookup_Offset);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
+	
 	if (type == DynamicType_String)
 	{
 		if (stringlength == 0)
@@ -443,24 +418,24 @@ stock int _Dynamic_CreateMemberOffset(Handle array, int index, int &position, in
 			return false;
 		}
 		
-		_Dynamic_ExpandIfRequired(array, position, offset, blocksize, ByteCountToCells(stringlength));
-		_Dynamic_SetMemberDataType(array, position, offset, blocksize, type);
-		_Dynamic_SetMemberStringLength(array, position, offset, blocksize, stringlength);
-		SetArrayCell(s_Collection, index, offset + 3 + ByteCountToCells(stringlength), Dynamic_NextOffset);
+		_Dynamic_ExpandIfRequired(data, position, offset, blocksize, ByteCountToCells(stringlength));
+		_Dynamic_SetMemberDataType(data, position, offset, blocksize, type);
+		_Dynamic_SetMemberStringLength(data, position, offset, blocksize, stringlength);
+		dynamic.NextOffset = offset + 3 + ByteCountToCells(stringlength);
 		return memberindex;
 	}
 	else if (type == DynamicType_Vector)
 	{
-		_Dynamic_ExpandIfRequired(array, position, offset, blocksize, 3);
-		_Dynamic_SetMemberDataType(array, position, offset, blocksize, type);
-		SetArrayCell(s_Collection, index, offset + 4, Dynamic_NextOffset);
+		_Dynamic_ExpandIfRequired(data, position, offset, blocksize, 3);
+		_Dynamic_SetMemberDataType(data, position, offset, blocksize, type);
+		dynamic.NextOffset = offset + 4;
 		return memberindex;
 	}
 	else
 	{
-		_Dynamic_ExpandIfRequired(array, position, offset, blocksize, 1);
-		_Dynamic_SetMemberDataType(array, position, offset, blocksize, type);
-		SetArrayCell(s_Collection, index, offset + 2, Dynamic_NextOffset);
+		_Dynamic_ExpandIfRequired(data, position, offset, blocksize, 1);
+		_Dynamic_SetMemberDataType(data, position, offset, blocksize, type);
+		dynamic.NextOffset = offset + 2;
 		return memberindex;
 	}
 }
@@ -536,73 +511,64 @@ stock int _Dynamic_GetCollectionSize()
 	return s_CollectionSize;
 }
 
-stock int _Dynamic_GetMemberCount(int index)
+stock int _Dynamic_GetMemberCount(DynamicObject dynamic)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return 0;
 	
-	return GetArrayCell(s_Collection, index, Dynamic_MemberCount);
+	return dynamic.MemberCount;
 }
 
-stock int _Dynamic_GetMemberOffsetByIndex(int index, int memberindex)
+stock int _Dynamic_GetMemberOffsetByIndex(DynamicObject item, int memberindex)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	return GetArrayCell(membernames, memberindex, g_iDynamic_MemberLookup_Offset);
+	return GetArrayCell(item.MemberNames, memberindex, g_iDynamic_MemberLookup_Offset);
 }
 
-stock Dynamic_MemberType _Dynamic_GetMemberType(int index, const char[] membername)
+stock Dynamic_MemberType _Dynamic_GetMemberType(DynamicObject dynamic, const char[] membername)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return DynamicType_Unknown;
 	
-	Handle array = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(array, index, membername, false, position, offset, blocksize, DynamicType_Unknown))
-		return DynamicType_Unknown;
-		
-	return _Dynamic_GetMemberDataType(array, position, offset, blocksize);
-}
-
-stock Dynamic_MemberType _Dynamic_GetMemberTypeByOffset(int index, int offset)
-{
-	if (!_Dynamic_IsValid(index, true))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Unknown))
 		return DynamicType_Unknown;
 	
-	int position = 0;
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	return _Dynamic_GetMemberDataType(data, position, offset, blocksize);
+	return _Dynamic_GetMemberDataType(dynamic.Data, position, offset, dynamic.BlockSize);
 }
 
-stock bool _Dynamic_GetMemberNameByIndex(int index, int memberindex, char[] buffer, int length)
+stock Dynamic_MemberType _Dynamic_GetMemberTypeByOffset(DynamicObject dynamic, int offset)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
+		return DynamicType_Unknown;
+	
+	return _Dynamic_GetMemberDataType(dynamic.Data, 0, offset, dynamic.BlockSize);
+}
+
+stock bool _Dynamic_GetMemberNameByIndex(DynamicObject dynamic, int memberindex, char[] buffer, int length)
+{
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	int membercount = _Dynamic_GetMemberCount(index);
-	
-	if (memberindex >= membercount)
+	if (memberindex >= dynamic.MemberCount)
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	GetArrayString(membernames, memberindex, buffer, length);
+	GetArrayString(dynamic.MemberNames, memberindex, buffer, length);
 	return true;
 }
 
-stock bool _Dynamic_GetMemberNameByOffset(int index, int offset, char[] buffer, int length)
+stock bool _Dynamic_GetMemberNameByOffset(DynamicObject dynamic, int offset, char[] buffer, int length)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	Handle membernames = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	int membercount = _Dynamic_GetMemberCount(index);
+	ArrayList membernames = dynamic.MemberNames;
+	int membercount = membernames.Length;
 	
 	for (int i = 0; i < membercount; i++)
 	{
@@ -615,18 +581,18 @@ stock bool _Dynamic_GetMemberNameByOffset(int index, int offset, char[] buffer, 
 	return false;
 }
 
-stock bool _Dynamic_SortMembers(int index, SortOrder order)
+stock bool _Dynamic_SortMembers(DynamicObject dynamic, SortOrder order)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	int count = _Dynamic_GetMemberCount(index);
+	int count = dynamic.MemberCount;
 	if (count == 0)
 		return false;
 	
 	// Dont bother sorting if there are no members
-	Handle members = GetArrayCell(s_Collection, index, Dynamic_MemberNames);
-	Handle offsetstrie = GetArrayCell(s_Collection, index, Dynamic_Offsets);
+	ArrayList members = dynamic.MemberNames;
+	StringMap offets = dynamic.Offsets;
 	char[][] membernames = new char[count][DYNAMIC_MEMBERNAME_MAXLEN];
 	int offset;
 	
@@ -643,7 +609,7 @@ stock bool _Dynamic_SortMembers(int index, SortOrder order)
 	// Rebuild member lookup arrays based on sorted membernames
 	for (int memberindex = 0; memberindex < count; memberindex++)
 	{
-		if (!GetTrieValue(offsetstrie, membernames[memberindex], offset))
+		if (!offets.GetValue(membernames[memberindex], offset))
 			continue;
 		
 		memberindex = PushArrayString(members, membernames[memberindex]);
@@ -652,20 +618,20 @@ stock bool _Dynamic_SortMembers(int index, SortOrder order)
 	return true;
 }
 
-stock int _Dynamic_FindByMemberValue(int index, int params)
+stock Collection _Dynamic_FindByMemberValue(DynamicObject dynamic, DynamicObject params)
 {
-	if (!_Dynamic_IsValid(index, true))
-		return 0;
+	if (!dynamic.IsValid(true))
+		return null;
 		
 	// Iterate through child dynamic objects
-	int membercount = _Dynamic_GetMemberCount(index);
+	int membercount = dynamic.MemberCount;
 	if (membercount == 0)
-		return 0;
+		return null;
 	
 	// All the required stuff
-	ArrayList results = new ArrayList();
-	int member;
-	int paramcount = _Dynamic_GetMemberCount(params);
+	Collection results = new Collection();
+	DynamicObject member;
+	int paramcount = params.MemberCount;
 	bool matched = true;
 	int resultcount = 0;
 	int memberoffset;
@@ -673,19 +639,26 @@ stock int _Dynamic_FindByMemberValue(int index, int params)
 	// Compile params
 	char[][] param_name = new char[paramcount][DYNAMIC_MEMBERNAME_MAXLEN];
 	Dynamic_MemberType[] param_type = new Dynamic_MemberType[paramcount];
+	DynamicObject[] param_object = new DynamicObject[paramcount];
 	int[] param_offset = new int[paramcount];
 	int[] param_length = new int[paramcount];
+	int[] param_operator = new int[paramcount];
 	int param_maxlength;
-	for (int param=0; param<paramcount; param++)
+	DynamicObject paramater;
+	for (int i=0; i<paramcount; i++)
 	{
-		param_offset[param] = _Dynamic_GetMemberOffsetByIndex(params, param);
-		_Dynamic_GetMemberNameByIndex(params, param, param_name[param], DYNAMIC_MEMBERNAME_MAXLEN);
-		param_type[param] = _Dynamic_GetMemberTypeByOffset(params, param_offset[param]);
-		if (param_type[param] == DynamicType_String)
+		paramater = _Dynamic_GetObjectByIndex(params, i);
+		param_object[i] = paramater;
+		_Dynamic_GetString(paramater, "MemberName", param_name[i], DYNAMIC_MEMBERNAME_MAXLEN);
+		param_operator[i] = _Dynamic_GetInt(paramater, "Operator");
+		param_offset[i] = _Dynamic_GetMemberOffset(paramater, "Value");
+		param_type[i] = _Dynamic_GetMemberTypeByOffset(paramater, param_offset[i]);
+		
+		if (param_type[i] == DynamicType_String)
 		{
-			param_length[param] = _Dynamic_GetStringLengthByOffset(params, param_offset[param]);
-			if (param_length[param] > param_maxlength)
-				param_maxlength = param_length[param];
+			param_length[i] = _Dynamic_GetStringLengthByOffset(paramater, param_offset[i]);
+			if (param_length[i] > param_maxlength)
+				param_maxlength = param_length[i];
 		}
 	}
 	char[] paramvalue = new char[param_maxlength];
@@ -694,13 +667,13 @@ stock int _Dynamic_FindByMemberValue(int index, int params)
 	for (int i = 0; i < membercount; i++)
 	{
 		// Get member offset and check its a dynamic object
-		memberoffset = _Dynamic_GetMemberOffsetByIndex(index, i);
-		if (_Dynamic_GetMemberTypeByOffset(index, memberoffset) != DynamicType_Object)
+		memberoffset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
+		if (_Dynamic_GetMemberTypeByOffset(dynamic, memberoffset) != DynamicType_Object)
 			continue;
 		
 		// Get member and check its valid
-		member = _Dynamic_GetObjectByOffset(index, memberoffset);
-		if (!_Dynamic_IsValid(member))
+		member = _Dynamic_GetObjectByOffset(dynamic, memberoffset);
+		if (!member.IsValid(false))
 			continue;
 		
 		// Iterate through each param and check for matches
@@ -711,19 +684,38 @@ stock int _Dynamic_FindByMemberValue(int index, int params)
 			{
 				case DynamicType_String:
 				{
-					_Dynamic_GetStringByOffset(params, param_offset[param], paramvalue, param_length[param]);
+					_Dynamic_GetStringByOffset(param_object[param], param_offset[param], paramvalue, param_length[param]);
 					memberoffset = _Dynamic_GetMemberOffset(member, param_name[param]);
 					
-					if (!_Dynamic_CompareStringByOffset(member, memberoffset, paramvalue, true))
+					switch(param_operator[param])
 					{
-						matched = false;
-						break;
+						case DynamicOperator_Equals:
+						{
+							if (!_Dynamic_CompareStringByOffset(member, memberoffset, paramvalue, true))
+							{
+								matched = false;
+								break;
+							}
+						}
+						case DynamicOperator_NotEquals:
+						{
+							if (_Dynamic_CompareStringByOffset(member, memberoffset, paramvalue, true))
+							{
+								matched = false;
+								break;
+							}
+						}
+						default:
+						{
+							ThrowError("DynamicOperator %d is not yet supported", param_operator[param]);
+							return null;
+						}
 					}
 				}
 				default:
 				{
-					ThrowError("Dynamic_MemberType:%d is not yet supported", param_type[param]);
-					return 0;
+					ThrowError("Dynamic_MemberType %d is not yet supported", param_type[param]);
+					return null;
 				}
 			}
 		}
@@ -739,8 +731,8 @@ stock int _Dynamic_FindByMemberValue(int index, int params)
 	if (resultcount == 0)
 	{
 		delete results;
-		return 0;
+		return null;
 	}
 	
-	return view_as<int>(results);
+	return results;
 }

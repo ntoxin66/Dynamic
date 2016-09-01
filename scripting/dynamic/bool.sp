@@ -40,8 +40,8 @@ stock bool _GetBool(ArrayList data, int position, int offset, int blocksize, boo
 	}
 	else if (type == DynamicType_Object)
 	{
-		int value = _Dynamic_GetMemberDataInt(data, position, offset, blocksize);
-		if (value == Invalid_Dynamic_Object)
+		DynamicObject value = view_as<DynamicObject>(_Dynamic_GetMemberDataInt(data, position, offset, blocksize));
+		if (!value.IsValid(false))
 			return false;
 		return true;
 	}
@@ -88,44 +88,44 @@ stock Dynamic_MemberType _SetBool(ArrayList data, int position, int offset, int 
 	}
 }
 
-stock bool _Dynamic_GetBool(int index, const char[] membername, bool defaultvalue=false)
+stock bool _Dynamic_GetBool(DynamicObject item, const char[] membername, bool defaultvalue=false)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return defaultvalue;
 
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = item.Data;
+	int blocksize = item.BlockSize;
 	
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, false, position, offset, blocksize, DynamicType_Bool))
+	if (!_Dynamic_GetMemberDataOffset(item, membername, false, position, offset, DynamicType_Bool))
 		return defaultvalue;
 		
 	return _GetBool(data, position, offset, blocksize, defaultvalue);
 }
 
-stock int _Dynamic_SetBool(int index, const char[] membername, bool value)
+stock int _Dynamic_SetBool(DynamicObject item, const char[] membername, bool value)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = item.Data;
+	int blocksize = item.BlockSize;
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, true, position, offset, blocksize, DynamicType_Bool))
+	if (!_Dynamic_GetMemberDataOffset(item, membername, true, position, offset, DynamicType_Bool))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = _SetBool(data, position, offset, blocksize, value);
-	CallOnChangedForward(index, offset, membername, type);
+	_Dynamic_CallOnChangedForward(item, offset, membername, type);
 	return offset;
 }
 
-stock bool _Dynamic_GetBoolByOffset(int index, int offset, bool defaultvalue=false)
+stock bool _Dynamic_GetBoolByOffset(DynamicObject item, int offset, bool defaultvalue=false)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return defaultvalue;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = item.Data;
+	int blocksize = item.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return defaultvalue;
@@ -133,44 +133,44 @@ stock bool _Dynamic_GetBoolByOffset(int index, int offset, bool defaultvalue=fal
 	return _GetBool(data, position, offset, blocksize, defaultvalue);
 }
 
-stock bool _Dynamic_SetBoolByOffset(int index, int offset, bool value)
+stock bool _Dynamic_SetBoolByOffset(DynamicObject item, int offset, bool value)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return false;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = item.Data;
+	int blocksize = item.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetBool(data, position, offset, blocksize, value);
-	CallOnChangedForwardByOffset(index, offset, type);
+	_Dynamic_CallOnChangedForwardByOffset(item, offset, type);
 	return true;
 }
 
-stock int _Dynamic_PushBool(int index, bool value, const char[] name="")
+stock int _Dynamic_PushBool(DynamicObject item, bool value, const char[] name="")
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = item.Data;
+	int blocksize = item.BlockSize;
 	int position; int offset;
-	int memberindex = _Dynamic_CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_Bool);
+	int memberindex = _Dynamic_CreateMemberOffset(item, position, offset, name, DynamicType_Bool);
 	_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value);
-	CallOnChangedForward(index, offset, name, DynamicType_Bool);
+	_Dynamic_CallOnChangedForward(item, offset, name, DynamicType_Bool);
 	return memberindex;
 }
 
-stock bool _Dynamic_GetBoolByIndex(int index, int memberindex, bool defaultvalue=false)
+stock bool _Dynamic_GetBoolByIndex(DynamicObject item, int memberindex, bool defaultvalue=false)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!item.IsValid(true))
 		return false;
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(item, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return defaultvalue;
 	
-	return _Dynamic_GetBoolByOffset(index, offset, defaultvalue);
+	return _Dynamic_GetBoolByOffset(item, offset, defaultvalue);
 }

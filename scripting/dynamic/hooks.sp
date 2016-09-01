@@ -62,34 +62,34 @@ stock bool _Dynamic_UnHookChanges(int index, Dynamic_HookType callback, Handle p
 	return true;
 }
 
-stock int _Dynamic_CallbackCount(int index)
+stock int _Dynamic_HookCount(DynamicObject dynamic)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return 0;
 	
-	return GetArrayCell(s_Collection, index, Dynamic_CallbackCount);
+	return dynamic.HookCount;
 }
 
-stock void CallOnChangedForward(int index, int offset, const char[] member, Dynamic_MemberType type)
+stock void _Dynamic_CallOnChangedForward(DynamicObject dynamic, int offset, const char[] member, Dynamic_MemberType type)
 {
-	Handle forwards = GetArrayCell(s_Collection, index, Dynamic_Forwards);
+	Handle forwards = dynamic.Forwards;
 	if (forwards == null)
 		return;
 		
 	Call_StartForward(forwards);
-	Call_PushCell(index);
+	Call_PushCell(dynamic);
 	Call_PushCell(offset);
 	Call_PushString(member);
 	Call_PushCell(type);
 	Call_Finish();
 }
 
-stock void CallOnChangedForwardByOffset(int index, int offset, Dynamic_MemberType type)
+stock void _Dynamic_CallOnChangedForwardByOffset(DynamicObject dynamic, int offset, Dynamic_MemberType type)
 {
-	if (GetArrayCell(s_Collection, index, Dynamic_CallbackCount) > 0)
+	if (dynamic.HookCount > 0)
 	{
 		char membername[DYNAMIC_MEMBERNAME_MAXLEN];
-		_Dynamic_GetMemberNameByOffset(index, offset, membername, sizeof(membername));
-		CallOnChangedForward(index, offset, membername, type);
+		_Dynamic_GetMemberNameByOffset(dynamic, offset, membername, sizeof(membername));
+		_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	}
 }

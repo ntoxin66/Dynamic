@@ -17,9 +17,9 @@
  *
  */
 
-stock bool _Dynamic_ReadConfig(int index, const char[] path, bool use_valve_fs=false, int valuelength=128)
+stock bool _Dynamic_ReadConfig(DynamicObject dynamic, const char[] path, bool use_valve_fs=false, int valuelength=128)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 	
 	// Check file exists
@@ -107,7 +107,7 @@ stock bool _Dynamic_ReadConfig(int index, const char[] path, bool use_valve_fs=f
 					continue;
 				}
 				
-				AddConfigSetting(index, settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, valuelength);
+				AddConfigSetting(dynamic, settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, valuelength);
 				settingnamelength = 0;
 				settingvaluelength = 0;
 			}
@@ -119,7 +119,7 @@ stock bool _Dynamic_ReadConfig(int index, const char[] path, bool use_valve_fs=f
 				
 				if (!readingstring && readingvalue)
 				{
-					AddConfigSetting(index, settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, valuelength);
+					AddConfigSetting(dynamic, settingnamearray, settingnamelength, settingvaluearray, settingvaluelength, valuelength);
 					settingnamelength = 0;
 					settingvaluelength = 0;
 					skippingcomment = true;
@@ -162,7 +162,7 @@ stock bool _Dynamic_ReadConfig(int index, const char[] path, bool use_valve_fs=f
 	return true;
 }
 
-stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList value, int valuelength, int maxlength)
+stock void AddConfigSetting(DynamicObject dynamic, ArrayList name, int namelength, ArrayList value, int valuelength, int maxlength)
 {
 	char[] settingname = new char[namelength];
 	GetArrayStackAsString(name, settingname, namelength);
@@ -172,10 +172,10 @@ stock void AddConfigSetting(int index, ArrayList name, int namelength, ArrayList
 	GetArrayStackAsString(value, settingvalue, valuelength);
 	value.Clear();
 	
-	CreateMemberFromString(index, settingname, settingvalue, maxlength);
+	CreateMemberFromString(dynamic, settingname, settingvalue, maxlength);
 }
 
-stock Dynamic_MemberType CreateMemberFromString(int index, const char[] membername, const char[] value, int maxlength)
+stock Dynamic_MemberType CreateMemberFromString(DynamicObject dynamic, const char[] membername, const char[] value, int maxlength)
 {
 	bool canbeint = true;
 	bool canbefloat = true;
@@ -206,18 +206,18 @@ stock Dynamic_MemberType CreateMemberFromString(int index, const char[] memberna
 		val = StringToInt(value);
 		if (val == -1 && StrEqual(value, "-1"))
 		{
-			_Dynamic_SetInt(index, membername, val);
+			_Dynamic_SetInt(dynamic, membername, val);
 			return DynamicType_Int;
 		}
 		else
 		{
-			_Dynamic_SetString(index, membername, value, maxlength, maxlength);
+			_Dynamic_SetString(dynamic, membername, value, maxlength, maxlength);
 			return DynamicType_String;
 		}
 	}
 	else if (canbefloat)
 	{
-		_Dynamic_SetFloat(index, membername, StringToFloat(value));
+		_Dynamic_SetFloat(dynamic, membername, StringToFloat(value));
 		return DynamicType_Float;
 	}
 	else
@@ -242,23 +242,23 @@ stock Dynamic_MemberType CreateMemberFromString(int index, const char[] memberna
 			GetRegexSubString(g_sRegex_Vector, 3, matchbuffer, sizeof(matchbuffer));
 			vec[2] = StringToFloat(matchbuffer);
 			
-			_Dynamic_SetVector(index, membername, vec);
+			_Dynamic_SetVector(dynamic, membername, vec);
 			return DynamicType_Vector;
 		}
 		
 		// check for bool last
 		if (StrEqual(value, "true", false))
 		{
-			_Dynamic_SetBool(index, membername, true);
+			_Dynamic_SetBool(dynamic, membername, true);
 			return DynamicType_Bool;
 		}
 		else if (StrEqual(value, "false", false))
 		{
-			_Dynamic_SetBool(index, membername, false);
+			_Dynamic_SetBool(dynamic, membername, false);
 			return DynamicType_Bool;
 		}
 		
-		_Dynamic_SetString(index, membername, value, maxlength, maxlength);
+		_Dynamic_SetString(dynamic, membername, value, maxlength, maxlength);
 		return DynamicType_String;
 	}	
 }
@@ -296,9 +296,9 @@ stock void GetArrayStackAsString(ArrayList stack, char[] buffer, int length)
 	}
 }
 
-stock bool _Dynamic_WriteConfig(int index, const char[] path)
+stock bool _Dynamic_WriteConfig(DynamicObject dynamic, const char[] path)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 
 	// Open file for writting
@@ -311,17 +311,17 @@ stock bool _Dynamic_WriteConfig(int index, const char[] path)
 		return false;
 	}
 	
-	int count = _Dynamic_GetMemberCount(index);
+	int count = _Dynamic_GetMemberCount(dynamic);
 	int memberoffset;
 	int length;
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	for (int i = 0; i < count; i++)
 	{
-		memberoffset = _Dynamic_GetMemberOffsetByIndex(index, i);
-		_Dynamic_GetMemberNameByIndex(index, i, membername, sizeof(membername));
-		length = _Dynamic_GetStringLengthByOffset(index, memberoffset);
+		memberoffset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
+		_Dynamic_GetMemberNameByIndex(dynamic, i, membername, sizeof(membername));
+		length = _Dynamic_GetStringLengthByOffset(dynamic, memberoffset);
 		char[] membervalue = new char[length];
-		_Dynamic_GetStringByOffset(index, memberoffset, membervalue, length);
+		_Dynamic_GetStringByOffset(dynamic, memberoffset, membervalue, length);
 		stream.WriteLine("%s\t\"%s\"", membername, membervalue);
 	}
 	

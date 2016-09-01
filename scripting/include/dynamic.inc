@@ -22,7 +22,11 @@
 #endif
 #define _dynamic_included
 
-#define INVALID_DYNAMIC_OBJECT			view_as<Dynamic>(-1)
+#if defined dynamic_use_local_methodmap
+	#define INVALID_DYNAMIC_OBJECT			view_as<DynamicObject>(-1)
+#else
+	#define INVALID_DYNAMIC_OBJECT			view_as<Dynamic>(-1)
+#endif
 #define Invalid_Dynamic_Object			-1
 #define INVALID_DYNAMIC_OFFSET			-1
 #define DYNAMIC_MEMBERNAME_MAXLEN		64
@@ -37,6 +41,12 @@ enum Dynamic_MemberType
 	DynamicType_Handle = 5,
 	DynamicType_Vector = 6,
 	DynamicType_Unknown = 7
+}
+
+enum Dynamic_Operator
+{
+	DynamicOperator_Equals=0,
+	DynamicOperator_NotEquals,
 }
 
 typeset Dynamic_HookType
@@ -608,8 +618,10 @@ public __pl_dynamic_SetNTVOptional()
 }
 #endif
 
-#include <dynamic-collection>
-#include <dynamic-basic>
+#if !defined dynamic_use_local_methodmap
+	#include <dynamic-collection>
+	#include <dynamic-basic>
+#endif
 
 public SharedPlugin __pl_dynamic = 
 {

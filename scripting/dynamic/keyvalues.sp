@@ -17,9 +17,9 @@
  *
  */
 
-stock bool _Dynamic_ReadKeyValues(Handle plugin, int index, const char[] path, int valuelength=128, Dynamic_HookType hook=INVALID_FUNCTION)
+stock bool _Dynamic_ReadKeyValues(Handle plugin, DynamicObject dynamic, const char[] path, int valuelength=128, Dynamic_HookType hook=INVALID_FUNCTION)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 	
 	// Check file exists
@@ -44,7 +44,7 @@ stock bool _Dynamic_ReadKeyValues(Handle plugin, int index, const char[] path, i
 		AddToForward(callbackforward, plugin, hook);
 	}
 	
-	IterateKeyValues(kv, index, valuelength, callbackforward);
+	IterateKeyValues(plugin, kv, dynamic, valuelength, callbackforward);
 	delete kv;
 	
 	if (callbackforward != null)
@@ -55,9 +55,9 @@ stock bool _Dynamic_ReadKeyValues(Handle plugin, int index, const char[] path, i
 	return true;
 }
 
-stock void IterateKeyValues(KeyValues kv, int index, int valuelength, Handle callbackforward, int depth=0)
+stock void IterateKeyValues(Handle plugin, KeyValues kv, DynamicObject dynamic, int valuelength, Handle callbackforward, int depth=0)
 {
-	char key[512];
+	char key[DYNAMIC_MEMBERNAME_MAXLEN];
 	KvDataTypes type;
 	
 	do
@@ -69,7 +69,7 @@ stock void IterateKeyValues(KeyValues kv, int index, int valuelength, Handle cal
 			if (callbackforward != null)
 			{
 				Call_StartForward(callbackforward);
-				Call_PushCell(index);
+				Call_PushCell(dynamic);
 				Call_PushString(key);
 				Call_PushCell(depth);
 				Call_Finish(result);
@@ -77,14 +77,16 @@ stock void IterateKeyValues(KeyValues kv, int index, int valuelength, Handle cal
 			
 			if (result == Plugin_Continue)
 			{
-				int child = _Dynamic_GetObject(index, key);
-				if (!_Dynamic_IsValid(child))
+				DynamicObject child = _Dynamic_GetObject(dynamic, key);
+				if (!child.IsValid(false))
 				{
-					child = _Dynamic_Initialise(null);
-					_Dynamic_SetObject(index, key, child);
+					child = DynamicObject();
+					child.Initialise(plugin);
+					
+					_Dynamic_SetObject(dynamic, key, child);
 				}
 				
-				IterateKeyValues(kv, child, valuelength, callbackforward, depth+1);
+				IterateKeyValues(plugin, kv, child, valuelength, callbackforward, depth+1);
 			}
 			kv.GoBack();
 		}
@@ -97,15 +99,15 @@ stock void IterateKeyValues(KeyValues kv, int index, int valuelength, Handle cal
 				{
 					char[] value = new char[valuelength];
 					kv.GetString(NULL_STRING, value, valuelength);
-					_Dynamic_SetString(index, key, value, valuelength, valuelength);
+					_Dynamic_SetString(dynamic, key, value, valuelength, valuelength);
 				}
 				case KvData_Int:
 				{
-					_Dynamic_SetInt(index, key, kv.GetNum(NULL_STRING));
+					_Dynamic_SetInt(dynamic, key, kv.GetNum(NULL_STRING));
 				}
 				case KvData_Float:
 				{
-					_Dynamic_SetFloat(index, key, kv.GetFloat(NULL_STRING));
+					_Dynamic_SetFloat(dynamic, key, kv.GetFloat(NULL_STRING));
 				}
 				case KvData_Ptr:
 				{
@@ -129,9 +131,9 @@ stock void IterateKeyValues(KeyValues kv, int index, int valuelength, Handle cal
 	while (kv.GotoNextKey(false));
 }
 
-stock bool _Dynamic_WriteKeyValues(int index, const char[] path)
+stock bool _Dynamic_WriteKeyValues(DynamicObject dynamic, const char[] path)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 	
 	// Open file for writting
@@ -144,13 +146,13 @@ stock bool _Dynamic_WriteKeyValues(int index, const char[] path)
 		return false;
 	}
 	
-	WriteObjectToKeyValues(stream, index, 0);
+	WriteObjectToKeyValues(stream, dynamic, 0);
 	
 	delete stream;
 	return true;
 }
 
-stock void WriteObjectToKeyValues(File stream, int index, int indent)
+stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent)
 {
 	// Create indent
 	char indextext[16];
@@ -159,27 +161,27 @@ stock void WriteObjectToKeyValues(File stream, int index, int indent)
 	indextext[indent] = 0;
 	int length = 1024;
 
-	int count = _Dynamic_GetMemberCount(view_as<int>(index));
+	int count = dynamic.MemberCount;
 	int memberoffset;
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	for (int i = 0; i < count; i++)
 	{
-		memberoffset = _Dynamic_GetMemberOffsetByIndex(view_as<int>(index), i);
-		_Dynamic_GetMemberNameByIndex(index, i, membername, sizeof(membername));
-		Dynamic_MemberType type = _Dynamic_GetMemberTypeByOffset(index, memberoffset);
+		memberoffset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
+		_Dynamic_GetMemberNameByIndex(dynamic, i, membername, sizeof(membername));
+		Dynamic_MemberType type = _Dynamic_GetMemberTypeByOffset(dynamic, memberoffset);
 		
 		if (type == DynamicType_Object)
 		{
 			stream.WriteLine("%s\"%s\"", indextext, membername);
 			stream.WriteLine("%s{", indextext);
-			WriteObjectToKeyValues(stream, _Dynamic_GetObjectByOffset(index, memberoffset), indent+1);
+			WriteObjectToKeyValues(stream, _Dynamic_GetObjectByOffset(dynamic, memberoffset), indent+1);
 			stream.WriteLine("%s}", indextext);
 		}
 		else
 		{
-			//length = GetStringLengthByOffset(view_as<int>(index), memberoffset);
+			//length = GetStringLengthByOffset(view_as<int>(dynamic), memberoffset);
 			char[] membervalue = new char[length];
-			_Dynamic_GetStringByOffset(index, memberoffset, membervalue, length);
+			_Dynamic_GetStringByOffset(dynamic, memberoffset, membervalue, length);
 			stream.WriteLine("%s\"%s\"\t\"%s\"", indextext, membername, membervalue);
 		}
 	}

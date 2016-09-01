@@ -107,57 +107,55 @@ stock Dynamic_MemberType _SetString(ArrayList data, int position, int offset, in
 	}
 }
 
-stock bool _Dynamic_GetString(int index, const char[] membername, char[] buffer, int length)
+stock bool _Dynamic_GetString(DynamicObject dynamic, const char[] membername, char[] buffer, int length)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, false, position, offset, blocksize, DynamicType_String))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_String))
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	return _GetString(data, position, offset, blocksize, buffer, length);
+	return _GetString(dynamic.Data, position, offset, dynamic.BlockSize, buffer, length);
 }
 
-stock int _Dynamic_SetString(int index, const char[] membername, const char[] value, int length, int valuelength)
+stock int _Dynamic_SetString(DynamicObject dynamic, const char[] membername, const char[] value, int length, int valuelength)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
 	
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, true, position, offset, blocksize, DynamicType_String, length))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_String, length))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	
 	
 	Dynamic_MemberType type = _SetString(data, position, offset, blocksize, value);
-	CallOnChangedForward(index, offset, membername, type);
+	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
-stock bool _Dynamic_GetStringByOffset(int index, int offset, char[] buffer, int length)
+stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, int offset, char[] buffer, int length)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
 	{
@@ -168,13 +166,13 @@ stock bool _Dynamic_GetStringByOffset(int index, int offset, char[] buffer, int 
 	return _GetString(data, position, offset, blocksize, buffer, length);
 }
 
-stock bool _Dynamic_SetStringByOffset(int index, int offset, const char[] value, int length, int valuelength)
+stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const char[] value, int length, int valuelength)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
 	
@@ -183,91 +181,91 @@ stock bool _Dynamic_SetStringByOffset(int index, int offset, const char[] value,
 		return false;
 	
 	Dynamic_MemberType type = _SetString(data, position, offset, blocksize, value);
-	CallOnChangedForwardByOffset(index, offset, type);
+	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
 
-stock int _Dynamic_PushString(int index, const char[] value, int length, int valuelength, const char[] name)
+stock int _Dynamic_PushString(DynamicObject dynamic, const char[] value, int length, int valuelength, const char[] name)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
 	
 	int position; int offset;
-	int memberindex = _Dynamic_CreateMemberOffset(data, index, position, offset, blocksize, name, DynamicType_String, length);
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_String, length);
 	
 	length+=2; // this can probably be removed (review Native_Dynamic_SetString for removal also)
 	_Dynamic_SetMemberDataString(data, position, offset, blocksize, value);
-	CallOnChangedForward(index, offset, name, DynamicType_String);
+	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_String);
 	return memberindex;
 }
 
-stock bool _Dynamic_GetStringByIndex(int index, int memberindex, char[] buffer, int length)
+stock bool _Dynamic_GetStringByIndex(DynamicObject dynamic, int memberindex, char[] buffer, int length)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(index, memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	if (_Dynamic_GetStringByOffset(index, offset, buffer, length))
+	if (_Dynamic_GetStringByOffset(dynamic, offset, buffer, length))
 		return true;
 		
 	return false;
 }
 
-stock int _Dynamic_GetStringLength(int index, const char[] membername)
+stock int _Dynamic_GetStringLength(DynamicObject dynamic, const char[] membername)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return 0;
 
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(data, index, membername, false, position, offset, blocksize, DynamicType_String))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_String))
 		return 0;
 	
 	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 }
 
-stock bool _Dynamic_CompareString(int index, const char[] membername, const char[] value, bool casesensitive)
+stock bool _Dynamic_CompareString(DynamicObject dynamic, const char[] membername, const char[] value, bool casesensitive)
 {
-	int offset = _Dynamic_GetMemberOffset(index, membername);
+	int offset = _Dynamic_GetMemberOffset(dynamic, membername);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 	
-	return _Dynamic_CompareStringByOffset(index, offset,  value, casesensitive);
+	return _Dynamic_CompareStringByOffset(dynamic, offset,  value, casesensitive);
 }
 
-stock bool _Dynamic_CompareStringByOffset(int index, int offset, const char[] value, bool casesensitive)
+stock bool _Dynamic_CompareStringByOffset(DynamicObject dynamic, int offset, const char[] value, bool casesensitive)
 {
-	int length = _Dynamic_GetStringLengthByOffset(index, offset);
+	int length = _Dynamic_GetStringLengthByOffset(dynamic, offset);
 	char[] buffer = new char[length];
-	_Dynamic_GetStringByOffset(index, offset, buffer, length);
+	_Dynamic_GetStringByOffset(dynamic, offset, buffer, length);
 	
 	PrintToServer("> Compare '%s' == '%s'", value, buffer);
 	return StrEqual(value, buffer, casesensitive);	
 }
 
-stock int _Dynamic_GetStringLengthByOffset(int index, int offset)
+stock int _Dynamic_GetStringLengthByOffset(DynamicObject dynamic, int offset)
 {
-	if (!_Dynamic_IsValid(index, true))
+	if (!dynamic.IsValid(true))
 		return 0;
 	
-	ArrayList data = GetArrayCell(s_Collection, index, Dynamic_Data);
-	int blocksize = GetArrayCell(s_Collection, index, Dynamic_Blocksize);
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position;
 	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
