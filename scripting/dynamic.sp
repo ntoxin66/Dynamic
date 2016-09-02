@@ -212,7 +212,7 @@ stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reu
 		
 		for (int i = index - 1; i >= 0; i--)
 		{
-			if (GetArrayCell(s_Collection, i, Dynamic_Index) != Invalid_Dynamic_Object)
+			if (s_Collection.Get(i, Dynamic_Index) != Invalid_Dynamic_Object)
 				break;
 			
 			RemoveFromArray(s_Collection, i);
@@ -347,7 +347,7 @@ stock bool _Dynamic_IsValid(int index, bool throwerror=false)
 		return false;
 	}
 		
-	if (GetArrayCell(s_Collection, index, Dynamic_Index) == -1)
+	if (s_Collection.Get(index, Dynamic_Index) == -1)
 	{
 		if (throwerror)
 			ThrowNativeError(SP_ERROR_NATIVE, "Tried to access disposed dynamic handle %d", index);
@@ -493,7 +493,7 @@ stock Dynamic_MemberType _Dynamic_GetMemberDataType(ArrayList data, int position
 	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Get and return type
-	Dynamic_MemberType type = GetArrayCell(data, position, offset);
+	Dynamic_MemberType type = data.Get(position, offset);
 	return type;
 }
 
@@ -524,7 +524,7 @@ stock int _Dynamic_GetMemberOffsetByIndex(DynamicObject dynamic, int memberindex
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	return GetArrayCell(dynamic.MemberNames, memberindex, g_iDynamic_MemberLookup_Offset);
+	return dynamic.MemberNames.Get(memberindex, g_iDynamic_MemberLookup_Offset);
 }
 
 stock Dynamic_MemberType _Dynamic_GetMemberType(DynamicObject dynamic, const char[] membername)
@@ -572,9 +572,9 @@ stock bool _Dynamic_GetMemberNameByOffset(DynamicObject dynamic, int offset, cha
 	
 	for (int i = 0; i < membercount; i++)
 	{
-		if (GetArrayCell(membernames, i, g_iDynamic_MemberLookup_Offset) == offset)
+		if (membernames.Get(i, g_iDynamic_MemberLookup_Offset) == offset)
 		{
-			GetArrayString(membernames, i, buffer, length);
+			membernames.GetString(i, buffer, length);
 			return true;
 		}
 	}

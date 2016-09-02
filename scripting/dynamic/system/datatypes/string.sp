@@ -285,7 +285,7 @@ stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offse
 	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Return string length
-	return GetArrayCell(data, position, offset);
+	return data.Get(position, offset);
 }
 
 stock void _Dynamic_SetMemberStringLength(ArrayList data, int position, int offset, int blocksize, int length)
@@ -343,7 +343,7 @@ stock void _Dynamic_GetMemberDataString(ArrayList data, int position, int offset
 	int i; char letter;
 	for (i=0; i < length; i++)
 	{
-		letter = view_as<char>(GetArrayCell(data, position, offset, true));
+		letter = view_as<char>(data.Get(position, offset, true));
 		buffer[i] = letter;
 		
 		// If the null terminator exists we are done

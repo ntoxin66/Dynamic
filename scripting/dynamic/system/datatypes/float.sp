@@ -170,7 +170,7 @@ stock float _Dynamic_GetMemberDataFloat(ArrayList data, int position, int offset
 	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Return value
-	return GetArrayCell(data, position, offset);
+	return data.Get(position, offset);
 }
 
 stock void _Dynamic_SetMemberDataFloat(ArrayList data, int position, int offset, int blocksize, float value)

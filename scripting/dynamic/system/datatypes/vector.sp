@@ -158,7 +158,7 @@ stock bool _Dynamic_GetMemberDataVector(ArrayList data, int position, int offset
 		_Dynamic_RecalculateOffset(position, offset, blocksize);
 		
 		// Get the value
-		vector[i] = GetArrayCell(data, position, offset);
+		vector[i] = data.Get(position, offset);
 	}
 	return true;
 }

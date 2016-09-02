@@ -41,7 +41,7 @@
 #define me                view_as<int>(this)
 
 // this should be static
-Handle s_Collection = null;
+ArrayList s_Collection = null;
 
 methodmap DynamicObject
 {

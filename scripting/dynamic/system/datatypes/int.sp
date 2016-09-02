@@ -179,7 +179,7 @@ stock int _Dynamic_GetMemberDataInt(ArrayList data, int position, int offset, in
 	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Return value
-	return GetArrayCell(data, position, offset);
+	return data.Get(position, offset);
 }
 
 stock void _Dynamic_SetMemberDataInt(ArrayList data, int position, int offset, int blocksize, int value)
