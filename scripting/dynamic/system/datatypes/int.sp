@@ -78,46 +78,46 @@ stock Dynamic_MemberType _SetInt(ArrayList data, int position, int offset, int b
 	}
 }
 
-stock int _Dynamic_GetInt(DynamicObject item, const char[] membername, int defaultvalue=-1)
+stock int _Dynamic_GetInt(DynamicObject dynamic, const char[] membername, int defaultvalue=-1)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(item, membername, false, position, offset, DynamicType_Int))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Int))
 		return defaultvalue;
 		
 	return _GetInt(data, position, offset, blocksize, defaultvalue);
 }
 
 // native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
-stock int _Dynamic_SetInt(DynamicObject item, const char[] membername, int value)
+stock int _Dynamic_SetInt(DynamicObject dynamic, const char[] membername, int value)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(item, membername, true, position, offset, DynamicType_Int))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Int))
 		return INVALID_DYNAMIC_OFFSET;
 	
 	Dynamic_MemberType type = _SetInt(data, position, offset, blocksize, value);
-	_Dynamic_CallOnChangedForward(item, offset, membername, type);
+	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
-stock int _Dynamic_GetIntByOffset(DynamicObject item, int offset, int defaultvalue=-1)
+stock int _Dynamic_GetIntByOffset(DynamicObject dynamic, int offset, int defaultvalue=-1)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position;
 	
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
@@ -126,48 +126,48 @@ stock int _Dynamic_GetIntByOffset(DynamicObject item, int offset, int defaultval
 	return _GetInt(data, position, offset, blocksize, defaultvalue);
 }
 
-stock bool _Dynamic_SetIntByOffset(DynamicObject item, int offset, int value)
+stock bool _Dynamic_SetIntByOffset(DynamicObject dynamic, int offset, int value)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetInt(data, position, offset, blocksize, value);
-	_Dynamic_CallOnChangedForwardByOffset(item, offset, type);
+	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
 
-stock int _Dynamic_PushInt(DynamicObject item, int value, const char[] name="")
+stock int _Dynamic_PushInt(DynamicObject dynamic, int value, const char[] name="")
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	
-	int memberindex = _Dynamic_CreateMemberOffset(item, position, offset, name, DynamicType_Int);
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Int);
 	_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value);
-	_Dynamic_CallOnChangedForward(item, offset, name, DynamicType_Int);
+	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Int);
 	return memberindex;
 }
 
-stock int _Dynamic_GetIntByIndex(DynamicObject item, int memberindex, int defaultvalue=-1)
+stock int _Dynamic_GetIntByIndex(DynamicObject dynamic, int memberindex, int defaultvalue=-1)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(item, memberindex);
+	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return defaultvalue;
 	
-	return _Dynamic_GetIntByOffset(item, offset, defaultvalue);
+	return _Dynamic_GetIntByOffset(dynamic, offset, defaultvalue);
 }
 
 stock int _Dynamic_GetMemberDataInt(ArrayList data, int position, int offset, int blocksize)

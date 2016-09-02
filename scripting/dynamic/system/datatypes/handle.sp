@@ -49,15 +49,15 @@ stock Dynamic_MemberType _SetHandle(ArrayList data, int position, int offset, in
 	}
 }
 
-stock int _Dynamic_GetHandle(DynamicObject item, const char[] membername)
+stock int _Dynamic_GetHandle(DynamicObject dynamic, const char[] membername)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return 0;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(item, membername, false, position, offset, DynamicType_Handle))
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Handle))
 		return 0;
 		
 	return _GetHandle(data, position, offset, blocksize);
@@ -80,13 +80,13 @@ stock int _Dynamic_SetHandle(DynamicObject dynamic, const char[] membername, int
 	return offset;
 }
 
-stock int _Dynamic_GetHandleByOffset(DynamicObject item, int offset)
+stock int _Dynamic_GetHandleByOffset(DynamicObject dynamic, int offset)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return 0;
 	
-	ArrayList data = item.Data;
-	int blocksize = item.BlockSize;
+	ArrayList data = dynamic.Data;
+	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return 0;
