@@ -120,7 +120,7 @@ stock int _Dynamic_GetIntByOffset(DynamicObject item, int offset, int defaultval
 	int blocksize = item.BlockSize;
 	int position;
 	
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return defaultvalue;
 	
 	return _GetInt(data, position, offset, blocksize, defaultvalue);
@@ -135,7 +135,7 @@ stock bool _Dynamic_SetIntByOffset(DynamicObject item, int offset, int value)
 	int blocksize = item.BlockSize;
 	
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetInt(data, position, offset, blocksize, value);
@@ -176,7 +176,7 @@ stock int _Dynamic_GetMemberDataInt(ArrayList data, int position, int offset, in
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Return value
 	return GetArrayCell(data, position, offset);
@@ -188,7 +188,7 @@ stock void _Dynamic_SetMemberDataInt(ArrayList data, int position, int offset, i
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Set the value
 	SetArrayCell(data, position, value, offset);

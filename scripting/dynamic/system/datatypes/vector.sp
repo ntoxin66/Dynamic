@@ -99,7 +99,7 @@ stock bool _Dynamic_GetVectorByOffset(DynamicObject dynamic, int offset, float[3
 	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	return _GetVector(data, position, offset, blocksize, value);
@@ -114,7 +114,7 @@ stock bool _Dynamic_SetVectorByOffset(DynamicObject dynamic, int offset, const f
 	int blocksize = dynamic.BlockSize;
 	
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetVector(data, position, offset, blocksize, value);
@@ -155,7 +155,7 @@ stock bool _Dynamic_GetMemberDataVector(ArrayList data, int position, int offset
 		offset++;
 		
 		// Calculate internal data array index and cell position
-		_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+		_Dynamic_RecalculateOffset(position, offset, blocksize);
 		
 		// Get the value
 		vector[i] = GetArrayCell(data, position, offset);
@@ -172,7 +172,7 @@ stock void _Dynamic_SetMemberDataVector(ArrayList data, int position, int offset
 		offset++;
 		
 		// Calculate internal data array index and cell position
-		_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+		_Dynamic_RecalculateOffset(position, offset, blocksize);
 		
 		// Set the value
 		SetArrayCell(data, position, value[i], offset);

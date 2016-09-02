@@ -380,7 +380,7 @@ stock bool _Dynamic_GetMemberDataOffset(DynamicObject dynamic, const char[] memb
 	// Find and return member offset
 	if (dynamic.Offsets.GetValue(membername, offset))
 	{
-		_Dynamic_RecalculateOffset(dynamic.Data, position, offset, dynamic.BlockSize);
+		_Dynamic_RecalculateOffset(position, offset, dynamic.BlockSize);
 		return true;
 	}
 	
@@ -442,7 +442,7 @@ stock int _Dynamic_CreateMemberOffset(DynamicObject dynamic, int &position, int 
 	}
 }
 
-stock bool _Dynamic_RecalculateOffset(ArrayList data, int &position, int &offset, int blocksize, bool expand=false, bool aschar=false)
+stock bool _Dynamic_RecalculateOffset(int &position, int &offset, int blocksize, bool aschar=false)
 {
 	// Calculate offset into internal array index and cell position
 	if (aschar)
@@ -458,27 +458,6 @@ stock bool _Dynamic_RecalculateOffset(ArrayList data, int &position, int &offset
 		offset-=blocksize;
 		position++;
 	}
-	
-	if (expand)
-	{
-		// Expand array if offset is outside of array bounds
-		// Performance: Get array size should be replaced with an size counter
-		// The above needs a really good think!!
-		int size = GetArraySize(data);
-		while (size <= position)
-		{
-			// -1 is the default value of unused memory to allow parenting via Set/PushObject
-			int val = PushArrayCell(data, INVALID_DYNAMIC_OBJECT);
-			size++;
-			
-			// This was added to ensure all memory is set to -1 for a parent resetting
-			// -> this might impact performance and potentially cause parent resetting be redone
-			for (int block = 1; block < blocksize; block++)
-			{
-				SetArrayCell(data, val, INVALID_DYNAMIC_OBJECT, block);
-			}
-		}
-	}
 	return true;
 }
 
@@ -486,13 +465,32 @@ stock void _Dynamic_ExpandIfRequired(ArrayList data, int position, int offset, i
 {
 	// Used to expand internal object arrays by the _Dynamic_GetMemberDataOffset method
 	offset += length + 1;
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize, true);
+	
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
+	
+	// Expand array if offset is outside of array bounds
+	// Performance: Get array size should be replaced with an size counter
+	// The above needs a really good think!!
+	int size = GetArraySize(data);
+	while (size <= position)
+	{
+		// -1 is the default value of unused memory to allow parenting via Set/PushObject
+		int val = PushArrayCell(data, INVALID_DYNAMIC_OBJECT);
+		size++;
+		
+		// This was added to ensure all memory is set to -1 for a parent resetting
+		// -> this might impact performance and potentially cause parent resetting be redone
+		for (int block = 1; block < blocksize; block++)
+		{
+			SetArrayCell(data, val, INVALID_DYNAMIC_OBJECT, block);
+		}
+	}
 }
 
 stock Dynamic_MemberType _Dynamic_GetMemberDataType(ArrayList data, int position, int offset, int blocksize)
 {
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Get and return type
 	Dynamic_MemberType type = GetArrayCell(data, position, offset);
@@ -502,7 +500,7 @@ stock Dynamic_MemberType _Dynamic_GetMemberDataType(ArrayList data, int position
 stock void _Dynamic_SetMemberDataType(ArrayList data, int position, int offset, int blocksize, Dynamic_MemberType type)
 {
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Set member type
 	SetArrayCell(data, position, type, offset);

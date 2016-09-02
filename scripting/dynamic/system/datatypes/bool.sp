@@ -132,7 +132,7 @@ stock bool _Dynamic_GetBoolByOffset(DynamicObject item, int offset, bool default
 	ArrayList data = item.Data;
 	int blocksize = item.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return defaultvalue;
 	
 	return _GetBool(data, position, offset, blocksize, defaultvalue);
@@ -146,7 +146,7 @@ stock bool _Dynamic_SetBoolByOffset(DynamicObject item, int offset, bool value)
 	ArrayList data = item.Data;
 	int blocksize = item.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetBool(data, position, offset, blocksize, value);

@@ -104,7 +104,7 @@ stock DynamicObject _Dynamic_GetDynamicByOffset(DynamicObject dynamic, int offse
 	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return INVALID_DYNAMIC_OBJECT;
 	
 	return _GetDynamic(data, position, offset, blocksize);
@@ -119,7 +119,7 @@ stock bool _Dynamic_SetDynamicByOffset(DynamicObject dynamic, int offset, Dynami
 	int blocksize = dynamic.BlockSize;
 	
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetDynamic(dynamic, data, position, offset, blocksize, value);

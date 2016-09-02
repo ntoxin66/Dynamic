@@ -88,7 +88,7 @@ stock int _Dynamic_GetHandleByOffset(DynamicObject item, int offset)
 	ArrayList data = item.Data;
 	int blocksize = item.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return 0;
 	
 	return _GetHandle(data, position, offset, blocksize);
@@ -102,7 +102,7 @@ stock bool _Dynamic_SetHandleByOffset(DynamicObject dynamic, int offset, int val
 	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetHandle(data, position, offset, blocksize, value);

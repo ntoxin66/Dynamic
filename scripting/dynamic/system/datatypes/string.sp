@@ -162,7 +162,7 @@ stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, int offset, char[] 
 	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 	{
 		buffer[0] = '\0';
 		return false;
@@ -182,7 +182,7 @@ stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const c
 		length = ++valuelength;
 	
 	int position;
-	if (!_Dynamic_RecalculateOffset(data, position, offset, blocksize))
+	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
 	Dynamic_MemberType type = _SetString(data, position, offset, blocksize, value);
@@ -241,7 +241,7 @@ stock int _Dynamic_GetStringLength(DynamicObject dynamic, const char[] membernam
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_String))
 		return 0;
 	
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 }
 
@@ -272,7 +272,7 @@ stock int _Dynamic_GetStringLengthByOffset(DynamicObject dynamic, int offset)
 	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 }
 
@@ -282,7 +282,7 @@ stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offse
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Return string length
 	return GetArrayCell(data, position, offset);
@@ -291,7 +291,7 @@ stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offse
 stock void _Dynamic_SetMemberStringLength(ArrayList data, int position, int offset, int blocksize, int length)
 {
 	offset++;
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	SetArrayCell(data, position, length, offset);
 }
 
@@ -301,7 +301,7 @@ stock void _Dynamic_SetMemberDataString(ArrayList data, int position, int offset
 	
 	// Move the offset forward by two cells as this is where the string data starts
 	offset+=2;
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Offsets for Strings must by multiplied by 4
 	offset*=4;
@@ -319,12 +319,12 @@ stock void _Dynamic_SetMemberDataString(ArrayList data, int position, int offset
 			return;
 			
 		offset++;
-		_Dynamic_RecalculateOffset(data, position, offset, blocksize, false, true);
+		_Dynamic_RecalculateOffset(position, offset, blocksize, true);
 	}
 	
 	// Move back one offset once string is written to internal data array
 	offset--;
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize, false, true);
+	_Dynamic_RecalculateOffset(position, offset, blocksize, true);
 	
 	// Set null terminator
 	SetArrayCell(data, position, 0, offset, true);
@@ -334,7 +334,7 @@ stock void _Dynamic_GetMemberDataString(ArrayList data, int position, int offset
 {
 	// Move the offset forward by two cells as this is where the string data starts
 	offset+=2;
-	_Dynamic_RecalculateOffset(data, position, offset, blocksize, true);
+	_Dynamic_RecalculateOffset(position, offset, blocksize);
 	
 	// Offsets for Strings must by multiplied by 4
 	offset*=4;
@@ -351,7 +351,7 @@ stock void _Dynamic_GetMemberDataString(ArrayList data, int position, int offset
 			return;
 			
 		offset++;
-		_Dynamic_RecalculateOffset(data, position, offset, blocksize, false, true);
+		_Dynamic_RecalculateOffset(position, offset, blocksize, true);
 	}
 	
 	// Add null terminator to end of string
