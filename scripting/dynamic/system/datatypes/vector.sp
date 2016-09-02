@@ -68,13 +68,12 @@ stock bool _Dynamic_GetVector(DynamicObject dynamic, const char[] membername, fl
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Vector))
 		return false;
 		
-	return _GetVector(data, position, offset, blocksize, vector);
+	return _GetVector(dynamic.Data, position, offset, blocksize, vector);
 }
 
 stock int _Dynamic_SetVector(DynamicObject dynamic, const char[] membername, const float value[3])
@@ -82,13 +81,12 @@ stock int _Dynamic_SetVector(DynamicObject dynamic, const char[] membername, con
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Vector))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetVector(data, position, offset, blocksize, value, membername);
+	Dynamic_MemberType type = _SetVector(dynamic.Data, position, offset, blocksize, value, membername);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
@@ -148,7 +146,7 @@ stock bool _Dynamic_GetVectorByIndex(DynamicObject dynamic, int memberindex, flo
 	return _Dynamic_GetVectorByOffset(dynamic, offset, value);
 }
 
-stock bool _Dynamic_GetMemberDataVector(Handle array, int position, int offset, int blocksize, float vector[3])
+stock bool _Dynamic_GetMemberDataVector(ArrayList data, int position, int offset, int blocksize, float vector[3])
 {
 	// A vector has 3 cells of data to be retrieved
 	for (int i=0; i<3; i++)
@@ -157,10 +155,10 @@ stock bool _Dynamic_GetMemberDataVector(Handle array, int position, int offset, 
 		offset++;
 		
 		// Calculate internal data array index and cell position
-		_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+		_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 		
 		// Get the value
-		vector[i] = GetArrayCell(array, position, offset);
+		vector[i] = GetArrayCell(data, position, offset);
 	}
 	return true;
 }

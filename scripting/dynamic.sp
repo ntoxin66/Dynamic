@@ -160,7 +160,7 @@ stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reu
 	// Dispose of child members if disposemembers is set
 	if (disposemembers)
 	{
-		Handle data = dynamic.Data;
+		ArrayList data = dynamic.Data;
 		int count = dynamic.MemberCount;
 		int offset; int position;
 		DynamicObject disposableobject;
@@ -442,7 +442,7 @@ stock int _Dynamic_CreateMemberOffset(DynamicObject dynamic, int &position, int 
 	}
 }
 
-stock bool _Dynamic_RecalculateOffset(Handle array, int &position, int &offset, int blocksize, bool expand=false, bool aschar=false)
+stock bool _Dynamic_RecalculateOffset(ArrayList data, int &position, int &offset, int blocksize, bool expand=false, bool aschar=false)
 {
 	// Calculate offset into internal array index and cell position
 	if (aschar)
@@ -464,32 +464,32 @@ stock bool _Dynamic_RecalculateOffset(Handle array, int &position, int &offset, 
 		// Expand array if offset is outside of array bounds
 		// Performance: Get array size should be replaced with an size counter
 		// The above needs a really good think!!
-		int size = GetArraySize(array);
+		int size = GetArraySize(data);
 		while (size <= position)
 		{
 			// -1 is the default value of unused memory to allow parenting via Set/PushObject
-			int val = PushArrayCell(array, INVALID_DYNAMIC_OBJECT);
+			int val = PushArrayCell(data, INVALID_DYNAMIC_OBJECT);
 			size++;
 			
 			// This was added to ensure all memory is set to -1 for a parent resetting
 			// -> this might impact performance and potentially cause parent resetting be redone
 			for (int block = 1; block < blocksize; block++)
 			{
-				SetArrayCell(array, val, INVALID_DYNAMIC_OBJECT, block);
+				SetArrayCell(data, val, INVALID_DYNAMIC_OBJECT, block);
 			}
 		}
 	}
 	return true;
 }
 
-stock void _Dynamic_ExpandIfRequired(Handle array, int position, int offset, int blocksize, int length=1)
+stock void _Dynamic_ExpandIfRequired(ArrayList data, int position, int offset, int blocksize, int length=1)
 {
 	// Used to expand internal object arrays by the _Dynamic_GetMemberDataOffset method
 	offset += length + 1;
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize, true);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize, true);
 }
 
-stock Dynamic_MemberType _Dynamic_GetMemberDataType(Handle data, int position, int offset, int blocksize)
+stock Dynamic_MemberType _Dynamic_GetMemberDataType(ArrayList data, int position, int offset, int blocksize)
 {
 	// Calculate internal data array index and cell position
 	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
@@ -499,13 +499,13 @@ stock Dynamic_MemberType _Dynamic_GetMemberDataType(Handle data, int position, i
 	return type;
 }
 
-stock void _Dynamic_SetMemberDataType(Handle array, int position, int offset, int blocksize, Dynamic_MemberType type)
+stock void _Dynamic_SetMemberDataType(ArrayList data, int position, int offset, int blocksize, Dynamic_MemberType type)
 {
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	
 	// Set member type
-	SetArrayCell(array, position, type, offset);
+	SetArrayCell(data, position, type, offset);
 }
 
 stock int _Dynamic_GetCollectionSize()

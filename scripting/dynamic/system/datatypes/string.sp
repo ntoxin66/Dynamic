@@ -276,32 +276,32 @@ stock int _Dynamic_GetStringLengthByOffset(DynamicObject dynamic, int offset)
 	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 }
 
-stock int _Dynamic_GetMemberStringLength(Handle array, int position, int offset, int blocksize)
+stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offset, int blocksize)
 {
 	// Move the offset forward by one cell as this is where a strings length is stored
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	
 	// Return string length
-	return GetArrayCell(array, position, offset);
+	return GetArrayCell(data, position, offset);
 }
 
-stock void _Dynamic_SetMemberStringLength(Handle array, int position, int offset, int blocksize, int length)
+stock void _Dynamic_SetMemberStringLength(ArrayList data, int position, int offset, int blocksize, int length)
 {
 	offset++;
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
-	SetArrayCell(array, position, length, offset);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
+	SetArrayCell(data, position, length, offset);
 }
 
-stock void _Dynamic_SetMemberDataString(Handle array, int position, int offset, int blocksize, const char[] buffer)
+stock void _Dynamic_SetMemberDataString(ArrayList data, int position, int offset, int blocksize, const char[] buffer)
 {
-	int length = _Dynamic_GetMemberStringLength(array, position, offset, blocksize);
+	int length = _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 	
 	// Move the offset forward by two cells as this is where the string data starts
 	offset+=2;
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	
 	// Offsets for Strings must by multiplied by 4
 	offset*=4;
@@ -312,29 +312,29 @@ stock void _Dynamic_SetMemberDataString(Handle array, int position, int offset, 
 	for (i=0; i < length; i++)
 	{
 		letter = buffer[i];
-		SetArrayCell(array, position, letter, offset, true);
+		SetArrayCell(data, position, letter, offset, true);
 		
 		// If the null terminator exists we are done
 		if (letter == 0)
 			return;
 			
 		offset++;
-		_Dynamic_RecalculateOffset(array, position, offset, blocksize, false, true);
+		_Dynamic_RecalculateOffset(data, position, offset, blocksize, false, true);
 	}
 	
 	// Move back one offset once string is written to internal data array
 	offset--;
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize, false, true);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize, false, true);
 	
 	// Set null terminator
-	SetArrayCell(array, position, 0, offset, true);
+	SetArrayCell(data, position, 0, offset, true);
 }
 
-stock void _Dynamic_GetMemberDataString(Handle array, int position, int offset, int blocksize, char[] buffer, int length)
+stock void _Dynamic_GetMemberDataString(ArrayList data, int position, int offset, int blocksize, char[] buffer, int length)
 {
 	// Move the offset forward by two cells as this is where the string data starts
 	offset+=2;
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize, true);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize, true);
 	
 	// Offsets for Strings must by multiplied by 4
 	offset*=4;
@@ -343,7 +343,7 @@ stock void _Dynamic_GetMemberDataString(Handle array, int position, int offset, 
 	int i; char letter;
 	for (i=0; i < length; i++)
 	{
-		letter = view_as<char>(GetArrayCell(array, position, offset, true));
+		letter = view_as<char>(GetArrayCell(data, position, offset, true));
 		buffer[i] = letter;
 		
 		// If the null terminator exists we are done
@@ -351,7 +351,7 @@ stock void _Dynamic_GetMemberDataString(Handle array, int position, int offset, 
 			return;
 			
 		offset++;
-		_Dynamic_RecalculateOffset(array, position, offset, blocksize, false, true);
+		_Dynamic_RecalculateOffset(data, position, offset, blocksize, false, true);
 	}
 	
 	// Add null terminator to end of string

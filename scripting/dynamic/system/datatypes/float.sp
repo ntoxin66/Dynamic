@@ -161,26 +161,26 @@ stock float _Dynamic_GetFloatByIndex(DynamicObject item, int memberindex, float 
 	return _Dynamic_GetFloatByOffset(item, offset, defaultvalue);
 }
 
-stock float _Dynamic_GetMemberDataFloat(Handle array, int position, int offset, int blocksize)
+stock float _Dynamic_GetMemberDataFloat(ArrayList data, int position, int offset, int blocksize)
 {
 	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	
 	// Return value
-	return GetArrayCell(array, position, offset);
+	return GetArrayCell(data, position, offset);
 }
 
-stock void _Dynamic_SetMemberDataFloat(Handle array, int position, int offset, int blocksize, float value)
+stock void _Dynamic_SetMemberDataFloat(ArrayList data, int position, int offset, int blocksize, float value)
 {
 	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	
 	// Set the value
-	SetArrayCell(array, position, value, offset);
+	SetArrayCell(data, position, value, offset);
 }

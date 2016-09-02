@@ -170,19 +170,19 @@ stock int _Dynamic_GetIntByIndex(DynamicObject item, int memberindex, int defaul
 	return _Dynamic_GetIntByOffset(item, offset, defaultvalue);
 }
 
-stock int _Dynamic_GetMemberDataInt(Handle array, int position, int offset, int blocksize)
+stock int _Dynamic_GetMemberDataInt(ArrayList data, int position, int offset, int blocksize)
 {
 	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
 	
 	// Calculate internal data array index and cell position
-	_Dynamic_RecalculateOffset(array, position, offset, blocksize);
+	_Dynamic_RecalculateOffset(data, position, offset, blocksize);
 	
 	// Return value
-	return GetArrayCell(array, position, offset);
+	return GetArrayCell(data, position, offset);
 }
 
-stock void _Dynamic_SetMemberDataInt(Handle data, int position, int offset, int blocksize, int value)
+stock void _Dynamic_SetMemberDataInt(ArrayList data, int position, int offset, int blocksize, int value)
 {
 	// Move the offset forward by one cell as this is where the value is stored
 	offset++;
