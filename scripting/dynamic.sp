@@ -56,7 +56,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.19",
+	version = "0.0.20",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -320,20 +320,20 @@ stock bool _Dynamic_GetName(DynamicObject dynamic, char[] buffer, int length)
 	return true;	
 }
 
-stock bool _Dynamic_GetPersistence(int index)
+stock bool _Dynamic_GetPersistence(DynamicObject dynamic)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 		
-	return GetArrayCell(s_Collection, index, Dynamic_Persistent);
+	return dynamic.Persistent;
 }
 
-stock bool _Dynamic_SetPersistence(int index, bool value)
+stock bool _Dynamic_SetPersistence(DynamicObject dynamic, bool value)
 {
-	if (!_Dynamic_IsValid(index))
+	if (!dynamic.IsValid(true))
 		return false;
 		
-	SetArrayCell(s_Collection, index, value, Dynamic_Persistent);
+	dynamic.Persistent = value;
 	return true;
 }
 
@@ -519,12 +519,12 @@ stock int _Dynamic_GetMemberCount(DynamicObject dynamic)
 	return dynamic.MemberCount;
 }
 
-stock int _Dynamic_GetMemberOffsetByIndex(DynamicObject item, int memberindex)
+stock int _Dynamic_GetMemberOffsetByIndex(DynamicObject dynamic, int memberindex)
 {
-	if (!item.IsValid(true))
+	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	return GetArrayCell(item.MemberNames, memberindex, g_iDynamic_MemberLookup_Offset);
+	return GetArrayCell(dynamic.MemberNames, memberindex, g_iDynamic_MemberLookup_Offset);
 }
 
 stock Dynamic_MemberType _Dynamic_GetMemberType(DynamicObject dynamic, const char[] membername)

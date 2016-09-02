@@ -93,7 +93,7 @@ public int Native_Dynamic_GetName(Handle plugin, int params)
 public int Native_Dynamic_GetPersistence(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	return _Dynamic_GetPersistence(dynamic.Index);
+	return _Dynamic_GetPersistence(dynamic);
 }
 
 // native bool Dynamic_SetPersistence(Dynamic obj, bool value);
@@ -101,7 +101,7 @@ public int Native_Dynamic_SetPersistence(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	bool value = GetNativeCell(2);
-	return _Dynamic_SetPersistence(dynamic.Index, value);
+	return _Dynamic_SetPersistence(dynamic, value);
 }
 
 // native bool Dynamic_ReadConfig(Dynamic obj, const char[] path, bool use_valve_fs=false, int valuelength=256);
