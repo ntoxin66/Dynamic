@@ -81,13 +81,12 @@ stock float _Dynamic_GetFloat(DynamicObject dynamic, const char[] membername, fl
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Float))
 		return defaultvalue;
 		
-	return _GetFloat(data, position, offset, blocksize, defaultvalue);
+	return _GetFloat(dynamic.Data, position, offset, blocksize, defaultvalue);
 }
 
 stock int _Dynamic_SetFloat(DynamicObject dynamic, const char[] membername, float value)
@@ -95,13 +94,12 @@ stock int _Dynamic_SetFloat(DynamicObject dynamic, const char[] membername, floa
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Float))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetFloat(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetFloat(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
@@ -111,28 +109,25 @@ stock float _Dynamic_GetFloatByOffset(DynamicObject dynamic, int offset, float d
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
-	
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return defaultvalue;
 		
-	return _GetFloat(data, position, offset, blocksize, defaultvalue);
+	return _GetFloat(dynamic.Data, position, offset, blocksize, defaultvalue);
 }
 
 stock bool _Dynamic_SetFloatByOffset(DynamicObject dynamic, int offset, float value)
 {
 	if (!dynamic.IsValid(true))
 		return false;
-
-	ArrayList data = dynamic.Data;
+	
 	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetFloat(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetFloat(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }

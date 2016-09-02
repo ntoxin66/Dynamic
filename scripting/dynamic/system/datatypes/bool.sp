@@ -97,29 +97,27 @@ stock bool _Dynamic_GetBool(DynamicObject dynamic, const char[] membername, bool
 {
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
-
-	ArrayList data = dynamic.Data;
+	
 	int blocksize = dynamic.BlockSize;
 	
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Bool))
 		return defaultvalue;
 		
-	return _GetBool(data, position, offset, blocksize, defaultvalue);
+	return _GetBool(dynamic.Data, position, offset, blocksize, defaultvalue);
 }
 
 stock int _Dynamic_SetBool(DynamicObject dynamic, const char[] membername, bool value)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
-
-	ArrayList data = dynamic.Data;
+	
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Bool))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetBool(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetBool(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
@@ -129,13 +127,12 @@ stock bool _Dynamic_GetBoolByOffset(DynamicObject dynamic, int offset, bool defa
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return defaultvalue;
 	
-	return _GetBool(data, position, offset, blocksize, defaultvalue);
+	return _GetBool(dynamic.Data, position, offset, blocksize, defaultvalue);
 }
 
 stock bool _Dynamic_SetBoolByOffset(DynamicObject dynamic, int offset, bool value)
@@ -143,13 +140,12 @@ stock bool _Dynamic_SetBoolByOffset(DynamicObject dynamic, int offset, bool valu
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetBool(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetBool(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
@@ -159,11 +155,10 @@ stock int _Dynamic_PushBool(DynamicObject dynamic, bool value, const char[] name
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Bool);
-	_Dynamic_SetMemberDataInt(data, position, offset, blocksize, value);
+	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Bool);
 	return memberindex;
 }

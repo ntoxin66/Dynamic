@@ -96,13 +96,12 @@ stock bool _Dynamic_GetVectorByOffset(DynamicObject dynamic, int offset, float[3
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
-	return _GetVector(data, position, offset, blocksize, value);
+	return _GetVector(dynamic.Data, position, offset, blocksize, value);
 }
 
 stock bool _Dynamic_SetVectorByOffset(DynamicObject dynamic, int offset, const float value[3])
@@ -110,14 +109,12 @@ stock bool _Dynamic_SetVectorByOffset(DynamicObject dynamic, int offset, const f
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
-	
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetVector(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetVector(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }

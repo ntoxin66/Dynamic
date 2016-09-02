@@ -135,7 +135,6 @@ stock int _Dynamic_SetString(DynamicObject dynamic, const char[] membername, con
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
@@ -144,9 +143,7 @@ stock int _Dynamic_SetString(DynamicObject dynamic, const char[] membername, con
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_String, length))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	
-	
-	Dynamic_MemberType type = _SetString(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetString(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
@@ -159,7 +156,6 @@ stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, int offset, char[] 
 		return false;
 	}
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
@@ -168,7 +164,7 @@ stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, int offset, char[] 
 		return false;
 	}
 	
-	return _GetString(data, position, offset, blocksize, buffer, length);
+	return _GetString(dynamic.Data, position, offset, blocksize, buffer, length);
 }
 
 stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const char[] value, int length, int valuelength)
@@ -176,7 +172,6 @@ stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const c
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
@@ -185,7 +180,7 @@ stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const c
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetString(data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetString(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
@@ -195,7 +190,6 @@ stock int _Dynamic_PushString(DynamicObject dynamic, const char[] value, int len
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
@@ -204,7 +198,7 @@ stock int _Dynamic_PushString(DynamicObject dynamic, const char[] value, int len
 	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_String, length);
 	
 	length+=2; // this can probably be removed (review Native_Dynamic_SetString for removal also)
-	_Dynamic_SetMemberDataString(data, position, offset, blocksize, value);
+	_Dynamic_SetMemberDataString(dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_String);
 	return memberindex;
 }
@@ -234,15 +228,14 @@ stock int _Dynamic_GetStringLength(DynamicObject dynamic, const char[] membernam
 {
 	if (!dynamic.IsValid(true))
 		return 0;
-
-	ArrayList data = dynamic.Data;
+	
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_String))
 		return 0;
 	
 	_Dynamic_RecalculateOffset(position, offset, blocksize);
-	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
+	return _Dynamic_GetMemberStringLength(dynamic.Data, position, offset, blocksize);
 }
 
 stock bool _Dynamic_CompareString(DynamicObject dynamic, const char[] membername, const char[] value, bool casesensitive)
@@ -269,11 +262,10 @@ stock int _Dynamic_GetStringLengthByOffset(DynamicObject dynamic, int offset)
 	if (!dynamic.IsValid(true))
 		return 0;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
 	_Dynamic_RecalculateOffset(position, offset, blocksize);
-	return _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
+	return _Dynamic_GetMemberStringLength(dynamic.Data, position, offset, blocksize);
 }
 
 stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offset, int blocksize)

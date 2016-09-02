@@ -70,14 +70,12 @@ stock DynamicObject _Dynamic_GetDynamic(DynamicObject dynamic, const char[] memb
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OBJECT;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
-	
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Dynamic))
 		return INVALID_DYNAMIC_OBJECT;
 		
-	return _GetDynamic(data, position, offset, blocksize);
+	return _GetDynamic(dynamic.Data, position, offset, blocksize);
 }
 
 stock int _Dynamic_SetDynamic(DynamicObject dynamic, const char[] membername, DynamicObject value)
@@ -85,13 +83,12 @@ stock int _Dynamic_SetDynamic(DynamicObject dynamic, const char[] membername, Dy
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position; int offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Dynamic))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetDynamic(dynamic, data, position, offset, blocksize, value, membername);
+	Dynamic_MemberType type = _SetDynamic(dynamic, dynamic.Data, position, offset, blocksize, value, membername);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
@@ -101,13 +98,12 @@ stock DynamicObject _Dynamic_GetDynamicByOffset(DynamicObject dynamic, int offse
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OBJECT;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return INVALID_DYNAMIC_OBJECT;
 	
-	return _GetDynamic(data, position, offset, blocksize);
+	return _GetDynamic(dynamic.Data, position, offset, blocksize);
 }
 
 stock bool _Dynamic_SetDynamicByOffset(DynamicObject dynamic, int offset, DynamicObject value)
@@ -115,14 +111,12 @@ stock bool _Dynamic_SetDynamicByOffset(DynamicObject dynamic, int offset, Dynami
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	ArrayList data = dynamic.Data;
 	int blocksize = dynamic.BlockSize;
-	
 	int position;
 	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
 		return false;
 	
-	Dynamic_MemberType type = _SetDynamic(dynamic, data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetDynamic(dynamic, dynamic.Data, position, offset, blocksize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
