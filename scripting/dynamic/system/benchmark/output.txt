@@ -1,0 +1,32 @@
+[SM] Preparing benchmark Test...
+[SM] Starting Benchmark Tests...
+Created 1000 dynamic object(s) in 0.000000 second(s)
+Created 100000 dynamic member(s) in 0.199218 second(s)
+Read 100000 dynamic member(s) in 0.085937 second(s)
+Read 100000 dynamic member(s) using offsets in 0.066406 second(s)
+Verified 100000 dynamic member(s) in 0.253906 second(s)
+Updated 100000 dynamic member(s) in 0.093750 second(s)
+Offset verification with 100000 dynamic member(s) in 0.238281 second(s)
+Disposed 1000 dynamic object(s) in 0.031250 second(s)
+
+[SM] Preparing benchmark Test...
+[SM] Starting Benchmark Tests...
+Created 1000 dynamic object(s) in 0.000000 second(s)
+Created 100000 dynamic member(s) in 0.210937 second(s)
+Read 100000 dynamic member(s) in 0.085937 second(s)
+Read 100000 dynamic member(s) using offsets in 0.070312 second(s)
+Verified 100000 dynamic member(s) in 0.250000 second(s)
+Updated 100000 dynamic member(s) in 0.093750 second(s)
+Offset verification with 100000 dynamic member(s) in 0.250000 second(s)
+Disposed 1000 dynamic object(s) in 0.031250 second(s)
+
+[SM] Preparing benchmark Test...
+[SM] Starting Benchmark Tests...
+Created 1000 dynamic object(s) in 0.000000 second(s)
+Created 100000 dynamic member(s) in 0.203125 second(s)
+Read 100000 dynamic member(s) in 0.082031 second(s)
+Read 100000 dynamic member(s) using offsets in 0.066406 second(s)
+Verified 100000 dynamic member(s) in 0.246093 second(s)
+Updated 100000 dynamic member(s) in 0.093750 second(s)
+Offset verification with 100000 dynamic member(s) in 0.234375 second(s)
+Disposed 1000 dynamic object(s) in 0.031250 second(s)
