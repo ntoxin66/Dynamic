@@ -149,7 +149,10 @@ public int Native_Dynamic_WriteKeyValues(Handle plugin, int params)
 	GetNativeStringLength(2, length);
 	char[] path = new char[length];
 	GetNativeString(2, path, length+1);
-	return _Dynamic_WriteKeyValues(dynamic, path);
+	GetNativeStringLength(3, length);
+	char[] basekey = new char[length];
+	GetNativeString(3, basekey, length+1);
+	return _Dynamic_WriteKeyValues(dynamic, path, basekey);
 }
 
 // native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue=-1);

@@ -39,7 +39,6 @@ int g_iDynamic_MemberLookup_Offset;
 #include "dynamic/system/datatypes/float.sp"
 #include "dynamic/system/datatypes/handle.sp"
 #include "dynamic/system/datatypes/int.sp"
-
 #include "dynamic/system/datatypes/string.sp"
 #include "dynamic/system/datatypes/vector.sp"
 

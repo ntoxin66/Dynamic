@@ -119,6 +119,15 @@ public void _Dynamic_SelfTest(any userid)
 	}
 	PrintToConsole(client, "> Dynamic_FindByMemberValue test completed");
 	
+	// Dynamic_KeyValues Test
+	test.Reset();
+	if (!_Dynamic_KeyValuesTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	PrintToConsole(client, "> Dynamic_KeyValues test completed");
+	
 	test.Dispose();
 }
 
@@ -1058,6 +1067,96 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	return true;
 }
 
+stock bool _Dynamic_KeyValuesTest(int client, Dynamic test)
+{
+	// Build structure for testing
+	Dynamic child; Dynamic grandchild;
+	for (int i=0; i<3; i++)
+	{
+		child = Dynamic();
+		child.SetString("String", "abcd");
+		child.SetInt("Int", i);
+		
+		grandchild = Dynamic();
+		grandchild.SetVector("Vector", NULL_VECTOR);
+		grandchild.SetFloat("Float", 66.66);
+		child.SetDynamic("granny", grandchild);
+		
+		if (i == 1)
+			test.SetDynamic("SomeValue", child);
+		else
+			test.PushDynamic(child);
+	}
+	
+	// Write test structure to disk
+	test.WriteKeyValues("test.txt", "BaseKeyName");
+	
+	// Read test structure from disk
+	test.Reset();
+	test.ReadKeyValues("test.txt");
+	
+	// Really basic tests
+	if (test.GetDynamicByIndex(0).GetInt("Int") != 0)
+	{
+		PrintToConsole(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x1");
+		PrintToConsole(client, "> %d should equal %d", test.GetDynamicByIndex(0).GetInt("Int"), 0);
+		return false; 
+	}
+	if (test.GetDynamic("SomeValue").GetInt("Int") != 1)
+	{
+		PrintToConsole(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x2");
+		PrintToConsole(client, "> %d should equal %d", test.GetDynamic("SomeValue").GetInt("Int"), 1);
+		return false; 
+	}
+	if (test.GetDynamicByIndex(2).GetInt("Int") != 2)
+	{
+		PrintToConsole(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x3");
+		PrintToConsole(client, "> %d should equal %d", test.GetDynamicByIndex(2).GetInt("Int"), 2);
+		return false; 
+	}
+	
+	// Ensure file contents match after an additional write
+	test.Reset();
+	test.ReadKeyValues("test.txt");
+	test.WriteKeyValues("test1.txt", "BaseKeyName");
+	File stream1 = OpenFile("test.txt", "r");
+	File stream2 = OpenFile("test1.txt", "r");
+	char buffer1[1024];
+	char buffer2[1024];
+	while(stream1.ReadLine(buffer1, sizeof(buffer1)))
+	{
+		if (!stream2.ReadLine(buffer2, sizeof(buffer2)))
+		{
+			PrintToConsole(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x4");
+			PrintToConsole(client, "> 0 should equal 1");
+			delete stream1; delete stream2;
+			return false;
+		}
+		else if (!StrEqual(buffer1, buffer2))
+		{
+			PrintToConsole(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x5");
+			PrintToConsole(client, "> '%s' should equal '%s'", buffer1, buffer2);
+			delete stream1; delete stream2;
+			return false;
+		}
+	}
+	if (stream2.ReadLine(buffer2, sizeof(buffer2)))
+	{
+		PrintToConsole(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x6");
+		PrintToConsole(client, "> 1 should equal 0");
+		delete stream1; delete stream2;
+		return false;
+	}
+	
+	delete stream1;
+	delete stream2;
+	
+	DeleteFile("test.txt");
+	DeleteFile("test1.txt");
+	
+	return true;
+}
+
 stock bool _Dynamic_CompareVectors(const float value1[3], const float value2[3])
 {
 	if (value1[0] != value2[0])
@@ -1067,4 +1166,14 @@ stock bool _Dynamic_CompareVectors(const float value1[3], const float value2[3])
 	if (value1[2] != value2[2])
 		return false;
 	return true;
+}
+
+stock int _Dynamic_HashFile(const char[] path)
+{
+	File stream = OpenFile(path, "r");
+	
+	
+	
+	
+	delete stream;
 }
