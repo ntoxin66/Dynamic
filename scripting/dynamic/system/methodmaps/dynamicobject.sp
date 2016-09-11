@@ -171,13 +171,13 @@ methodmap DynamicObject
 		}
 	}
 	
-	property int NextOffset
+	property DynamicOffset NextOffset
 	{
 		public get()
 		{
 			return GetArrayCell(s_Collection, me, Dynamic_NextOffset);
 		}
-		public set(int value)
+		public set(DynamicOffset value)
 		{
 			return SetArrayCell(s_Collection, me, value, Dynamic_NextOffset);
 		}
@@ -207,13 +207,13 @@ methodmap DynamicObject
 		}
 	}
 	
-	property int ParentOffset
+	property DynamicOffset ParentOffset
 	{
 		public get()
 		{
 			return GetArrayCell(s_Collection, me, Dynamic_ParentOffset);
 		}
-		public set(int value)
+		public set(DynamicOffset value)
 		{
 			SetArrayCell(s_Collection, me, value, Dynamic_ParentOffset);
 		}

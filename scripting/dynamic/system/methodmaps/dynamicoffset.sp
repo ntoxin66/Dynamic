@@ -48,4 +48,18 @@ methodmap DynamicOffset
 			return cell;
 		}
 	}
+	
+	public DynamicOffset Clone(int blocksize, int addcells=0)
+	{
+		int index = this.Index;
+		int cell = this.Cell + addcells;
+		
+		while (cell >= blocksize)
+		{
+			index++;
+			cell-=blocksize;
+		}
+		
+		return DynamicOffset(index, cell);
+	}
 }

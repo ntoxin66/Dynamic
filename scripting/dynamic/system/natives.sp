@@ -165,30 +165,30 @@ public int Native_Dynamic_GetInt(Handle plugin, int params)
 	return _Dynamic_GetInt(dynamic, membername, defaultvalue);
 }
 
-// native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
+// native DynamicOffset Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
 public int Native_Dynamic_SetInt(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	int value = GetNativeCell(3);
-	return _Dynamic_SetInt(dynamic, membername, value);
+	return view_as<int>(_Dynamic_SetInt(dynamic, membername, value));
 }
 
-// native int Dynamic_GetIntByOffset(Dynamic obj, int offset, int defaultvalue=-1);
+// native int Dynamic_GetIntByOffset(Dynamic obj, DynamicOffset offset, int defaultvalue=-1);
 public int Native_Dynamic_GetIntByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	int defaultvalue = GetNativeCell(3);
 	return _Dynamic_GetIntByOffset(dynamic, offset, defaultvalue);
 }
 
-// native bool Dynamic_SetIntByOffset(Dynamic obj, int offset, int value);
+// native bool Dynamic_SetIntByOffset(Dynamic obj, DynamicOffset offset, int value);
 public int Native_Dynamic_SetIntByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	int value = GetNativeCell(3);
 	return _Dynamic_SetIntByOffset(dynamic, offset, value);
 }
@@ -224,21 +224,21 @@ public int Native_Dynamic_GetBool(Handle plugin, int params)
 	return _Dynamic_GetBool(dynamic, membername, defaultvalue);
 }
 
-// native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
+// native DynamicOffset Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
 public int Native_Dynamic_SetBool(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	bool value = GetNativeCell(3);
-	return _Dynamic_SetBool(dynamic, membername, value);
+	return view_as<int>(_Dynamic_SetBool(dynamic, membername, value));
 }
 
 // native bool Dynamic_GetBoolByOffset(Dynamic obj, int offset, bool defaultvalue=false);
 public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	bool defaultvalue = GetNativeCell(3);
 	return _Dynamic_GetBoolByOffset(dynamic, offset, defaultvalue);
 }
@@ -247,7 +247,7 @@ public int Native_Dynamic_GetBoolByOffset(Handle plugin, int params)
 public int Native_Dynamic_SetBoolByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	bool value = GetNativeCell(3);
 	return _Dynamic_SetBoolByOffset(dynamic, offset, value);
 }
@@ -293,20 +293,20 @@ public int Native_Dynamic_SetFloat(Handle plugin, int params)
 	return view_as<int>(_Dynamic_SetFloat(dynamic, membername, value));
 }
 
-// native float Dynamic_GetFloatByOffset(Dynamic obj, int offset, float defaultvalue=-1.0);
+// native float Dynamic_GetFloatByOffset(Dynamic obj, DynamicOffset offset, float defaultvalue=-1.0);
 public int Native_Dynamic_GetFloatByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	float defaultvalue = GetNativeCell(3);
 	return view_as<int>(_Dynamic_GetFloatByOffset(dynamic, offset, defaultvalue));
 }
 
-// native bool Dynamic_SetFloatByOffset(Dynamic obj, int offset, float value);
+// native bool Dynamic_SetFloatByOffset(Dynamic obj, DynamicOffset offset, float value);
 public int Native_Dynamic_SetFloatByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	float value = GetNativeCell(3);
 	return _Dynamic_SetFloatByOffset(dynamic, offset, value);
 }
@@ -345,7 +345,7 @@ public int Native_Dynamic_GetString(Handle plugin, int params)
 	return result;
 }
 
-// native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
+// native DynamicOffset Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
 public int Native_Dynamic_SetString(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
@@ -356,14 +356,14 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 	char[] value = new char[++valuelength];
 	GetNativeString(3, value, valuelength);
 	int length = GetNativeCell(4);
-	return _Dynamic_SetString(dynamic, membername, value, length, valuelength);
+	return view_as<int>(_Dynamic_SetString(dynamic, membername, value, length, valuelength));
 }
 
-// native bool Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int length);
+// native bool Dynamic_GetStringByOffset(Dynamic obj, DynamicOffset offset, char[] buffer, int length);
 public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	int length = GetNativeCell(4);
 	char[] buffer = new char[length];
 	bool result = _Dynamic_GetStringByOffset(dynamic, offset, buffer, length);
@@ -375,7 +375,7 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	int length = GetNativeCell(4);
 	char[] value = new char[length];
 	GetNativeString(3, value, length);
@@ -412,11 +412,11 @@ public int Native_Dynamic_GetStringByIndex(Handle plugin, int params)
 	return result;
 }
 
-// native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
+// native int Dynamic_GetStringLengthByOffset(Dynamic obj, DynamicOffset offset);
 public int Native_Dynamic_GetStringLengthByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	return _Dynamic_GetStringLengthByOffset(dynamic, offset);
 }
 
@@ -452,29 +452,29 @@ public int Native_Dynamic_GetDynamic(Handle plugin, int params)
 	return view_as<int>(_Dynamic_GetDynamic(dynamic, membername));
 }
 
-// native int Dynamic_SetDynamic(Dynamic obj, const char[] membername, Dynamic value);
+// native DynamicOffset Dynamic_SetDynamic(Dynamic obj, const char[] membername, Dynamic value);
 public int Native_Dynamic_SetDynamic(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	DynamicObject value = GetNativeCell(3);
-	return _Dynamic_SetDynamic(dynamic, membername, value);
+	return view_as<int>(_Dynamic_SetDynamic(dynamic, membername, value));
 }
 
-// native Dynamic Dynamic_GetDynamicByOffset(Dynamic obj, int offset);
+// native Dynamic Dynamic_GetDynamicByOffset(Dynamic obj, DynamicOffset offset);
 public int Native_Dynamic_GetDynamicByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	return view_as<int>(_Dynamic_GetDynamicByOffset(dynamic, offset));
 }
 
-// native bool Dynamic_SetDynamicByOffset(Dynamic obj, int offset, Dynamic value);
+// native bool Dynamic_SetDynamicByOffset(Dynamic obj, DynamicOffset offset, Dynamic value);
 public int Native_Dynamic_SetDynamicByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	DynamicObject value = GetNativeCell(3);
 	return _Dynamic_SetDynamicByOffset(dynamic, offset, value);
 }
@@ -517,29 +517,29 @@ public int Native_Dynamic_GetHandle(Handle plugin, int params)
 	return _Dynamic_GetHandle(dynamic, membername);
 }
 
-// native int Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
+// native DynamicOffset Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
 public int Native_Dynamic_SetHandle(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	int value = GetNativeCell(3);
-	return _Dynamic_SetHandle(dynamic, membername, value);
+	return view_as<int>(_Dynamic_SetHandle(dynamic, membername, value));
 }
 
-// native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
+// native Handle Dynamic_GetHandleByOffset(Dynamic obj, DynamicOffset offset);
 public int Native_Dynamic_GetHandleByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	return _Dynamic_GetHandleByOffset(dynamic, offset);
 }
 
-// native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
+// native bool Dynamic_SetHandleByOffset(Dynamic obj, DynamicOffset offset, Handle value);
 public int Native_Dynamic_SetHandleByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	int value = GetNativeCell(3);
 	return _Dynamic_SetHandleByOffset(dynamic, offset, value);
 }
@@ -576,7 +576,7 @@ public int Native_Dynamic_GetVector(Handle plugin, int params)
 	return result;
 }
 
-// native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float value[3]);
+// native DynamicOffset Dynamic_SetVector(Dynamic obj, const char[] membername, const float value[3]);
 public int Native_Dynamic_SetVector(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
@@ -584,25 +584,25 @@ public int Native_Dynamic_SetVector(Handle plugin, int params)
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	float vector[3];
 	GetNativeArray(3, vector, sizeof(vector));
-	return _Dynamic_SetVector(dynamic, membername, vector);
+	return view_as<int>(_Dynamic_SetVector(dynamic, membername, vector));
 }
 
-// native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float value[3]);
+// native bool Dynamic_GetVectorByOffset(Dynamic obj, DynamicOffset offset, float value[3]);
 public int Native_Dynamic_GetVectorByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	float value[3];
 	bool result = _Dynamic_GetVectorByOffset(dynamic, offset, value);
 	SetNativeArray(3, value, sizeof(value));
 	return result;
 }
 
-// native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float value[3]);
+// native bool Dynamic_SetVectorByOffset(Dynamic obj, DynamicOffset offset, const float value[3]);
 public int Native_Dynamic_SetVectorByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	float value[3];
 	return _Dynamic_SetVectorByOffset(dynamic, offset, value);
 }
@@ -667,21 +667,21 @@ public int Native_Dynamic_CallbackCount(Handle plugin, int params)
 	return _Dynamic_HookCount(dynamic);
 }
 
-// native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
+// native DynamicOffset Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
 public int Native_Dynamic_GetMemberOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
-	return _Dynamic_GetMemberOffset(dynamic, membername);
+	return view_as<int>(_Dynamic_GetMemberOffset(dynamic, membername));
 }
 
-// native int Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
+// native DynamicOffset Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
 public int Native_Dynamic_GetMemberOffsetByIndex(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	int memberindex = GetNativeCell(2);
-	return _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
+	return view_as<int>(_Dynamic_GetMemberOffsetByIndex(dynamic, memberindex));
 }
 
 // native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
@@ -693,11 +693,11 @@ public int Native_Dynamic_GetMemberType(Handle plugin, int params)
 	return view_as<int>(_Dynamic_GetMemberType(dynamic, membername));
 }
 
-// native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
+// native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, DynamicOffset offset);
 public int Native_Dynamic_GetMemberTypeByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	return view_as<int>(_Dynamic_GetMemberTypeByOffset(dynamic, offset));
 }
 
@@ -713,11 +713,11 @@ public int Native_Dynamic_GetMemberNameByIndex(Handle plugin, int params)
 	return result;
 }
 
-// native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int length);
+// native bool Dynamic_GetMemberNameByOffset(Dynamic obj, DynamicOffset offset, char[] buffer, int length);
 public int Native_Dynamic_GetMemberNameByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
-	int offset = GetNativeCell(2);
+	DynamicOffset offset = GetNativeCell(2);
 	int length = GetNativeCell(2);
 	char[] buffer = new char[length];
 	bool result = _Dynamic_GetMemberNameByOffset(dynamic, offset, buffer, length);

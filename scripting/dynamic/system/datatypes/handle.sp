@@ -54,54 +54,41 @@ stock int _Dynamic_GetHandle(DynamicObject dynamic, const char[] membername)
 	if (!dynamic.IsValid(true))
 		return 0;
 	
-	int blocksize = dynamic.BlockSize;
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Handle))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, offset, DynamicType_Handle))
 		return 0;
 		
-	return _GetHandle(dynamic.Data, position, offset, blocksize);
+	return _GetHandle(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize);
 }
 
-stock int _Dynamic_SetHandle(DynamicObject dynamic, const char[] membername, int value)
+stock DynamicOffset _Dynamic_SetHandle(DynamicObject dynamic, const char[] membername, int value)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	int blocksize = dynamic.BlockSize;
-	
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Handle))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, offset, DynamicType_Handle))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetHandle(dynamic.Data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetHandle(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
-stock int _Dynamic_GetHandleByOffset(DynamicObject dynamic, int offset)
+stock int _Dynamic_GetHandleByOffset(DynamicObject dynamic, DynamicOffset offset)
 {
 	if (!dynamic.IsValid(true))
 		return 0;
 	
-	int blocksize = dynamic.BlockSize;
-	int position;
-	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
-		return 0;
-	
-	return _GetHandle(dynamic.Data, position, offset, blocksize);
+	return _GetHandle(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize);
 }
 
-stock bool _Dynamic_SetHandleByOffset(DynamicObject dynamic, int offset, int value)
+stock bool _Dynamic_SetHandleByOffset(DynamicObject dynamic, DynamicOffset offset, int value)
 {
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	int blocksize = dynamic.BlockSize;
-	int position;
-	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
-		return false;
-	
-	Dynamic_MemberType type = _SetHandle(dynamic.Data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetHandle(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
@@ -109,11 +96,11 @@ stock bool _Dynamic_SetHandleByOffset(DynamicObject dynamic, int offset, int val
 stock int _Dynamic_PushHandle(DynamicObject dynamic, int value, const char[] name="")
 {
 	if (!dynamic.IsValid(true))
-		return INVALID_DYNAMIC_OFFSET;
+		return INVALID_DYNAMIC_INDEX;
 	
-	int position; int offset;
-	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Dynamic);
-	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, dynamic.BlockSize, value);
+	DynamicOffset offset;
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, offset, name, DynamicType_Dynamic);
+	_Dynamic_SetMemberDataInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Handle);
 	return memberindex;
 }
@@ -123,7 +110,7 @@ stock int _Dynamic_GetHandleByIndex(DynamicObject dynamic, int memberindex)
 	if (!dynamic.IsValid(true))
 		return 0;
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
+	DynamicOffset offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return 0;
 	

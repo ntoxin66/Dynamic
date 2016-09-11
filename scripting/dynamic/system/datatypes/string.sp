@@ -120,35 +120,34 @@ stock bool _Dynamic_GetString(DynamicObject dynamic, const char[] membername, ch
 		return false;
 	}
 	
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_String))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, offset, DynamicType_String))
 	{
 		buffer[0] = '\0';
 		return false;
 	}
 	
-	return _GetString(dynamic.Data, position, offset, dynamic.BlockSize, buffer, length);
+	return _GetString(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, buffer, length);
 }
 
-stock int _Dynamic_SetString(DynamicObject dynamic, const char[] membername, const char[] value, int length, int valuelength)
+stock DynamicOffset _Dynamic_SetString(DynamicObject dynamic, const char[] membername, const char[] value, int length, int valuelength)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
 	
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_String, length))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, offset, DynamicType_String, length))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetString(dynamic.Data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetString(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
-stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, int offset, char[] buffer, int length)
+stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, DynamicOffset offset, char[] buffer, int length)
 {
 	if (!dynamic.IsValid(true))
 	{
@@ -156,31 +155,15 @@ stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, int offset, char[] 
 		return false;
 	}
 	
-	int blocksize = dynamic.BlockSize;
-	int position;
-	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
-	{
-		buffer[0] = '\0';
-		return false;
-	}
-	
-	return _GetString(dynamic.Data, position, offset, blocksize, buffer, length);
+	return _GetString(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, buffer, length);
 }
 
-stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const char[] value, int length, int valuelength)
+stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, DynamicOffset offset, const char[] value, int length, int valuelength)
 {
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	int blocksize = dynamic.BlockSize;
-	if (length == 0)
-		length = ++valuelength;
-	
-	int position;
-	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
-		return false;
-	
-	Dynamic_MemberType type = _SetString(dynamic.Data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetString(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
@@ -188,17 +171,16 @@ stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, int offset, const c
 stock int _Dynamic_PushString(DynamicObject dynamic, const char[] value, int length, int valuelength, const char[] name)
 {
 	if (!dynamic.IsValid(true))
-		return INVALID_DYNAMIC_OFFSET;
+		return INVALID_DYNAMIC_INDEX;
 	
-	int blocksize = dynamic.BlockSize;
 	if (length == 0)
 		length = ++valuelength;
 	
-	int position; int offset;
-	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_String, length);
+	DynamicOffset offset;
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, offset, name, DynamicType_String, length);
 	
 	length+=2; // this can probably be removed (review Native_Dynamic_SetString for removal also)
-	_Dynamic_SetMemberDataString(dynamic.Data, position, offset, blocksize, value);
+	_Dynamic_SetMemberDataString(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_String);
 	return memberindex;
 }
@@ -211,7 +193,7 @@ stock bool _Dynamic_GetStringByIndex(DynamicObject dynamic, int memberindex, cha
 		return false;
 	}
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
+	DynamicOffset offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 	{
 		buffer[0] = '\0';
@@ -229,25 +211,23 @@ stock int _Dynamic_GetStringLength(DynamicObject dynamic, const char[] membernam
 	if (!dynamic.IsValid(true))
 		return 0;
 	
-	int blocksize = dynamic.BlockSize;
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_String))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, offset, DynamicType_String))
 		return 0;
 	
-	_Dynamic_RecalculateOffset(position, offset, blocksize);
-	return _Dynamic_GetMemberStringLength(dynamic.Data, position, offset, blocksize);
+	return _Dynamic_GetMemberStringLength(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize);
 }
 
 stock bool _Dynamic_CompareString(DynamicObject dynamic, const char[] membername, const char[] value, bool casesensitive)
 {
-	int offset = _Dynamic_GetMemberOffset(dynamic, membername);
+	DynamicOffset offset = _Dynamic_GetMemberOffset(dynamic, membername);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return false;
 	
-	return _Dynamic_CompareStringByOffset(dynamic, offset,  value, casesensitive);
+	return _Dynamic_CompareStringByOffset(dynamic, offset, value, casesensitive);
 }
 
-stock bool _Dynamic_CompareStringByOffset(DynamicObject dynamic, int offset, const char[] value, bool casesensitive)
+stock bool _Dynamic_CompareStringByOffset(DynamicObject dynamic, DynamicOffset offset, const char[] value, bool casesensitive)
 {
 	int length = _Dynamic_GetStringLengthByOffset(dynamic, offset);
 	char[] buffer = new char[length];
@@ -257,15 +237,12 @@ stock bool _Dynamic_CompareStringByOffset(DynamicObject dynamic, int offset, con
 	return StrEqual(value, buffer, casesensitive);	
 }
 
-stock int _Dynamic_GetStringLengthByOffset(DynamicObject dynamic, int offset)
+stock int _Dynamic_GetStringLengthByOffset(DynamicObject dynamic, DynamicOffset offset)
 {
 	if (!dynamic.IsValid(true))
 		return 0;
 	
-	int blocksize = dynamic.BlockSize;
-	int position;
-	_Dynamic_RecalculateOffset(position, offset, blocksize);
-	return _Dynamic_GetMemberStringLength(dynamic.Data, position, offset, blocksize);
+	return _Dynamic_GetMemberStringLength(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize);
 }
 
 stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offset, int blocksize)
@@ -280,11 +257,10 @@ stock int _Dynamic_GetMemberStringLength(ArrayList data, int position, int offse
 	return data.Get(position, offset);
 }
 
-stock void _Dynamic_SetMemberStringLength(ArrayList data, int position, int offset, int blocksize, int length)
+stock void _Dynamic_SetMemberStringLength(ArrayList data, DynamicOffset offset, int blocksize, int length)
 {
-	offset++;
-	_Dynamic_RecalculateOffset(position, offset, blocksize);
-	SetArrayCell(data, position, length, offset);
+	offset = offset.Clone(blocksize, 1);
+	data.Set(offset.Index, length, offset.Cell);
 }
 
 stock void _Dynamic_SetMemberDataString(ArrayList data, int position, int offset, int blocksize, const char[] buffer)

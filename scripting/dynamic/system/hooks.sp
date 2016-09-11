@@ -69,7 +69,7 @@ stock int _Dynamic_HookCount(DynamicObject dynamic)
 	return dynamic.HookCount;
 }
 
-stock void _Dynamic_CallOnChangedForward(DynamicObject dynamic, int offset, const char[] member, Dynamic_MemberType type)
+stock void _Dynamic_CallOnChangedForward(DynamicObject dynamic, DynamicOffset offset, const char[] member, Dynamic_MemberType type)
 {
 	Handle forwards = dynamic.Forwards;
 	if (forwards == null)
@@ -83,7 +83,7 @@ stock void _Dynamic_CallOnChangedForward(DynamicObject dynamic, int offset, cons
 	Call_Finish();
 }
 
-stock void _Dynamic_CallOnChangedForwardByOffset(DynamicObject dynamic, int offset, Dynamic_MemberType type)
+stock void _Dynamic_CallOnChangedForwardByOffset(DynamicObject dynamic, DynamicOffset offset, Dynamic_MemberType type)
 {
 	if (dynamic.HookCount > 0)
 	{
