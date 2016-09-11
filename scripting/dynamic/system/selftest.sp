@@ -28,7 +28,14 @@ public void _Dynamic_SelfTest(any userid)
 	if (!IsClientConnected(client))
 		return;
 	
+	// Test DynamicOffset methodmap
+	if (!_Dynamic_DynamicOffsetTest(client))
+		return;
+	PrintToConsole(client, "> DynamicOffset test completed");
+	
+	
 	// Test offset alignments (initialisation offset vs findmemberoffset)
+	
 	
 	// Test dynamic dynamic creation
 	Dynamic test;
@@ -129,6 +136,32 @@ public void _Dynamic_SelfTest(any userid)
 	PrintToConsole(client, "> Dynamic_KeyValues test completed");
 	
 	test.Dispose();
+}
+
+stock bool _Dynamic_DynamicOffsetTest(int client)
+{	
+	DynamicOffset offset;
+	for (int i=0; i<65536; i+=10)
+	{
+		for (int x=0; x<65536; x+=10)
+		{
+			offset = DynamicOffset(i, x);
+			
+			if (offset.Index != i)
+			{
+				PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx1");
+				PrintToConsole(client, "> %d should equal %d", offset.Index, i);
+				return false;
+			}
+			else if (offset.Cell != x)
+			{
+				PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx2");
+				PrintToConsole(client, "> %d should equal %d", offset.Cell, x);
+				return false;
+			}
+		}
+	}
+	return true;
 }
 
 stock bool _Dynamic_InitialiseTest(int client, Dynamic &test)

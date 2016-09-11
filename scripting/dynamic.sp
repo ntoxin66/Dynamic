@@ -30,7 +30,8 @@ StringMap s_tObjectNames = null;
 Handle g_sRegex_Vector = null;
 int g_iDynamic_MemberLookup_Offset;
 
-// Dynamics internal methodmap
+// Dynamics internal methodmaps
+#include "dynamic/system/methodmaps/dynamicoffset.sp"
 #include "dynamic/system/methodmaps/dynamicobject.sp"
 
 // Dynamic datatypes
