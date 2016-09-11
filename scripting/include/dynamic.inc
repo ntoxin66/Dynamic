@@ -28,7 +28,8 @@
 	#define INVALID_DYNAMIC_OBJECT			view_as<Dynamic>(-1)
 #endif
 #define Invalid_Dynamic_Object			-1
-#define INVALID_DYNAMIC_OFFSET			-1
+#define INVALID_DYNAMIC_OFFSET			view_as<DynamicOffset>(-1)
+#define INVALID_DYNAMIC_INDEX			-1
 #define DYNAMIC_MEMBERNAME_MAXLEN		64
 
 enum Dynamic_MemberType
@@ -53,7 +54,7 @@ enum Dynamic_Operator
 typeset Dynamic_HookType
 {
 	// HookChanges
-	function void (Dynamic obj, int offset, const char[] member, Dynamic_MemberType type);
+	function void (Dynamic obj, DynamicOffset offset, const char[] member, Dynamic_MemberType type);
 	
 	// DynamicReadKeyValue
 	function Action (Dynamic obj, const char[] member, int depth);
@@ -82,12 +83,12 @@ native bool Dynamic_ReadKeyValues(Dynamic obj, const char[] path, int valuelengt
 native bool Dynamic_WriteKeyValues(Dynamic obj, const char[] path, const char[] basekey);
 
 native int Dynamic_GetMemberCount(Dynamic obj);
-native int Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
-native int Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
+native DynamicOffset Dynamic_GetMemberOffset(Dynamic obj, const char[] membername);
+native DynamicOffset Dynamic_GetMemberOffsetByIndex(Dynamic obj, int index);
 native bool Dynamic_GetMemberNameByIndex(Dynamic obj, int index, char[] buffer, int length);
-native bool Dynamic_GetMemberNameByOffset(Dynamic obj, int offset, char[] buffer, int length);
+native bool Dynamic_GetMemberNameByOffset(Dynamic obj, DynamicOffset offset, char[] buffer, int length);
 native Dynamic_MemberType Dynamic_GetMemberType(Dynamic obj, const char[] membername);
-native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, int offset);
+native Dynamic_MemberType Dynamic_GetMemberTypeByOffset(Dynamic obj, DynamicOffset offset);
 native bool Dynamic_SortMembers(Dynamic obj, SortOrder order);
 native ArrayList Dynamic_FindByMemberValue(Dynamic obj, Dynamic params);
 
@@ -96,38 +97,38 @@ native bool Dynamic_HookChanges(Dynamic obj, Dynamic_HookType callback);
 native bool Dynamic_UnHookChanges(Dynamic obj, Dynamic_HookType callback);
 
 native int Dynamic_GetInt(Dynamic obj, const char[] membername, int defaultvalue=-1);
-native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
-native int Dynamic_GetIntByOffset(Dynamic obj, int offset, int defaultvalue=-1);
-native bool Dynamic_SetIntByOffset(Dynamic obj, int offset, int value);
+native DynamicOffset Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
+native int Dynamic_GetIntByOffset(Dynamic obj, DynamicOffset offset, int defaultvalue=-1);
+native bool Dynamic_SetIntByOffset(Dynamic obj, DynamicOffset offset, int value);
 native int Dynamic_PushInt(Dynamic obj, int value, const char[] name="");
 native int Dynamic_GetIntByIndex(Dynamic obj, int index, int defaultvalue=-1);
 
 native float Dynamic_GetFloat(Dynamic obj, const char[] membername, float defaultvalue=-1.0);
-native int Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
-native float Dynamic_GetFloatByOffset(Dynamic obj, int offset, float defaultvalue=-1.0);
-native bool Dynamic_SetFloatByOffset(Dynamic obj, int offset, float value);
+native DynamicOffset Dynamic_SetFloat(Dynamic obj, const char[] membername, float value);
+native float Dynamic_GetFloatByOffset(Dynamic obj, DynamicOffset offset, float defaultvalue=-1.0);
+native bool Dynamic_SetFloatByOffset(Dynamic obj, DynamicOffset offset, float value);
 native int Dynamic_PushFloat(Dynamic obj, float value, const char[] name="");
 native float Dynamic_GetFloatByIndex(Dynamic obj, int index, float defaultvalue=-1.0);
 
 native bool Dynamic_GetString(Dynamic obj, const char[] membername, char[] buffer, int length);
-native int Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
-native bool Dynamic_GetStringByOffset(Dynamic obj, int offset, char[] buffer, int length);
-native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
+native DynamicOffset Dynamic_SetString(Dynamic obj, const char[] membername, const char[] value, int length=0);
+native bool Dynamic_GetStringByOffset(Dynamic obj, DynamicOffset offset, char[] buffer, int length);
+native bool Dynamic_SetStringByOffset(Dynamic obj, DynamicOffset offset, const char[] value, int length=0);
 native int Dynamic_PushString(Dynamic obj, const char[] value, int length=0, const char[] name="");
 native bool Dynamic_GetStringByIndex(Dynamic obj, int index, char[] buffer, int length);
 native int Dynamic_GetStringLength(Dynamic obj, const char[] membername);
-native int Dynamic_GetStringLengthByOffset(Dynamic obj, int offset);
+native int Dynamic_GetStringLengthByOffset(Dynamic obj, DynamicOffset offset);
 native bool Dynamic_CompareString(Dynamic obj, const char[] membername, const char[] value, bool casesensitive=true);
 
 // This can be removed at some point in the future
 #pragma deprecated Use Dynamic_GetDynamic() instead
 native Dynamic Dynamic_GetObject(Dynamic obj, const char[] membername);
 #pragma deprecated Use Dynamic_SetDynamic() instead
-native int Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
+native DynamicOffset Dynamic_SetObject(Dynamic obj, const char[] membername, Dynamic value);
 #pragma deprecated Use Dynamic_GetDynamicByOffset() instead
-native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, int offset);
+native Dynamic Dynamic_GetObjectByOffset(Dynamic obj, DynamicOffset offset);
 #pragma deprecated Use Dynamic_SetDynamicByOffset() instead
-native bool Dynamic_SetObjectByOffset(Dynamic obj, int offset, Dynamic value);
+native bool Dynamic_SetObjectByOffset(Dynamic obj, DynamicOffset offset, Dynamic value);
 #pragma deprecated Use Dynamic_PushDynamic() instead
 native int Dynamic_PushObject(Dynamic obj, Dynamic value, const char[] name="");
 #pragma deprecated Use Dynamic_GetDynamicByIndex() instead
@@ -136,33 +137,35 @@ native Dynamic Dynamic_GetObjectByIndex(Dynamic obj, int index);
 native bool Dynamic_SetObjectByIndex(Dynamic obj, int index, Dynamic value);
 
 native Dynamic Dynamic_GetDynamic(Dynamic obj, const char[] membername);
-native int Dynamic_SetDynamic(Dynamic obj, const char[] membername, Dynamic value);
-native Dynamic Dynamic_GetDynamicByOffset(Dynamic obj, int offset);
-native bool Dynamic_SetDynamicByOffset(Dynamic obj, int offset, Dynamic value);
+native DynamicOffset Dynamic_SetDynamic(Dynamic obj, const char[] membername, Dynamic value);
+native Dynamic Dynamic_GetDynamicByOffset(Dynamic obj, DynamicOffset offset);
+native bool Dynamic_SetDynamicByOffset(Dynamic obj, DynamicOffset offset, Dynamic value);
 native int Dynamic_PushDynamic(Dynamic obj, Dynamic value, const char[] name="");
 native Dynamic Dynamic_GetDynamicByIndex(Dynamic obj, int index);
 native bool Dynamic_SetDynamicByIndex(Dynamic obj, int index, Dynamic value);
 
 native bool Dynamic_GetBool(Dynamic obj, const char[] membername, bool defaultvalue=false);
-native int Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
-native bool Dynamic_GetBoolByOffset(Dynamic obj, int offset, bool defaultvalue=false);
-native bool Dynamic_SetBoolByOffset(Dynamic obj, int offset, bool value);
+native DynamicOffset Dynamic_SetBool(Dynamic obj, const char[] membername, bool value);
+native bool Dynamic_GetBoolByOffset(Dynamic obj, DynamicOffset offset, bool defaultvalue=false);
+native bool Dynamic_SetBoolByOffset(Dynamic obj, DynamicOffset offset, bool value);
 native int Dynamic_PushBool(Dynamic obj, bool value, const char[] name="");
 native bool Dynamic_GetBoolByIndex(Dynamic obj, int index, bool defaultvalue=false);
 
 native Handle Dynamic_GetHandle(Dynamic obj, const char[] membername);
-native int Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
-native Handle Dynamic_GetHandleByOffset(Dynamic obj, int offset);
-native bool Dynamic_SetHandleByOffset(Dynamic obj, int offset, Handle value);
+native DynamicOffset Dynamic_SetHandle(Dynamic obj, const char[] membername, Handle value);
+native Handle Dynamic_GetHandleByOffset(Dynamic obj, DynamicOffset offset);
+native bool Dynamic_SetHandleByOffset(Dynamic obj, DynamicOffset offset, Handle value);
 native int Dynamic_PushHandle(Dynamic obj, Handle value, const char[] name="");
 native Handle Dynamic_GetHandleByIndex(Dynamic obj, int index);
 
 native bool Dynamic_GetVector(Dynamic obj, const char[] membername, float value[3]);
-native int Dynamic_SetVector(Dynamic obj, const char[] membername, const float value[3]);
-native bool Dynamic_GetVectorByOffset(Dynamic obj, int offset, float value[3]);
-native bool Dynamic_SetVectorByOffset(Dynamic obj, int offset, const float value[3]);
+native DynamicOffset Dynamic_SetVector(Dynamic obj, const char[] membername, const float value[3]);
+native bool Dynamic_GetVectorByOffset(Dynamic obj, DynamicOffset offset, float value[3]);
+native bool Dynamic_SetVectorByOffset(Dynamic obj, DynamicOffset offset, const float value[3]);
 native int Dynamic_PushVector(Dynamic obj, const float value[3], const char[] name="");
 native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float value[3]);
+
+#include "../dynamic/system/methodmaps/dynamicoffset.sp"
 
 methodmap Dynamic
 {
@@ -282,17 +285,17 @@ methodmap Dynamic
 		return Dynamic_GetInt(this, membername, defaultvalue);
 	}
 	
-	public int SetInt(const char[] membername, int value)
+	public DynamicOffset SetInt(const char[] membername, int value)
 	{
 		return Dynamic_SetInt(this, membername, value);
 	}
 	
-	public int GetIntByOffset(int offset, int defaultvalue=-1)
+	public int GetIntByOffset(DynamicOffset offset, int defaultvalue=-1)
 	{
 		return Dynamic_GetIntByOffset(this, offset, defaultvalue);
 	}
 	
-	public void SetIntByOffset(int offset, int value)
+	public void SetIntByOffset(DynamicOffset offset, int value)
 	{
 		Dynamic_SetIntByOffset(this, offset, value);
 	}
@@ -312,17 +315,17 @@ methodmap Dynamic
 		return Dynamic_GetBool(this, membername, defaultvalue);
 	}
 	
-	public int SetBool(const char[] membername, bool value)
+	public DynamicOffset SetBool(const char[] membername, bool value)
 	{
 		return Dynamic_SetBool(this, membername, value);
 	}
 	
-	public bool GetBoolByOffset(int offset, bool defaultvalue = false)
+	public bool GetBoolByOffset(DynamicOffset offset, bool defaultvalue = false)
 	{
 		return Dynamic_GetBoolByOffset(this, offset, defaultvalue);
 	}
 	
-	public void SetBoolByOffset(int offset, bool value)
+	public void SetBoolByOffset(DynamicOffset offset, bool value)
 	{
 		Dynamic_SetBoolByOffset(this, offset, value);
 	}
@@ -342,17 +345,17 @@ methodmap Dynamic
 		return Dynamic_GetFloat(this, membername, defaultvalue);
 	}
 	
-	public int SetFloat(const char[] membername, float value)
+	public DynamicOffset SetFloat(const char[] membername, float value)
 	{
 		return Dynamic_SetFloat(this, membername, value);
 	}
 	
-	public float GetFloatByOffset(int offset, float defaultvalue=-1.0)
+	public float GetFloatByOffset(DynamicOffset offset, float defaultvalue=-1.0)
 	{
 		return Dynamic_GetFloatByOffset(this, offset, defaultvalue);
 	}
 	
-	public void SetFloatByOffset(int offset, float value)
+	public void SetFloatByOffset(DynamicOffset offset, float value)
 	{
 		Dynamic_SetFloatByOffset(this, offset, value);
 	}
@@ -372,17 +375,17 @@ methodmap Dynamic
 		return Dynamic_GetString(this, membername, buffer, length);
 	}
 	
-	public int SetString(const char[] membername, const char[] value, int length=0)
+	public DynamicOffset SetString(const char[] membername, const char[] value, int length=0)
 	{
 		return Dynamic_SetString(this, membername, value, length);
 	}
 	
-	public int GetStringByOffset(int offset, char[] buffer, int length)
+	public int GetStringByOffset(DynamicOffset offset, char[] buffer, int length)
 	{
 		return Dynamic_GetStringByOffset(this, offset, buffer, length);
 	}
 	
-	public void SetStringByOffset(const int offset, const char[] value, int length=0)
+	public void SetStringByOffset(const DynamicOffset offset, const char[] value, int length=0)
 	{
 		Dynamic_SetStringByOffset(this, offset, value, length);
 	}
@@ -402,7 +405,7 @@ methodmap Dynamic
 		return Dynamic_GetStringLength(this, membername);
 	}
 	
-	public int GetStringLengthByOffset(int offset)
+	public int GetStringLengthByOffset(DynamicOffset offset)
 	{
 		return Dynamic_GetStringLengthByOffset(this, offset);
 	}
@@ -419,19 +422,19 @@ methodmap Dynamic
 	}
 	
 	#pragma deprecated Use .SetDynamic() instead
-	public int SetObject(const char[] membername, Dynamic value)
+	public DynamicOffset SetObject(const char[] membername, Dynamic value)
 	{
 		return Dynamic_SetDynamic(this, membername, value);
 	}
 	
 	#pragma deprecated Use .SetDynamicByOffset() instead
-	public Dynamic GetObjectByOffset(int offset)
+	public Dynamic GetObjectByOffset(DynamicOffset offset)
 	{
 		return Dynamic_GetDynamicByOffset(this, offset);
 	}
 	
 	#pragma deprecated Use .SetDynamicByOffset() instead
-	public void SetObjectByOffset(int offset, Dynamic value)
+	public void SetObjectByOffset(DynamicOffset offset, Dynamic value)
 	{
 		Dynamic_SetDynamicByOffset(this, offset, value);
 	}
@@ -459,17 +462,17 @@ methodmap Dynamic
 		return Dynamic_GetDynamic(this, membername);
 	}
 	
-	public int SetDynamic(const char[] membername, Dynamic value)
+	public DynamicOffset SetDynamic(const char[] membername, Dynamic value)
 	{
 		return Dynamic_SetDynamic(this, membername, value);
 	}
 	
-	public Dynamic GetDynamicByOffset(int offset)
+	public Dynamic GetDynamicByOffset(DynamicOffset offset)
 	{
 		return Dynamic_GetDynamicByOffset(this, offset);
 	}
 	
-	public void SetDynamicByOffset(int offset, Dynamic value)
+	public void SetDynamicByOffset(DynamicOffset offset, Dynamic value)
 	{
 		Dynamic_SetDynamicByOffset(this, offset, value);
 	}
@@ -494,17 +497,17 @@ methodmap Dynamic
 		return Dynamic_GetHandle(this, membername);
 	}
 	
-	public int SetHandle(const char[] membername, Handle value)
+	public DynamicOffset SetHandle(const char[] membername, Handle value)
 	{
 		return Dynamic_SetHandle(this, membername, value);
 	}
 	
-	public Handle GetHandleByOffset(int offset)
+	public Handle GetHandleByOffset(DynamicOffset offset)
 	{
 		return Dynamic_GetHandleByOffset(this, offset);
 	}
 	
-	public void SetHandleByOffset(int offset, Handle value)
+	public void SetHandleByOffset(DynamicOffset offset, Handle value)
 	{
 		Dynamic_SetHandleByOffset(this, offset, value);
 	}
@@ -524,17 +527,17 @@ methodmap Dynamic
 		return Dynamic_GetVector(this, membername, value);
 	}
 	
-	public int SetVector(const char[] membername, const float value[3])
+	public DynamicOffset SetVector(const char[] membername, const float value[3])
 	{
 		return Dynamic_SetVector(this, membername, value);
 	}
 	
-	public bool GetVectorByOffset(int offset, float[3] value)
+	public bool GetVectorByOffset(DynamicOffset offset, float[3] value)
 	{
 		return Dynamic_GetVectorByOffset(this, offset, value);
 	}
 	
-	public void SetVectorByOffset(int offset, const float[3] value)
+	public void SetVectorByOffset(DynamicOffset offset, const float[3] value)
 	{
 		Dynamic_SetVectorByOffset(this, offset, value);
 	}
@@ -564,12 +567,12 @@ methodmap Dynamic
 		return Dynamic_CallbackCount(this);
 	}
 	
-	public int GetMemberOffset(const char[] membername)
+	public DynamicOffset GetMemberOffset(const char[] membername)
 	{
 		return Dynamic_GetMemberOffset(this, membername);
 	}
 	
-	public Dynamic_MemberType GetMemberType(int offset)
+	public Dynamic_MemberType GetMemberType(DynamicOffset offset)
 	{
 		return Dynamic_GetMemberTypeByOffset(this, offset);
 	}
@@ -579,12 +582,12 @@ methodmap Dynamic
 		return Dynamic_GetMemberNameByIndex(this, index, buffer, length);
 	}
 	
-	public int GetMemberOffsetByIndex(int index)
+	public DynamicOffset GetMemberOffsetByIndex(int index)
 	{
 		return Dynamic_GetMemberOffsetByIndex(this, index);
 	}
 	
-	public bool GetMemberNameByOffset(int offset, char[] buffer, int length)
+	public bool GetMemberNameByOffset(DynamicOffset offset, char[] buffer, int length)
 	{
 		return Dynamic_GetMemberNameByOffset(this, offset, buffer, length);
 	}

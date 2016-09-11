@@ -28,7 +28,14 @@ public void _Dynamic_SelfTest(any userid)
 	if (!IsClientConnected(client))
 		return;
 	
+	// Test DynamicOffset methodmap
+	if (!_Dynamic_DynamicOffsetTest(client))
+		return;
+	PrintToConsole(client, "> DynamicOffset test completed");
+	
+	
 	// Test offset alignments (initialisation offset vs findmemberoffset)
+	
 	
 	// Test dynamic dynamic creation
 	Dynamic test;
@@ -131,6 +138,62 @@ public void _Dynamic_SelfTest(any userid)
 	test.Dispose();
 }
 
+stock bool _Dynamic_DynamicOffsetTest(int client)
+{
+	// Offset accessor testing
+	DynamicOffset offset;
+	for (int i=0; i<65536; i+=10)
+	{
+		for (int x=0; x<65536; x+=10)
+		{
+			offset = DynamicOffset(i, x);
+			
+			if (offset.Index != i)
+			{
+				PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx1");
+				PrintToConsole(client, "> %d should equal %d", offset.Index, i);
+				return false;
+			}
+			else if (offset.Cell != x)
+			{
+				PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx2");
+				PrintToConsole(client, "> %d should equal %d", offset.Cell, x);
+				return false;
+			}
+		}
+	}
+	
+	// Test cloner
+	offset = DynamicOffset(0,0);
+	offset = offset.Clone(16, 1);
+	if (offset.Index != 0)
+	{
+		PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx3");
+		PrintToConsole(client, "> %d should equal %d", offset.Index, 0);
+		return false;
+	}
+	if (offset.Cell != 1)
+	{
+		PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx4");
+		PrintToConsole(client, "> %d should equal %d", offset.Index, 1);
+		return false;
+	}
+	offset = offset.Clone(12, 11);
+	if (offset.Index != 1)
+	{
+		PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx5");
+		PrintToConsole(client, "> %d should equal %d", offset.Index, 1);
+		return false;
+	}
+	if (offset.Cell != 0)
+	{
+		PrintToConsole(client, "DynamicOffset test failed: ErrorCode Bx6");
+		PrintToConsole(client, "> %d should equal %d", offset.Index, 0);
+		return false;
+	}
+	return true;
+}
+
 stock bool _Dynamic_InitialiseTest(int client, Dynamic &test)
 {
 	// Check initial test dynamic is valid
@@ -151,7 +214,7 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 	int value = GetRandomInt(0, 32000);
 	
 	// Offset test
-	int offset = test.SetInt("val", value);
+	DynamicOffset offset = test.SetInt("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
 		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x1");
@@ -250,7 +313,7 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 	float value = GetRandomFloat(0.0, 32000.0);
 	
 	// Offset test
-	int offset = test.SetFloat("val", value);
+	DynamicOffset offset = test.SetFloat("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
 		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x1");
@@ -354,8 +417,8 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	value[63] = '\0';
 	
 	// Offset test
-	int offset = test.SetString("val", value);
-	if (offset != test.GetMemberOffset("val"))
+	DynamicOffset offset = test.SetString("stringval", value);
+	if (offset != test.GetMemberOffset("stringval"))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x1");
 		PrintToConsole(client, "> member offset mismatch!!!!!");
@@ -363,7 +426,7 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	}
 	
 	// String test
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x2");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
@@ -373,15 +436,15 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	// Int test
 	int ivalue = GetRandomInt(0, 32000);
 	IntToString(ivalue, value, sizeof(value));
-	test.SetString("val", value);
-	if (test.GetInt("val") != ivalue)
+	test.SetString("stringval", value);
+	if (test.GetInt("stringval") != ivalue)
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x3");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), ivalue);
+		PrintToConsole(client, "> %d should equal %d", test.GetInt("stringval"), ivalue);
 		return false;
 	}
-	test.SetInt("val", ivalue);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	test.SetInt("stringval", ivalue);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x4");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
@@ -391,15 +454,15 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	// Float test
 	float fvalue = GetRandomFloat(0.0, 32000.0);
 	FloatToString(fvalue, value, sizeof(value));
-	test.SetString("val", value);
-	if (test.GetFloat("val") != fvalue)
+	test.SetString("stringval", value);
+	if (test.GetFloat("stringval") != fvalue)
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x3");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), fvalue);
+		PrintToConsole(client, "> %f should equal %f", test.GetFloat("stringval"), fvalue);
 		return false;
 	}
-	test.SetFloat("val", fvalue);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	test.SetFloat("stringval", fvalue);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x4");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
@@ -410,29 +473,29 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	// Add support for this as Get/SetString -> Read/WriteKeyValues
 	
 	// Boolean test
-	test.SetString("val", "False");
-	if (test.GetBool("val"))
+	test.SetString("stringval", "False");
+	if (test.GetBool("stringval"))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x8");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), false);
+		PrintToConsole(client, "> %d should equal %d", test.GetBool("stringval"), false);
 		return false;
 	}
-	test.SetString("val", "True");
-	if (!test.GetBool("val"))
+	test.SetString("stringval", "True");
+	if (!test.GetBool("stringval"))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x9");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), true);
+		PrintToConsole(client, "> %d should equal %d", test.GetBool("stringval"), true);
 		return false;
 	}
-	test.SetBool("val", false);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual("False", buffer))
+	test.SetBool("stringval", false);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("False", buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x10");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "False");
 		return false;
 	}
-	test.SetBool("val", true);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual("True", buffer))
+	test.SetBool("stringval", true);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("True", buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x11");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "True");
@@ -448,11 +511,11 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	vvalue[0][2] = GetRandomFloat(1.0, 32000.0);
 	char vbuffer[2][256];
 	Format(vbuffer[0], sizeof(vbuffer[]), "{%f, %f, %f}", vvalue[0][0], vvalue[0][1], vvalue[0][2]);
-	test.SetString("val", vbuffer[0]);
-	if (!test.GetVector("val", vvalue[1]))
+	test.SetString("stringval", vbuffer[0]);
+	if (!test.GetVector("stringval", vvalue[1]))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x12");
-		PrintToConsole(client, "> %d should equal %d", test.GetVector("val", vvalue[0]), true);
+		PrintToConsole(client, "> %d should equal %d", test.GetVector("stringval", vvalue[0]), true);
 		return false;
 	}
 	if (!_Dynamic_CompareVectors(vvalue[0], vvalue[1]))
@@ -461,11 +524,11 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		PrintToConsole(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vvalue[0][0], vvalue[0][1], vvalue[0][2], vvalue[1][0], vvalue[1][1], vvalue[1][2]);
 		return false;
 	}
-	test.SetVector("val", vvalue[0]);
-	if (!test.GetString("val", vbuffer[1], sizeof(vbuffer[])))
+	test.SetVector("stringval", vvalue[0]);
+	if (!test.GetString("stringval", vbuffer[1], sizeof(vbuffer[])))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x14");
-		PrintToConsole(client, "> %d should equal %d", test.GetString("val", vbuffer[1], sizeof(vbuffer[])), true);
+		PrintToConsole(client, "> %d should equal %d", test.GetString("stringval", vbuffer[1], sizeof(vbuffer[])), true);
 		return false;
 	}
 	if (!StrEqual(vbuffer[0], vbuffer[1]))
@@ -477,8 +540,8 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	
 	// Test setting string length > maxlength
 	test.Reset(); // set blocksize to 16
-	test.SetString("val", "1234567890", 6); // include eos space
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual("12345", buffer))
+	test.SetString("stringval", "1234567890", 6); // include eos space
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("12345", buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x16");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "12345");
@@ -490,8 +553,8 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	for (int i=0; i<sizeof(value); i++)
 		value[i] = GetRandomInt(65, 122);
 	value[15] = '\0';
-	offset = test.SetString("val", value);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	offset = test.SetString("stringval", value);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x17");
 		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
@@ -499,10 +562,10 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	}
 	
 	// Test string length returns valid length
-	if (test.GetStringLength("val") != 17) // Length expands by one to ensure trailing EOS is added
+	if (test.GetStringLength("stringval") != 17) // Length expands by one to ensure trailing EOS is added
 	{
 		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x18");
-		PrintToConsole(client, "> %d should equal %d", test.GetStringLength("val"), 16);
+		PrintToConsole(client, "> %d should equal %d", test.GetStringLength("stringval"), 16);
 		return false;
 	}
 	if (test.GetStringLengthByOffset(offset) != 17) // Length expands by one to ensure trailing EOS is added
@@ -521,7 +584,7 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 	bool value = GetRandomInt(0, 1) == 0 ? false : true;
 	
 	// Offset test
-	int offset = test.SetBool("val", value);
+	DynamicOffset offset = test.SetBool("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
 		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x1");
@@ -592,7 +655,7 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	Dynamic value = Dynamic();
 	
 	// Offset test
-	int offset = test.SetDynamic("val", value);
+	DynamicOffset offset = test.SetDynamic("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
 		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x1");
@@ -690,7 +753,7 @@ stock bool _Dynamic_HandleTest(int client, Dynamic test)
 	ArrayList value = new ArrayList();
 	
 	// Offset test
-	int offset = test.SetHandle("val", value);
+	DynamicOffset offset = test.SetHandle("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
 		PrintToConsole(client, "DynamicType_Handle test failed: ErrorCode 5x1");
@@ -743,7 +806,7 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	value[2] = GetRandomFloat(1.0, 32000.0);
 	
 	// Offset test
-	int offset = test.SetVector("val", value);
+	DynamicOffset offset = test.SetVector("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
 		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x1");

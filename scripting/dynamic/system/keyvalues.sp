@@ -177,7 +177,7 @@ stock void _Dynamic_KeyValues_WriteDynamic(File stream, DynamicObject dynamic, i
 	char buffer[1024];
 
 	int count = dynamic.MemberCount;
-	int memberoffset;
+	DynamicOffset memberoffset;
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	for (int i = 0; i < count; i++)
 	{

@@ -23,10 +23,10 @@ stock void BenchmarkTest()
 	PrintToServer("[SM] Preparing benchmark Test...");
 	Dynamic someobject;
 	char membernames[100][DYNAMIC_MEMBERNAME_MAXLEN];
-	int memberoffsets[100];
+	DynamicOffset memberoffsets[100];
 	char buffer[DYNAMIC_MEMBERNAME_MAXLEN];
 	int ival; float fval; char sval[DYNAMIC_MEMBERNAME_MAXLEN]; float vector[3];
-	int offset;
+	DynamicOffset offset;
 	Dynamic objects[1000];
     
 	// Make member names
@@ -351,7 +351,7 @@ stock void BenchmarkTest()
 	PrintToServer("Disposed %d dynamic object(s) in %f second(s)", objectcount, GetEngineTime() - start);
 }
 
-public void OnDynamicMemberChanged(Dynamic obj, int offset, const char[] member, Dynamic_MemberType type)
+public void OnDynamicMemberChanged(Dynamic obj, DynamicOffset offset, const char[] member, Dynamic_MemberType type)
 {
 	switch (type)
 	{

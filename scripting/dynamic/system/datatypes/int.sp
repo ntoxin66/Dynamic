@@ -83,55 +83,42 @@ stock int _Dynamic_GetInt(DynamicObject dynamic, const char[] membername, int de
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	int blocksize = dynamic.BlockSize;
-	
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, position, offset, DynamicType_Int))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, offset, DynamicType_Int))
 		return defaultvalue;
 		
-	return _GetInt(dynamic.Data, position, offset, blocksize, defaultvalue);
+	return _GetInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, defaultvalue);
 }
 
 // native int Dynamic_SetInt(Dynamic obj, const char[] membername, int value);
-stock int _Dynamic_SetInt(DynamicObject dynamic, const char[] membername, int value)
+stock DynamicOffset _Dynamic_SetInt(DynamicObject dynamic, const char[] membername, int value)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	int blocksize = dynamic.BlockSize;
-	int position; int offset;
-	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, position, offset, DynamicType_Int))
+	DynamicOffset offset;
+	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, offset, DynamicType_Int))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetInt(dynamic.Data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
 
-stock int _Dynamic_GetIntByOffset(DynamicObject dynamic, int offset, int defaultvalue=-1)
+stock int _Dynamic_GetIntByOffset(DynamicObject dynamic, DynamicOffset offset, int defaultvalue=-1)
 {
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	int blocksize = dynamic.BlockSize;
-	int position;
-	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
-		return defaultvalue;
-	
-	return _GetInt(dynamic.Data, position, offset, blocksize, defaultvalue);
+	return _GetInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, defaultvalue);
 }
 
-stock bool _Dynamic_SetIntByOffset(DynamicObject dynamic, int offset, int value)
+stock bool _Dynamic_SetIntByOffset(DynamicObject dynamic, DynamicOffset offset, int value)
 {
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	int blocksize = dynamic.BlockSize;
-	int position;
-	if (!_Dynamic_RecalculateOffset(position, offset, blocksize))
-		return false;
-	
-	Dynamic_MemberType type = _SetInt(dynamic.Data, position, offset, blocksize, value);
+	Dynamic_MemberType type = _SetInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
@@ -139,13 +126,11 @@ stock bool _Dynamic_SetIntByOffset(DynamicObject dynamic, int offset, int value)
 stock int _Dynamic_PushInt(DynamicObject dynamic, int value, const char[] name="")
 {
 	if (!dynamic.IsValid(true))
-		return INVALID_DYNAMIC_OFFSET;
+		return INVALID_DYNAMIC_INDEX;
 	
-	int blocksize = dynamic.BlockSize;
-	int position; int offset;
-	
-	int memberindex = _Dynamic_CreateMemberOffset(dynamic, position, offset, name, DynamicType_Int);
-	_Dynamic_SetMemberDataInt(dynamic.Data, position, offset, blocksize, value);
+	DynamicOffset offset;	
+	int memberindex = _Dynamic_CreateMemberOffset(dynamic, offset, name, DynamicType_Int);
+	_Dynamic_SetMemberDataInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Int);
 	return memberindex;
 }
@@ -153,9 +138,9 @@ stock int _Dynamic_PushInt(DynamicObject dynamic, int value, const char[] name="
 stock int _Dynamic_GetIntByIndex(DynamicObject dynamic, int memberindex, int defaultvalue=-1)
 {
 	if (!dynamic.IsValid(true))
-		return INVALID_DYNAMIC_OFFSET;
+		return INVALID_DYNAMIC_INDEX;
 	
-	int offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
+	DynamicOffset offset = _Dynamic_GetMemberOffsetByIndex(dynamic, memberindex);
 	if (offset == INVALID_DYNAMIC_OFFSET)
 		return defaultvalue;
 	
