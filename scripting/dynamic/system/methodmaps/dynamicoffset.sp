@@ -21,20 +21,14 @@ methodmap DynamicOffset
 {
 	public DynamicOffset(int index, int cell)
 	{
-		int offset = index << 16 | cell;
-		offset ^= (-((index >> 32) & 1) ^ offset) & (1 << 32);
-		offset ^= (-((cell >> 32) & 1) ^ offset) & (1 << 16);
-		return view_as<DynamicOffset>(offset); 
+		return view_as<DynamicOffset>(index << 16 | cell); 
 	}
 	
 	property int Index
 	{
 		public get()
 		{
-			int index = view_as<int>(this) >> 16 & 0xFFFF;
-			index ^= (-((view_as<int>(this) >> 32) & 1) ^ index) & (1 << 32);
-			index ^= (-0 ^ index) & (1 << 16);
-			return index;
+			return view_as<int>(this) >>> 16;
 		}
 	}
 	
@@ -42,10 +36,7 @@ methodmap DynamicOffset
 	{
 		public get()
 		{
-			int cell = view_as<int>(this) & 0xFFFF;
-			cell ^= (-((view_as<int>(this) >> 16) & 1) ^ cell) & (1 << 32);
-			cell ^= (-0 ^ cell) & (1 << 16);
-			return cell;
+			return view_as<int>(this) & 0xFFFF; 
 		}
 	}
 	
