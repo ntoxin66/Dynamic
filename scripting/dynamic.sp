@@ -18,8 +18,9 @@
  */
 #define dynamic_use_local_methodmap 1
 #include <dynamic>
-//#include <dynamic-collection>
 #include <regex>
+#undef INVALID_DYNAMIC_OBJECT
+#define INVALID_DYNAMIC_OBJECT			view_as<DynamicObject>(-1)
 #pragma newdecls required
 #pragma semicolon 1
 
@@ -55,7 +56,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.20",
+	version = "0.0.21",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 

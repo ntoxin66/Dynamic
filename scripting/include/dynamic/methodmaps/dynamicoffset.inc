@@ -40,8 +40,13 @@ methodmap DynamicOffset
 		}
 	}
 	
-	public DynamicOffset Clone(int blocksize, int addcells=0)
+	public DynamicOffset Clone(int blocksize, int addcells)
 	{
+		if (addcells ==  0)
+		{
+			return this;
+		}
+		
 		int index = this.Index;
 		int cell = this.Cell + addcells;
 		
