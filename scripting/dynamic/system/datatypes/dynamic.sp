@@ -70,12 +70,11 @@ stock DynamicObject _Dynamic_GetDynamic(DynamicObject dynamic, const char[] memb
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OBJECT;
 	
-	int blocksize = dynamic.BlockSize;
 	DynamicOffset offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, offset, DynamicType_Dynamic))
 		return INVALID_DYNAMIC_OBJECT;
 		
-	return _GetDynamic(dynamic.Data, offset.Index, offset.Cell, blocksize);
+	return _GetDynamic(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize);
 }
 
 stock DynamicOffset _Dynamic_SetDynamic(DynamicObject dynamic, const char[] membername, DynamicObject value)
@@ -83,12 +82,11 @@ stock DynamicOffset _Dynamic_SetDynamic(DynamicObject dynamic, const char[] memb
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	int blocksize = dynamic.BlockSize;
 	DynamicOffset offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, offset, DynamicType_Dynamic))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetDynamic(dynamic, dynamic.Data, offset.Index, offset.Cell, blocksize, value, membername);
+	Dynamic_MemberType type = _SetDynamic(dynamic, dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value, membername);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }

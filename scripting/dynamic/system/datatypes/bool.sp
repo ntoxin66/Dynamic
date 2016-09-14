@@ -98,26 +98,23 @@ stock bool _Dynamic_GetBool(DynamicObject dynamic, const char[] membername, bool
 	if (!dynamic.IsValid(true))
 		return defaultvalue;
 	
-	int blocksize = dynamic.BlockSize;
-	
 	DynamicOffset offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, false, offset, DynamicType_Bool))
 		return defaultvalue;
 		
-	return _GetBool(dynamic.Data, offset.Index, offset.Cell, blocksize, defaultvalue);
+	return _GetBool(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, defaultvalue);
 }
 
 stock DynamicOffset _Dynamic_SetBool(DynamicObject dynamic, const char[] membername, bool value)
 {
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_OFFSET;
-	
-	int blocksize = dynamic.BlockSize;
+		
 	DynamicOffset offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, offset, DynamicType_Bool))
 		return INVALID_DYNAMIC_OFFSET;
 	
-	Dynamic_MemberType type = _SetBool(dynamic.Data, offset.Index, offset.Cell, blocksize, value);
+	Dynamic_MemberType type = _SetBool(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, membername, type);
 	return offset;
 }
@@ -145,10 +142,9 @@ stock int _Dynamic_PushBool(DynamicObject dynamic, bool value, const char[] name
 	if (!dynamic.IsValid(true))
 		return INVALID_DYNAMIC_INDEX;
 	
-	int blocksize = dynamic.BlockSize;
 	DynamicOffset offset;
 	int memberindex = _Dynamic_CreateMemberOffset(dynamic, offset, name, DynamicType_Bool);
-	_Dynamic_SetMemberDataInt(dynamic.Data, offset.Index, offset.Cell, blocksize, value);
+	_Dynamic_SetMemberDataInt(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForward(dynamic, offset, name, DynamicType_Bool);
 	return memberindex;
 }
