@@ -19,7 +19,43 @@
 
 public void _Dynamic_HandleUsage(any userid)
 {
-        int client = GetClientOfUserId(userid);
-        if (!IsClientConnected(client))
-                return;
+	int client = GetClientOfUserId(userid);
+	if (!IsClientConnected(client))
+		return;
+
+	// Loop plugins
+	Handle iterator = GetPluginIterator();
+	Handle plugin;
+	int count;
+	char pluginname[64];
+	while (MorePlugins(iterator))
+	{
+		plugin = ReadPlugin(iterator);
+		count = _Dynamic_HandleUsage_CountPluginHandles(plugin);
+		
+		if (count == 0)
+			continue;
+			
+		GetPluginInfo(plugin, PlInfo_Name, pluginname, sizeof(pluginname));
+		PrintToConsole(client, "-> `%s`: %d Handles", pluginname, count);
+	}
+	CloseHandle(iterator);
+}
+
+stock int _Dynamic_HandleUsage_CountPluginHandles(Handle plugin)
+{
+	int count = 0;
+	DynamicObject dynamic;
+	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
+	{
+		dynamic = view_as<DynamicObject>(i);
+		
+		// Skip disposed objects
+		if (!dynamic.IsValid(false))
+			continue;
+			
+		if (dynamic.OwnerPlugin == plugin)
+			count++;
+	}
+	return count;
 }
