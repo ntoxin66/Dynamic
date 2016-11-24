@@ -25,11 +25,17 @@
 stock void RegisterCommands()
 {
 	RegAdminCmd("sm_dynamic_selftest", OnDynamicSelfTestCommand, ADMFLAG_RCON, "performs a Dynamic SelfTest to verify Dynamic is running properly");
+	RegAdminCmd("sm_dynamic_handles", OnDynamicHandlesCommand, ADMFLAG_RCON, "performs a Dynamic SelfTest to verify Dynamic is running properly");
 }
 
 public Action OnDynamicSelfTestCommand(int client, int args)
 {
 	PrintToConsole(client, "Dynamic is running a SelfTest...");
 	RequestFrame(_Dynamic_SelfTest, GetClientUserId(client));
+	return Plugin_Handled;
+}
+
+public Action OnDynamicHandlesCommand(int client, int args)
+{
 	return Plugin_Handled;
 }
