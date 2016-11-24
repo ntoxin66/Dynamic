@@ -37,5 +37,7 @@ public Action OnDynamicSelfTestCommand(int client, int args)
 
 public Action OnDynamicHandlesCommand(int client, int args)
 {
+	PrintToConsole(client, "Dynamic is running a HandleUsage report...");
+	RequestFrame(_Dynamic_HandleUsage, GetClientUserId(client));
 	return Plugin_Handled;
 }
