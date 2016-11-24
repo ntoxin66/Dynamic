@@ -25,7 +25,7 @@
 stock void RegisterCommands()
 {
 	RegAdminCmd("sm_dynamic_selftest", OnDynamicSelfTestCommand, ADMFLAG_RCON, "performs a Dynamic SelfTest to verify Dynamic is running properly");
-	RegAdminCmd("sm_dynamic_handles", OnDynamicHandlesCommand, ADMFLAG_RCON, "performs a Dynamic SelfTest to verify Dynamic is running properly");
+	RegAdminCmd("sm_dynamic_handles", OnDynamicHandlesCommand, ADMFLAG_RCON, "displays a Dynamic Handle usage report per plugin");
 }
 
 public Action OnDynamicSelfTestCommand(int client, int args)
