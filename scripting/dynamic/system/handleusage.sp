@@ -17,6 +17,11 @@
  *
  */
 
+#if defined _dynamic_system_handleusage
+  #endinput
+#endif
+#define _dynamic_system_handleusage
+
 public void _Dynamic_HandleUsage(any userid)
 {
 	int client = GetClientOfUserId(userid);
