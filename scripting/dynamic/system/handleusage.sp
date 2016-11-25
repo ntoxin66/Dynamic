@@ -27,29 +27,24 @@ public void _Dynamic_HandleUsage(any userid)
 	int client = GetClientOfUserId(userid);
 	if (!IsClientConnected(client))
 		return;
-
+	
+	_Dynamic_HandleUsage_TotalHandleCount(client);
+	
 	// Loop plugins
 	Handle iterator = GetPluginIterator();
 	Handle plugin;
-	int count;
-	char pluginname[64];
 	while (MorePlugins(iterator))
 	{
 		plugin = ReadPlugin(iterator);
-		count = _Dynamic_HandleUsage_CountPluginHandles(plugin);
-		
-		if (count == 0)
-			continue;
-			
-		GetPluginInfo(plugin, PlInfo_Name, pluginname, sizeof(pluginname));
-		PrintToConsole(client, "-> `%s`: %d Handles", pluginname, count);
+		_Dynamic_HandleUsage_CountPluginHandles(plugin, client);
 	}
 	CloseHandle(iterator);
 }
 
-stock int _Dynamic_HandleUsage_CountPluginHandles(Handle plugin)
+stock void _Dynamic_HandleUsage_TotalHandleCount(int client)
 {
 	int count = 0;
+	int persistant = 0;
 	DynamicObject dynamic;
 	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
 	{
@@ -58,9 +53,43 @@ stock int _Dynamic_HandleUsage_CountPluginHandles(Handle plugin)
 		// Skip disposed objects
 		if (!dynamic.IsValid(false))
 			continue;
-			
-		if (dynamic.OwnerPlugin == plugin)
-			count++;
+		
+		if (dynamic.Persistent)
+			persistant++;
+		
+		count++;
 	}
-	return count;
+	
+	PrintToConsole(client, "-> Total Handles: %d (%d persistant handles)", count, persistant);
+}
+
+stock void _Dynamic_HandleUsage_CountPluginHandles(Handle plugin, int client)
+{
+	int count = 0;
+	int persistant = 0;
+	
+	DynamicObject dynamic;
+	for (int i = MAXPLAYERS; i < s_CollectionSize; i++)
+	{
+		dynamic = view_as<DynamicObject>(i);
+		
+		// Skip disposed objects
+		if (!dynamic.IsValid(false))
+			continue;
+		
+		if (dynamic.OwnerPlugin == plugin)
+		{
+			if (dynamic.Persistent)
+				persistant++;
+				
+			count++;
+		}
+	}
+	
+	if (count == 0)
+		return;
+	
+	char pluginname[64];
+	GetPluginInfo(plugin, PlInfo_Name, pluginname, sizeof(pluginname));
+	PrintToConsole(client, "--> `%s`: %d Handles (%d persistant handles)", pluginname, count, persistant);
 }
