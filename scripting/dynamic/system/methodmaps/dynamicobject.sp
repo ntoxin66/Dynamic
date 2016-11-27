@@ -167,7 +167,7 @@ methodmap DynamicObject
 		}
 		public set(Handle value)
 		{
-			return SetArrayCell(s_Collection, me, value, Dynamic_Forwards);
+			SetArrayCell(s_Collection, me, value, Dynamic_Forwards);
 		}
 	}
 	
@@ -179,7 +179,7 @@ methodmap DynamicObject
 		}
 		public set(DynamicOffset value)
 		{
-			return SetArrayCell(s_Collection, me, value, Dynamic_NextOffset);
+			SetArrayCell(s_Collection, me, value, Dynamic_NextOffset);
 		}
 	}
 	
@@ -191,7 +191,7 @@ methodmap DynamicObject
 		}
 		public set(int value)
 		{
-			return SetArrayCell(s_Collection, me, value, Dynamic_CallbackCount);
+			SetArrayCell(s_Collection, me, value, Dynamic_CallbackCount);
 		}
 	}
 	
@@ -203,7 +203,7 @@ methodmap DynamicObject
 		}
 		public set(DynamicObject value)
 		{
-			return SetArrayCell(s_Collection, me, value, Dynamic_ParentObject);
+			SetArrayCell(s_Collection, me, value, Dynamic_ParentObject);
 		}
 	}
 	
