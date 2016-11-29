@@ -22,27 +22,22 @@
 #endif
 #define _dynamic_system_selftest
 
-public void _Dynamic_SelfTest(any clientserial)
+public void _Dynamic_SelfTest(any userid)
 {
 	int client = 0;
-	
-	if (clientserial)
+	if (userid > 0)
 	{
-	    client = GetClientFromSerial(clientserial);
-	    if (!IsClientConnected(client))
-            client = 0;
+		client = GetClientOfUserId(userid);
+		if (!IsClientConnected(client))
+            		client = 0;
 	}
-	else
-	    client = 0;
 	
 	// Test DynamicOffset methodmap
 	if (!_Dynamic_DynamicOffsetTest(client))
 		return;
 	ReplyToCommand(client, "> DynamicOffset test completed");
 	
-	
 	// Test offset alignments (initialisation offset vs findmemberoffset)
-	
 	
 	// Test dynamic dynamic creation
 	Dynamic test;
@@ -51,6 +46,7 @@ public void _Dynamic_SelfTest(any clientserial)
 		test.Dispose();
 		return;
 	}
+	ReplyToCommand(client, "> Dynamic_Initialise test completed");
 	
 	// DynamicType_Int Test
 	test.Reset();
