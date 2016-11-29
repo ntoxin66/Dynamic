@@ -29,7 +29,7 @@ stock void RegisterCommands()
 
 public Action OnDynamicSelfTestCommand(int client, int args)
 {
-	PrintToConsole(client, "Dynamic is running a SelfTest...");
-	RequestFrame(_Dynamic_SelfTest, GetClientUserId(client));
+	ReplyToCommand(client, "Dynamic is running a SelfTest...");
+	RequestFrame(_Dynamic_SelfTest, (client) ? GetClientSerial(client) : 0);
 	return Plugin_Handled;
 }
