@@ -29,7 +29,7 @@ public void _Dynamic_SelfTest(any userid)
 	{
 		client = GetClientOfUserId(userid);
 		if (!IsClientConnected(client))
-            		client = 0;
+			client = 0;
 	}
 	
 	// Test DynamicOffset methodmap
