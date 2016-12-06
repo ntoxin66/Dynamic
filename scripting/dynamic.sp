@@ -46,6 +46,7 @@ int g_iDynamic_MemberLookup_Offset;
 // Other features
 #include "dynamic/system/commands.sp"
 #include "dynamic/system/flatconfigs.sp"
+#include "dynamic/system/handleusage.sp"
 #include "dynamic/system/hooks.sp"
 #include "dynamic/system/keyvalues.sp"
 #include "dynamic/system/natives.sp"
@@ -56,7 +57,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.22",
+	version = "0.0.23",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
