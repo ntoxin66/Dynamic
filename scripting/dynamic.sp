@@ -50,6 +50,7 @@ int g_iDynamic_MemberLookup_Offset;
 #include "dynamic/system/hooks.sp"
 #include "dynamic/system/keyvalues.sp"
 #include "dynamic/system/natives.sp"
+#include "dynamic/system/printmembers.sp"
 #include "dynamic/system/selftest.sp"
 
 public Plugin myinfo =
