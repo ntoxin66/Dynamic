@@ -46,7 +46,7 @@ methodmap Collection < ArrayList
 			Dynamic member;
 			for (int i = 0; i < count; i++)
 			{
-				member = view_as<Dynamic>(i);
+				member = view_as<Dynamic>(this.Get(i));
 				if (!member.IsValid)
 					continue;
 					
