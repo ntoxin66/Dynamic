@@ -24,9 +24,13 @@
 
 public void _Dynamic_HandleUsage(any userid)
 {
-	int client = GetClientOfUserId(userid);
-	if (!IsClientConnected(client))
-		return;
+	int client = 0;
+	if (userid > 0)
+	{
+		client = GetClientOfUserId(userid);
+		if (!IsClientConnected(client))
+			client = 0;
+	}
 	
 	_Dynamic_HandleUsage_TotalHandleCount(client);
 	
@@ -59,8 +63,8 @@ stock void _Dynamic_HandleUsage_TotalHandleCount(int client)
 		
 		count++;
 	}
-	
-	PrintToConsole(client, "-> Total Handles: %d (%d persistant handles)", count, persistant);
+  
+	ReplyToCommand(client, "-> Total Handles: %d (%d persistant handles)", count, persistant);
 }
 
 stock void _Dynamic_HandleUsage_CountPluginHandles(Handle plugin, int client)
@@ -91,5 +95,5 @@ stock void _Dynamic_HandleUsage_CountPluginHandles(Handle plugin, int client)
 	
 	char pluginname[64];
 	GetPluginInfo(plugin, PlInfo_Name, pluginname, sizeof(pluginname));
-	PrintToConsole(client, "--> `%s`: %d Handles (%d persistant handles)", pluginname, count, persistant);
+	ReplyToCommand(client, "--> `%s`: %d Handles (%d persistant handles)", pluginname, count, persistant);
 }

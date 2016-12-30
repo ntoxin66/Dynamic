@@ -30,14 +30,14 @@ stock void RegisterCommands()
 
 public Action OnDynamicSelfTestCommand(int client, int args)
 {
-	PrintToConsole(client, "Dynamic is running a SelfTest...");
-	RequestFrame(_Dynamic_SelfTest, GetClientUserId(client));
+	ReplyToCommand(client, "Dynamic is running a SelfTest...");
+	RequestFrame(_Dynamic_SelfTest, (client > 0 ? GetClientUserId(client) : 0));
 	return Plugin_Handled;
 }
 
 public Action OnDynamicHandlesCommand(int client, int args)
 {
 	PrintToConsole(client, "Dynamic is running a HandleUsage report...");
-	RequestFrame(_Dynamic_HandleUsage, GetClientUserId(client));
+	RequestFrame(_Dynamic_HandleUsage, (client > 0 ? GetClientUserId(client) : 0));
 	return Plugin_Handled;
 }
