@@ -24,7 +24,7 @@
 
 public void _Dynamic_HandleUsage(any userid)
 {
-	int client = 0; GetClientOfUserId(userid);
+	int client = 0;
 	if (userid > 0)
 	{
 		client = GetClientOfUserId(userid);
@@ -63,7 +63,7 @@ stock void _Dynamic_HandleUsage_TotalHandleCount(int client)
 		
 		count++;
 	}
-	
+  
 	ReplyToCommand(client, "-> Total Handles: %d (%d persistant handles)", count, persistant);
 }
 
