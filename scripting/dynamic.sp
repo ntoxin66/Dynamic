@@ -30,6 +30,7 @@ Handle s_FreeIndicies = null;
 StringMap s_tObjectNames = null;
 Handle g_sRegex_Vector = null;
 int g_iDynamic_MemberLookup_Offset;
+ArrayList g_UnloadedPlugins = null;
 
 // Dynamics internal methodmaps
 #include "dynamic/system/methodmaps/dynamicobject.sp"
@@ -73,6 +74,12 @@ public void OnLibraryRemoved(const char[] name)
 	_Dynamic_CollectGarbage();
 }
 
+public void OnPluginUnload2(Handle plugin)
+{
+	if (g_UnloadedPlugins.FindValue(plugin) == -1)
+		g_UnloadedPlugins.Push(plugin);
+}
+
 public void OnPluginStart()
 {
 	// Initialise static plugin data
@@ -81,6 +88,7 @@ public void OnPluginStart()
 	s_FreeIndicies = CreateStack();
 	s_tObjectNames = new StringMap();
 	g_iDynamic_MemberLookup_Offset = ByteCountToCells(DYNAMIC_MEMBERNAME_MAXLEN)+1;
+	g_UnloadedPlugins = new ArrayList();
 	
 	// Reserve first object index for global settings
 	DynamicObject settings = DynamicObject();
@@ -243,6 +251,16 @@ stock void _Dynamic_CollectGarbage()
 		if (dynamic.Persistent)
 			continue;
 			
+		{
+			int index = g_UnloadedPlugins.FindValue(dynamic.OwnerPlugin);
+			if (index != -1)
+			{
+				dynamic.Dispose(false);
+				g_UnloadedPlugins.Erase(index);
+				continue;
+			}
+		}
+
 		switch(GetPluginStatus(dynamic.OwnerPlugin))
 		{
 			case Plugin_Error, Plugin_Failed:
