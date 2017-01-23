@@ -231,15 +231,23 @@ methodmap DynamicObject
 		}
 	}
 	
-	property Handle OwnerPlugin
+	property int OwnerPlugin
 	{
 		public get()
 		{
 			return GetArrayCell(s_Collection, me, Dynamic_OwnerPlugin);
 		}
-		public set(Handle value)
+		public set(int value)
 		{
-			SetArrayCell(s_Collection, me, value, Dynamic_Persistent);
+			SetArrayCell(s_Collection, me, value, Dynamic_OwnerPlugin);
+		}
+	}
+	
+	property Handle OwnerPluginHandle
+	{
+		public get()
+		{
+			return _Dynamic_Plugins_GetHandleFromIndex(GetArrayCell(s_Collection, me, Dynamic_OwnerPlugin));
 		}
 	}
 	
