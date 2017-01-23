@@ -81,7 +81,7 @@ stock void _Dynamic_HandleUsage_CountPluginHandles(Handle plugin, int client)
 		if (!dynamic.IsValid(false))
 			continue;
 		
-		if (dynamic.OwnerPlugin == plugin)
+		if (dynamic.OwnerPluginHandle == plugin)
 		{
 			if (dynamic.Persistent)
 				persistant++;
