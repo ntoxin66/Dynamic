@@ -35,14 +35,14 @@ public int _Dynamic_Plugins_GetIndex(Handle plugin)
 	
 	// Create new index and push plugin handle and forward
 	index = g_aPlugins.Push(plugin);
-	g_aPlugins.Set(index, pluginforward, 2);
+	g_aPlugins.Set(index, pluginforward, 1);
 	return index;
 }
 
 public bool _Dynamic_Plugins_IsLoaded(int plugin)
 {
 	// Get the plugins forward handle
-	Handle pluginforward = g_aPlugins.Get(plugin, 2);
+	Handle pluginforward = g_aPlugins.Get(plugin, 1);
 	
 	// Check if the forward still has functions assigned to it
 	if (GetForwardFunctionCount(pluginforward) == 0)
