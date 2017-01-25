@@ -17,11 +17,6 @@
  *
  */
 
-public void _Dynamic_Plugins_PrivateFowardCallback()
-{
-	return;
-}
-
 public int _Dynamic_Plugins_GetIndex(Handle plugin)
 {
 	// Return plugin handle index if already registered
