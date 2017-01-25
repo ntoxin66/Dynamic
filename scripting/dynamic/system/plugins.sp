@@ -26,7 +26,7 @@ public int _Dynamic_Plugins_GetIndex(Handle plugin)
 		
 	// Create forward and add plugin handle
 	Handle pluginforward = CreateForward(ET_Ignore);
-	AddToForward(pluginforward, plugin, _Dynamic_Plugins_PrivateFowardCallback);
+	AddToForward(pluginforward, plugin, GetFunctionByName(plugin, "_Dynamic_Plugins_PrivateFowardCallback")); // WildCard65: Add to forward requires a function ID of public function FROM PLUGIN YOUR ADDING FOR, using your own function id will result in a different function being added or native error.
 	
 	// Create new index and push plugin handle and forward
 	index = g_aPlugins.Push(plugin);
