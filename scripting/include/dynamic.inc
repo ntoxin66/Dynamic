@@ -56,6 +56,11 @@ typeset Dynamic_HookType
 	function Action (Dynamic obj, const char[] member, int depth);
 }
 
+public void _Dynamic_Plugins_PrivateFowardCallback()
+{
+	return;
+}
+
 #include <dynamic/natives>
 #include <dynamic/methodmaps/dynamicoffset>
 #include <dynamic/methodmaps/dynamic>
