@@ -26,7 +26,7 @@ public int _Dynamic_Plugins_GetIndex(Handle plugin)
 		
 	// Create forward and add plugin handle
 	Handle pluginforward = CreateForward(ET_Ignore);
-	AddToForward(pluginforward, plugin, _Dynamic_Plugins_PrivateFowardCallback);
+	AddToForward(pluginforward, plugin, view_as<Function>(1));
 	
 	// Create new index and push plugin handle and forward
 	index = g_aPlugins.Push(plugin);
