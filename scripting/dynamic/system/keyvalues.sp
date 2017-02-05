@@ -82,16 +82,22 @@ stock void IterateKeyValues(Handle plugin, KeyValues kv, DynamicObject dynamic, 
 			
 			if (result == Plugin_Continue)
 			{
-				DynamicObject child = _Dynamic_GetDynamic(dynamic, key);
-				if (!child.IsValid(false))
+				if (depth == 0)
 				{
-					child = DynamicObject();
-					child.Initialise(plugin);
-					
-					_Dynamic_SetDynamic(dynamic, key, child);
+					IterateKeyValues(plugin, kv, dynamic, valuelength, callbackforward, depth+1);
 				}
-				
-				IterateKeyValues(plugin, kv, child, valuelength, callbackforward, depth+1);
+				else
+				{
+					DynamicObject child = _Dynamic_GetDynamic(dynamic, key);
+					if (!child.IsValid(false))
+					{
+						child = DynamicObject();
+						child.Initialise(plugin);
+						
+						_Dynamic_SetDynamic(dynamic, key, child);
+					}
+					IterateKeyValues(plugin, kv, child, valuelength, callbackforward, depth+1);
+				}
 			}
 			kv.GoBack();
 		}
@@ -136,7 +142,7 @@ stock void IterateKeyValues(Handle plugin, KeyValues kv, DynamicObject dynamic, 
 	while (kv.GotoNextKey(false));
 }
 
-stock bool _Dynamic_WriteKeyValues(DynamicObject dynamic, const char[] path)
+stock bool _Dynamic_WriteKeyValues(DynamicObject dynamic, const char[] path, const char[] basekey)
 {
 	if (!dynamic.IsValid(true))
 		return false;
@@ -151,13 +157,16 @@ stock bool _Dynamic_WriteKeyValues(DynamicObject dynamic, const char[] path)
 		return false;
 	}
 	
-	WriteObjectToKeyValues(stream, dynamic, 0);
+	stream.WriteLine("\"%s\"", basekey);
+	stream.WriteLine("{");
+	_Dynamic_KeyValues_WriteDynamic(stream, dynamic, 1);
+	stream.WriteLine("}");
 	
 	delete stream;
 	return true;
 }
 
-stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent)
+stock void _Dynamic_KeyValues_WriteDynamic(File stream, DynamicObject dynamic, int indent)
 {
 	// Create indent
 	char indextext[16];
@@ -165,9 +174,10 @@ stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent
 		indextext[i] = 9;
 	indextext[indent] = 0;
 	int length = 1024;
+	char buffer[1024];
 
 	int count = dynamic.MemberCount;
-	int memberoffset;
+	DynamicOffset memberoffset;
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	for (int i = 0; i < count; i++)
 	{
@@ -177,9 +187,15 @@ stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent
 		
 		if (type == DynamicType_Dynamic)
 		{
-			stream.WriteLine("%s\"%s\"", indextext, membername);
+			if (StrEqual(membername, ""))
+				stream.WriteLine("%s\"%d\"", indextext, i);
+			else
+			{
+				_Dynamic_KeyValues_EscapeString(membername, buffer, sizeof(membername));
+				stream.WriteLine("%s\"%s\"", indextext, buffer);
+			}
 			stream.WriteLine("%s{", indextext);
-			WriteObjectToKeyValues(stream, _Dynamic_GetDynamicByOffset(dynamic, memberoffset), indent+1);
+			_Dynamic_KeyValues_WriteDynamic(stream, _Dynamic_GetDynamicByOffset(dynamic, memberoffset), indent+1);
 			stream.WriteLine("%s}", indextext);
 		}
 		else
@@ -187,7 +203,62 @@ stock void WriteObjectToKeyValues(File stream, DynamicObject dynamic, int indent
 			//length = GetStringLengthByOffset(view_as<int>(dynamic), memberoffset);
 			char[] membervalue = new char[length];
 			_Dynamic_GetStringByOffset(dynamic, memberoffset, membervalue, length);
+			_Dynamic_KeyValues_EscapeString(membervalue, buffer, sizeof(buffer));
 			stream.WriteLine("%s\"%s\"\t\"%s\"", indextext, membername, membervalue);
 		}
 	}
+}
+
+stock void _Dynamic_KeyValues_EscapeString(const char[] input, char[] output, int length)
+{
+	int pos_in=0;
+	int pos_out=0;
+	int x;
+	do
+	{
+		x = input[pos_in++];
+		switch (x)
+		{
+			case 34: // `"` -> `\"`
+			{
+				if (pos_out+1 >= length)
+					return;
+					
+				output[pos_out++] = 92;
+				output[pos_out++] = 34;
+			}
+			case 92: // `\` -> `\\`
+			{
+				if (pos_out+1 >= length)
+					return;
+					
+				output[pos_out++] = 92;
+				output[pos_out++] = 92;
+			}
+			case 10: // newline -> `\n`
+			{
+				if (pos_out+1 >= length)
+					return;
+					
+				output[pos_out++] = 92;
+				output[pos_out++] = 110;
+			}
+			case 13: // linefeed -> `\r`
+			{
+				if (pos_out+1 >= length)
+					return;
+					
+				output[pos_out++] = 92;
+				output[pos_out++] = 114;
+			}
+			default:
+			{
+				if (pos_out == length)
+					return;
+					
+				output[pos_out++] = x;
+			}
+		}
+	}
+	while(x != 0);
 }

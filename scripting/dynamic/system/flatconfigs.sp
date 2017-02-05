@@ -317,7 +317,7 @@ stock bool _Dynamic_WriteConfig(DynamicObject dynamic, const char[] path)
 	}
 	
 	int count = _Dynamic_GetMemberCount(dynamic);
-	int memberoffset;
+	DynamicOffset memberoffset;
 	int length;
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
 	for (int i = 0; i < count; i++)

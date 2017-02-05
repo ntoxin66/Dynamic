@@ -24,9 +24,18 @@
 
 public void _Dynamic_SelfTest(any userid)
 {
-	int client = GetClientOfUserId(userid);
-	if (!IsClientConnected(client))
+	int client = 0;
+	if (userid > 0)
+	{
+		client = GetClientOfUserId(userid);
+		if (!IsClientConnected(client))
+			client = 0;
+	}
+	
+	// Test DynamicOffset methodmap
+	if (!_Dynamic_DynamicOffsetTest(client))
 		return;
+	ReplyToCommand(client, "> DynamicOffset test completed");
 	
 	// Test offset alignments (initialisation offset vs findmemberoffset)
 	
@@ -37,6 +46,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
+	ReplyToCommand(client, "> Dynamic_Initialise test completed");
 	
 	// DynamicType_Int Test
 	test.Reset();
@@ -45,7 +55,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Int test completed");
+	ReplyToCommand(client, "> DynamicType_Int test completed");
 	
 	// DynamicType_Float Test
 	test.Reset();
@@ -54,7 +64,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Float test completed");
+	ReplyToCommand(client, "> DynamicType_Float test completed");
 	
 	// DynamicType_String Test
 	test.Reset();
@@ -63,7 +73,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_String test completed");
+	ReplyToCommand(client, "> DynamicType_String test completed");
 	
 	// DynamicType_Bool Test
 	test.Reset();
@@ -72,7 +82,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Bool test completed");
+	ReplyToCommand(client, "> DynamicType_Bool test completed");
 	
 	// DynamicType_Dynamic Test
 	test.Reset();
@@ -81,7 +91,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Dynamic test completed");
+	ReplyToCommand(client, "> DynamicType_Dynamic test completed");
 	
 	// DynamicType_Handle Test
 	test.Reset();
@@ -90,7 +100,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Handle test completed");
+	ReplyToCommand(client, "> DynamicType_Handle test completed");
 	
 	// DynamicType_Vector Test
 	test.Reset();
@@ -99,7 +109,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> DynamicType_Vector test completed");
+	ReplyToCommand(client, "> DynamicType_Vector test completed");
 	
 	// Dynamic.GetMemberNameByIndex(Dynamic params) Test
 	test.Reset();
@@ -108,7 +118,7 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> Dynamic_GetMemberNameByIndex test completed");
+	ReplyToCommand(client, "> Dynamic_GetMemberNameByIndex test completed");
 	
 	// Dynamic.FindByMemberValue(Dynamic params) Test
 	test.Reset();
@@ -117,9 +127,74 @@ public void _Dynamic_SelfTest(any userid)
 		test.Dispose();
 		return;
 	}
-	PrintToConsole(client, "> Dynamic_FindByMemberValue test completed");
+	ReplyToCommand(client, "> Dynamic_FindByMemberValue test completed");
+	
+	// Dynamic_KeyValues Test
+	test.Reset();
+	if (!_Dynamic_KeyValuesTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	ReplyToCommand(client, "> Dynamic_KeyValues test completed");
 	
 	test.Dispose();
+}
+
+stock bool _Dynamic_DynamicOffsetTest(int client)
+{
+	// Offset accessor testing
+	DynamicOffset offset;
+	for (int i=0; i<65536; i+=10)
+	{
+		for (int x=0; x<65536; x+=10)
+		{
+			offset = DynamicOffset(i, x);
+			
+			if (offset.Index != i)
+			{
+				ReplyToCommand(client, "DynamicOffset test failed: ErrorCode Bx1");
+				ReplyToCommand(client, "> %d should equal %d", offset.Index, i);
+				return false;
+			}
+			else if (offset.Cell != x)
+			{
+				ReplyToCommand(client, "DynamicOffset test failed: ErrorCode Bx2");
+				ReplyToCommand(client, "> %d should equal %d", offset.Cell, x);
+				return false;
+			}
+		}
+	}
+	
+	// Test cloner
+	offset = DynamicOffset(0,0);
+	offset = offset.Clone(16, 1);
+	if (offset.Index != 0)
+	{
+		ReplyToCommand(client, "DynamicOffset test failed: ErrorCode Bx3");
+		ReplyToCommand(client, "> %d should equal %d", offset.Index, 0);
+		return false;
+	}
+	if (offset.Cell != 1)
+	{
+		ReplyToCommand(client, "DynamicOffset test failed: ErrorCode Bx4");
+		ReplyToCommand(client, "> %d should equal %d", offset.Index, 1);
+		return false;
+	}
+	offset = offset.Clone(12, 11);
+	if (offset.Index != 1)
+	{
+		ReplyToCommand(client, "DynamicOffset test failed: ErrorCode Bx5");
+		ReplyToCommand(client, "> %d should equal %d", offset.Index, 1);
+		return false;
+	}
+	if (offset.Cell != 0)
+	{
+		ReplyToCommand(client, "DynamicOffset test failed: ErrorCode Bx6");
+		ReplyToCommand(client, "> %d should equal %d", offset.Index, 0);
+		return false;
+	}
+	return true;
 }
 
 stock bool _Dynamic_InitialiseTest(int client, Dynamic &test)
@@ -128,9 +203,9 @@ stock bool _Dynamic_InitialiseTest(int client, Dynamic &test)
 	test = Dynamic();
 	if (!test.IsValid)
 	{
-		PrintToConsole(client, "Dynamic_Initialise test failed: ErrorCode Ax1");
-		PrintToConsole(client, "> %d should equal %d", test.IsValid, true);
-		PrintToConsole(client, "> test=%d", test);
+		ReplyToCommand(client, "Dynamic_Initialise test failed: ErrorCode Ax1");
+		ReplyToCommand(client, "> %d should equal %d", test.IsValid, true);
+		ReplyToCommand(client, "> test=%d", test);
 		return false;
 	}
 	return true;
@@ -142,19 +217,19 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 	int value = GetRandomInt(0, 32000);
 	
 	// Offset test
-	int offset = test.SetInt("val", value);
+	DynamicOffset offset = test.SetInt("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
 	// Int test
 	if (test.GetInt("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x2");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), value);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x2");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), value);
 		return false;
 	}
 	
@@ -162,15 +237,15 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 	float fvalue = float(value);
 	if (test.GetFloat("val") != fvalue)
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x3");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), fvalue);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x3");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("val"), fvalue);
 		return false;
 	}
 	test.SetFloat("val", fvalue);
 	if (test.GetInt("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x4");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), value);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x4");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), value);
 		return false;
 	}
 	
@@ -178,22 +253,22 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 	char cvalue[2][16];
 	if (!test.GetString("val", cvalue[0], sizeof(cvalue[])))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x5");
-		PrintToConsole(client, "> Couldn't read int as string");
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x5");
+		ReplyToCommand(client, "> Couldn't read int as string");
 		return false;
 	}
 	IntToString(value, cvalue[1], sizeof(cvalue[]));
 	if (!StrEqual(cvalue[0], cvalue[1]))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x6");
-		PrintToConsole(client, "> '%s' should equal '%s'", cvalue[0], cvalue[1]);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x6");
+		ReplyToCommand(client, "> '%s' should equal '%s'", cvalue[0], cvalue[1]);
 		return false;
 	}
 	test.SetString("val", cvalue[1]);
 	if (test.GetInt("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x7");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), value);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x7");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), value);
 		return false;
 	}
 	
@@ -203,29 +278,29 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 	test.SetInt("val", 0);
 	if (test.GetBool("val"))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x8");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), false);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x8");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), false);
 		return false;
 	}
 	test.SetInt("val", 1);
 	if (!test.GetBool("val"))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x9");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), true);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x9");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), true);
 		return false;
 	}
 	test.SetBool("val", false);
 	if (test.GetInt("val"))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x10");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), false);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x10");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), false);
 		return false;
 	}
 	test.SetBool("val", true);
 	if (!test.GetInt("val"))
 	{
-		PrintToConsole(client, "DynamicType_Int test failed: ErrorCode 0x11");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), true);
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x11");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), true);
 		return false;
 	}
 	
@@ -241,19 +316,19 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 	float value = GetRandomFloat(0.0, 32000.0);
 	
 	// Offset test
-	int offset = test.SetFloat("val", value);
+	DynamicOffset offset = test.SetFloat("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
 	// Float test
 	if (test.GetFloat("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x2");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), value);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x2");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("val"), value);
 		return false;
 	}
 	
@@ -261,15 +336,15 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 	int ivalue = RoundFloat(value);
 	if (test.GetInt("val") != ivalue)
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x3");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), ivalue);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x3");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), ivalue);
 		return false;
 	}
 	test.SetInt("val", ivalue);
 	if (test.GetFloat("val") != RoundFloat(value))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x4");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), RoundFloat(value));
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x4");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("val"), RoundFloat(value));
 		return false;
 	}
 	test.SetFloat("val", value);
@@ -278,22 +353,22 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 	char cvalue[2][64];
 	if (!test.GetString("val", cvalue[0], sizeof(cvalue[])))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x5");
-		PrintToConsole(client, "> Couldn't read int as string");
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x5");
+		ReplyToCommand(client, "> Couldn't read int as string");
 		return false;
 	}
 	FloatToString(value, cvalue[1], sizeof(cvalue[]));
 	if (!StrEqual(cvalue[0], cvalue[1]))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x6");
-		PrintToConsole(client, "> '%s' should equal '%s'", cvalue[0], cvalue[1]);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x6");
+		ReplyToCommand(client, "> '%s' should equal '%s'", cvalue[0], cvalue[1]);
 		return false;
 	}
 	test.SetString("val", cvalue[1]);
 	if (test.GetFloat("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x7");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), value);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x7");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("val"), value);
 		return false;
 	}
 	
@@ -303,29 +378,29 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 	test.SetFloat("val", 0.0);
 	if (test.GetBool("val"))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x8");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), false);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x8");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), false);
 		return false;
 	}
 	test.SetFloat("val", 1.0);
 	if (!test.GetBool("val"))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x9");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), true);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x9");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), true);
 		return false;
 	}
 	test.SetBool("val", false);
 	if (test.GetInt("val"))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x10");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), false);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x10");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), false);
 		return false;
 	}
 	test.SetBool("val", true);
 	if (!test.GetInt("val"))
 	{
-		PrintToConsole(client, "DynamicType_Float test failed: ErrorCode 1x11");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), true);
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x11");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), true);
 		return false;
 	}
 	
@@ -345,55 +420,64 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	value[63] = '\0';
 	
 	// Offset test
-	int offset = test.SetString("val", value);
-	if (offset != test.GetMemberOffset("val"))
+	DynamicOffset offset = test.SetString("stringval", value);
+	if (offset != test.GetMemberOffset("stringval"))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
 	// String test
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x2");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x2");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, value);
+		return false;
+	}
+	
+	// String by offset test
+	test.SetStringByOffset(offset, "strval");
+	if (test.GetStringByOffset(offset, buffer, sizeof(buffer)) && !StrEqual("strval", buffer))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x2b");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "strval");
 		return false;
 	}
 	
 	// Int test
 	int ivalue = GetRandomInt(0, 32000);
 	IntToString(ivalue, value, sizeof(value));
-	test.SetString("val", value);
-	if (test.GetInt("val") != ivalue)
+	test.SetString("stringval", value);
+	if (test.GetInt("stringval") != ivalue)
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x3");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), ivalue);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x3");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("stringval"), ivalue);
 		return false;
 	}
-	test.SetInt("val", ivalue);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	test.SetInt("stringval", ivalue);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x4");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x4");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, value);
 		return false;
 	}
 	
 	// Float test
 	float fvalue = GetRandomFloat(0.0, 32000.0);
 	FloatToString(fvalue, value, sizeof(value));
-	test.SetString("val", value);
-	if (test.GetFloat("val") != fvalue)
+	test.SetString("stringval", value);
+	if (test.GetFloat("stringval") != fvalue)
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x3");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), fvalue);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x3");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("stringval"), fvalue);
 		return false;
 	}
-	test.SetFloat("val", fvalue);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	test.SetFloat("stringval", fvalue);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x4");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x4");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, value);
 		return false;
 	}
 	
@@ -401,32 +485,32 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	// Add support for this as Get/SetString -> Read/WriteKeyValues
 	
 	// Boolean test
-	test.SetString("val", "False");
-	if (test.GetBool("val"))
+	test.SetString("stringval", "False");
+	if (test.GetBool("stringval"))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x8");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), false);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x8");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("stringval"), false);
 		return false;
 	}
-	test.SetString("val", "True");
-	if (!test.GetBool("val"))
+	test.SetString("stringval", "True");
+	if (!test.GetBool("stringval"))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x9");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), true);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x9");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("stringval"), true);
 		return false;
 	}
-	test.SetBool("val", false);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual("False", buffer))
+	test.SetBool("stringval", false);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("False", buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x10");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "False");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x10");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "False");
 		return false;
 	}
-	test.SetBool("val", true);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual("True", buffer))
+	test.SetBool("stringval", true);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("True", buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x11");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "True");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x11");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "True");
 		return false;
 	}
 	
@@ -439,40 +523,40 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	vvalue[0][2] = GetRandomFloat(1.0, 32000.0);
 	char vbuffer[2][256];
 	Format(vbuffer[0], sizeof(vbuffer[]), "{%f, %f, %f}", vvalue[0][0], vvalue[0][1], vvalue[0][2]);
-	test.SetString("val", vbuffer[0]);
-	if (!test.GetVector("val", vvalue[1]))
+	test.SetString("stringval", vbuffer[0]);
+	if (!test.GetVector("stringval", vvalue[1]))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x12");
-		PrintToConsole(client, "> %d should equal %d", test.GetVector("val", vvalue[0]), true);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x12");
+		ReplyToCommand(client, "> %d should equal %d", test.GetVector("stringval", vvalue[0]), true);
 		return false;
 	}
 	if (!_Dynamic_CompareVectors(vvalue[0], vvalue[1]))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x13");
-		PrintToConsole(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vvalue[0][0], vvalue[0][1], vvalue[0][2], vvalue[1][0], vvalue[1][1], vvalue[1][2]);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x13");
+		ReplyToCommand(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vvalue[0][0], vvalue[0][1], vvalue[0][2], vvalue[1][0], vvalue[1][1], vvalue[1][2]);
 		return false;
 	}
-	test.SetVector("val", vvalue[0]);
-	if (!test.GetString("val", vbuffer[1], sizeof(vbuffer[])))
+	test.SetVector("stringval", vvalue[0]);
+	if (!test.GetString("stringval", vbuffer[1], sizeof(vbuffer[])))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x14");
-		PrintToConsole(client, "> %d should equal %d", test.GetString("val", vbuffer[1], sizeof(vbuffer[])), true);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x14");
+		ReplyToCommand(client, "> %d should equal %d", test.GetString("stringval", vbuffer[1], sizeof(vbuffer[])), true);
 		return false;
 	}
 	if (!StrEqual(vbuffer[0], vbuffer[1]))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x15");
-		PrintToConsole(client, "> '%s' should equal '%s'", vbuffer[0], vbuffer[1]);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x15");
+		ReplyToCommand(client, "> '%s' should equal '%s'", vbuffer[0], vbuffer[1]);
 		return false;
 	}
 	
 	// Test setting string length > maxlength
 	test.Reset(); // set blocksize to 16
-	test.SetString("val", "1234567890", 6); // include eos space
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual("12345", buffer))
+	test.SetString("stringval", "1234567890", 6); // include eos space
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("12345", buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x16");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "12345");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x16");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "12345");
 		return false;
 	}
 	
@@ -481,25 +565,25 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	for (int i=0; i<sizeof(value); i++)
 		value[i] = GetRandomInt(65, 122);
 	value[15] = '\0';
-	offset = test.SetString("val", value);
-	if (test.GetString("val", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
+	offset = test.SetString("stringval", value);
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x17");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, value);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x17");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, value);
 		return false;
 	}
 	
 	// Test string length returns valid length
-	if (test.GetStringLength("val") != 17) // Length expands by one to ensure trailing EOS is added
+	if (test.GetStringLength("stringval") != 17) // Length expands by one to ensure trailing EOS is added
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x18");
-		PrintToConsole(client, "> %d should equal %d", test.GetStringLength("val"), 16);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x18");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("stringval"), 16);
 		return false;
 	}
 	if (test.GetStringLengthByOffset(offset) != 17) // Length expands by one to ensure trailing EOS is added
 	{
-		PrintToConsole(client, "DynamicType_String test failed: ErrorCode 2x19");
-		PrintToConsole(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 16);
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x19");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 16);
 		return false;
 	}
 	
@@ -512,19 +596,19 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 	bool value = GetRandomInt(0, 1) == 0 ? false : true;
 	
 	// Offset test
-	int offset = test.SetBool("val", value);
+	DynamicOffset offset = test.SetBool("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
 	// Bool test
 	if (test.GetBool("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x2");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), value);
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x2");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), value);
 		return false;
 	}
 	
@@ -532,15 +616,15 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 	float fvalue = float(value);
 	if (test.GetFloat("val") != fvalue)
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x3");
-		PrintToConsole(client, "> %f should equal %f", test.GetFloat("val"), fvalue);
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x3");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("val"), fvalue);
 		return false;
 	}
 	test.SetFloat("val", fvalue);
 	if (test.GetBool("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x4");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), value);
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x4");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), value);
 		return false;
 	}
 	
@@ -548,8 +632,8 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 	char cvalue[2][16];
 	if (!test.GetString("val", cvalue[0], sizeof(cvalue[])))
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x5");
-		PrintToConsole(client, "> Couldn't read int as string");
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x5");
+		ReplyToCommand(client, "> Couldn't read int as string");
 		return false;
 	}
 	if (value)
@@ -558,15 +642,15 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 		Format(cvalue[1], sizeof(cvalue[]), "False");
 	if (!StrEqual(cvalue[0], cvalue[1]))
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x6");
-		PrintToConsole(client, "> '%s' should equal '%s'", cvalue[0], cvalue[1]);
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x6");
+		ReplyToCommand(client, "> '%s' should equal '%s'", cvalue[0], cvalue[1]);
 		return false;
 	}
 	test.SetString("val", cvalue[1]);
 	if (test.GetBool("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Bool test failed: ErrorCode 3x7");
-		PrintToConsole(client, "> %d should equal %d", test.GetBool("val"), value);
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x7");
+		ReplyToCommand(client, "> %d should equal %d", test.GetBool("val"), value);
 		return false;
 	}
 	
@@ -583,19 +667,19 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	Dynamic value = Dynamic();
 	
 	// Offset test
-	int offset = test.SetDynamic("val", value);
+	DynamicOffset offset = test.SetDynamic("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
 	// Dynamic test
 	if (test.GetDynamic("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x2");
-		PrintToConsole(client, "> %d should equal %d", test.GetInt("val"), value);
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x2");
+		ReplyToCommand(client, "> %d should equal %d", test.GetInt("val"), value);
 		return false;
 	}
 	
@@ -604,8 +688,8 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	value.SetDynamic("child", child);
 	if (child.Parent != value)
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x3");
-		PrintToConsole(client, "> %d should equal %d", child.Parent, value);
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x3");
+		ReplyToCommand(client, "> %d should equal %d", child.Parent, value);
 		return false;
 	}
 	
@@ -613,14 +697,14 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	char buffer[32];
 	if (!child.GetName(buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x4");
-		PrintToConsole(client, "> Couldn't read `_name` as string");
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x4");
+		ReplyToCommand(client, "> Couldn't read `_name` as string");
 		return false;
 	}
 	if (!StrEqual(buffer, "child"))
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x5");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "child");
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x5");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "child");
 	}
 	
 	// Test parent follows most recent SetDynamic
@@ -628,22 +712,22 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	value2.SetDynamic("child2", child);
 	if (child.Parent != value2)
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x6");
-		PrintToConsole(client, "> %d should equal %d", child.Parent, value2);
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x6");
+		ReplyToCommand(client, "> %d should equal %d", child.Parent, value2);
 		return false;
 	}
 	
 	// Test _name setter follows most recent change
 	if (!child.GetName(buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x7");
-		PrintToConsole(client, "> Couldn't read `_name` as string");
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x7");
+		ReplyToCommand(client, "> Couldn't read `_name` as string");
 		return false;
 	}
 	if (!StrEqual(buffer, "child2"))
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x8");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "child2");
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x8");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "child2");
 		return false;
 	}
 	
@@ -651,8 +735,8 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	value.Dispose();
 	if (!child.IsValid)
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x9");
-		PrintToConsole(client, "> '%d' should equal '%d'", child.IsValid, true);
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x9");
+		ReplyToCommand(client, "> '%d' should equal '%d'", child.IsValid, true);
 		return false;
 	}
 	
@@ -660,8 +744,8 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	value2.Dispose();
 	if (child.IsValid)
 	{
-		PrintToConsole(client, "DynamicType_Dynamic test failed: ErrorCode 4x10");
-		PrintToConsole(client, "> '%d' should equal '%d'", child.IsValid, false);
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x10");
+		ReplyToCommand(client, "> '%d' should equal '%d'", child.IsValid, false);
 		return false;
 	}
 	
@@ -681,19 +765,19 @@ stock bool _Dynamic_HandleTest(int client, Dynamic test)
 	ArrayList value = new ArrayList();
 	
 	// Offset test
-	int offset = test.SetHandle("val", value);
+	DynamicOffset offset = test.SetHandle("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Handle test failed: ErrorCode 5x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_Handle test failed: ErrorCode 5x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
 	// Handle test
 	if (test.GetHandle("val") != value)
 	{
-		PrintToConsole(client, "DynamicType_Handle test failed: ErrorCode 5x2");
-		PrintToConsole(client, "> %d should equal %d", test.GetHandle("val"), value);
+		ReplyToCommand(client, "DynamicType_Handle test failed: ErrorCode 5x2");
+		ReplyToCommand(client, "> %d should equal %d", test.GetHandle("val"), value);
 		return false;
 	}
 	
@@ -706,8 +790,8 @@ stock bool _Dynamic_HandleTest(int client, Dynamic test)
 	value = view_as<ArrayList>(test.GetHandle("val"));
 	if (value.Get(0) != ivalue)
 	{
-		PrintToConsole(client, "DynamicType_Handle test failed: ErrorCode 5x3");
-		PrintToConsole(client, "> %d should equal %d", value.Get(0), ivalue);
+		ReplyToCommand(client, "DynamicType_Handle test failed: ErrorCode 5x3");
+		ReplyToCommand(client, "> %d should equal %d", value.Get(0), ivalue);
 		return false;
 	}
 	
@@ -734,11 +818,11 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	value[2] = GetRandomFloat(1.0, 32000.0);
 	
 	// Offset test
-	int offset = test.SetVector("val", value);
+	DynamicOffset offset = test.SetVector("val", value);
 	if (offset != test.GetMemberOffset("val"))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x1");
-		PrintToConsole(client, "> member offset mismatch!!!!!");
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x1");
+		ReplyToCommand(client, "> member offset mismatch!!!!!");
 		return false;
 	}
 	
@@ -746,14 +830,14 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	float vector[3];
 	if (!test.GetVector("val", vector))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x2");
-		PrintToConsole(client, "> %d should equal %d", test.GetVector("val", vector), true);
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x2");
+		ReplyToCommand(client, "> %d should equal %d", test.GetVector("val", vector), true);
 		return false;
 	}
 	if (!_Dynamic_CompareVectors(vector, value))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x3");
-		PrintToConsole(client, "> %d should equal %d", _Dynamic_CompareVectors(vector, value), true);
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x3");
+		ReplyToCommand(client, "> %d should equal %d", _Dynamic_CompareVectors(vector, value), true);
 		return false;
 	}
 	
@@ -764,28 +848,28 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	char buffer[2][256];
 	if (!test.GetString("val", buffer[0], sizeof(buffer[])))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x4");
-		PrintToConsole(client, "> %d should equal %d", test.GetString("val", buffer[0], sizeof(buffer[])), true);
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x4");
+		ReplyToCommand(client, "> %d should equal %d", test.GetString("val", buffer[0], sizeof(buffer[])), true);
 		return false;
 	}
 	Format(buffer[1], sizeof(buffer[]), "{%f, %f, %f}", value[0], value[1], value[2]);
 	if (!StrEqual(buffer[0], buffer[1]))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x5");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer[0], buffer[1]);
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x5");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer[0], buffer[1]);
 		return false;
 	}
 	test.SetString("val", buffer[0]);
 	if (!test.GetVector("val", vector))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x6");
-		PrintToConsole(client, "> %d should equal %d", test.GetVector("val", vector), true);
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x6");
+		ReplyToCommand(client, "> %d should equal %d", test.GetVector("val", vector), true);
 		return false;
 	}
 	if (!_Dynamic_CompareVectors(vector, value))
 	{
-		PrintToConsole(client, "DynamicType_Vector test failed: ErrorCode 6x7");
-		PrintToConsole(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vector[0], vector[1], vector[2], value[0], value[1], value[2]);
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x7");
+		ReplyToCommand(client, "> {%x, %x, %x} should equal {%x, %x, %x}", vector[0], vector[1], vector[2], value[0], value[1], value[2]);
 		return false; 
 	}
 	
@@ -804,16 +888,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x1");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x1");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushInt(1, "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x2");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x2");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -823,16 +907,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x3");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x3");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushFloat(1.0, "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x4");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x4");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -842,16 +926,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x5");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x5");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushBool(true, "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x6");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x6");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -861,16 +945,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x7");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x7");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushString("1", 0, "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x8");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x8");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -880,16 +964,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x9");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x9");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushDynamic(Dynamic(), "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x10");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x10");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -899,16 +983,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x11");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x11");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushHandle(null, "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x12");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x12");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -918,16 +1002,16 @@ stock bool _Dynamic_GetMemberNameByIndexTest(int client, Dynamic test)
 	test.GetMemberNameByIndex(0, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index0"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x13");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x13");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.PushVector(NULL_VECTOR, "index1");
 	test.GetMemberNameByIndex(1, buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "index1"))
 	{
-		PrintToConsole(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x14");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "index1");
+		ReplyToCommand(client, "_Dynamic_GetMemberNameByIndexTest test failed: ErrorCode 7x14");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "index1");
 		return false; 
 	}
 	test.Reset();
@@ -968,39 +1052,39 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	// Check plant results
 	if (results == null)
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x1");
-		PrintToConsole(client, "> null should equal notnull", results.Length, 2);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x1");
+		ReplyToCommand(client, "> null should equal notnull", results.Length, 2);
 		return false;
 	}
 	if (results.Length != 2)
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x1");
-		PrintToConsole(client, "> %d should equal %d", results.Length, 2);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x1");
+		ReplyToCommand(client, "> %d should equal %d", results.Length, 2);
 		return false; 
 	}
 	char buffer[32];
 	if (!results.Items(0).GetString("name", buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x2");
-		PrintToConsole(client, "> %d should equal %d", results.Items(0).GetString("name", buffer, sizeof(buffer)), true);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x2");
+		ReplyToCommand(client, "> %d should equal %d", results.Items(0).GetString("name", buffer, sizeof(buffer)), true);
 		return false; 
 	}
 	if (!StrEqual(buffer, "Tree"))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x3");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x3");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "Tree");
 		return false; 
 	}
 	if (!results.Items(1).GetString("name", buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x4");
-		PrintToConsole(client, "> %d should equal %d", results.Items(1).GetString("name", buffer, sizeof(buffer)), true);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x4");
+		ReplyToCommand(client, "> %d should equal %d", results.Items(1).GetString("name", buffer, sizeof(buffer)), true);
 		return false; 
 	}
 	if (!StrEqual(buffer, "Shrub"))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x5");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x5");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "Tree");
 		return false; 
 	}
 	delete results;
@@ -1018,43 +1102,133 @@ stock bool _Dynamic_FindByMemberValueTest(int client, Dynamic test)
 	// Check animal results
 	if (results == null)
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x6");
-		PrintToConsole(client, "> null should equal notnull", results.Length, 2);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x6");
+		ReplyToCommand(client, "> null should equal notnull", results.Length, 2);
 		return false;
 	}
 	if (results.Length != 2)
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x7");
-		PrintToConsole(client, "> %d should equal %d", results.Length, 2);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x7");
+		ReplyToCommand(client, "> %d should equal %d", results.Length, 2);
 		return false; 
 	}
 	if (!results.Items(0).GetString("name", buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x8");
-		PrintToConsole(client, "> %d should equal %d", results.Items(0).GetString("name", buffer, sizeof(buffer)), true);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x8");
+		ReplyToCommand(client, "> %d should equal %d", results.Items(0).GetString("name", buffer, sizeof(buffer)), true);
 		return false; 
 	}
 	if (!StrEqual(buffer, "Cat"))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x9");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x9");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "Tree");
 		return false; 
 	}
 	if (!results.Items(1).GetString("name", buffer, sizeof(buffer)))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x10");
-		PrintToConsole(client, "> %d should equal %d", results.Items(1).GetString("name", buffer, sizeof(buffer)), true);
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x10");
+		ReplyToCommand(client, "> %d should equal %d", results.Items(1).GetString("name", buffer, sizeof(buffer)), true);
 		return false; 
 	}
 	if (!StrEqual(buffer, "Dog"))
 	{
-		PrintToConsole(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x11");
-		PrintToConsole(client, "> '%s' should equal '%s'", buffer, "Tree");
+		ReplyToCommand(client, "Dynamic_FindByMemberValue test failed: ErrorCode 8x11");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "Tree");
 		return false; 
 	}
 	delete results;
 	
 	params.Dispose();
+	return true;
+}
+
+stock bool _Dynamic_KeyValuesTest(int client, Dynamic test)
+{
+	// Build structure for testing
+	Dynamic child; Dynamic grandchild;
+	for (int i=0; i<3; i++)
+	{
+		child = Dynamic();
+		child.SetString("String", "abcd");
+		child.SetInt("Int", i);
+		
+		grandchild = Dynamic();
+		grandchild.SetVector("Vector", NULL_VECTOR);
+		grandchild.SetFloat("Float", 66.66);
+		child.SetDynamic("granny", grandchild);
+		
+		if (i == 1)
+			test.SetDynamic("SomeValue", child);
+		else
+			test.PushDynamic(child);
+	}
+	
+	// Write test structure to disk
+	test.WriteKeyValues("test.txt", "BaseKeyName");
+	
+	// Read test structure from disk
+	test.Reset();
+	test.ReadKeyValues("test.txt");
+	
+	// Really basic tests
+	if (test.GetDynamicByIndex(0).GetInt("Int") != 0)
+	{
+		ReplyToCommand(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x1");
+		ReplyToCommand(client, "> %d should equal %d", test.GetDynamicByIndex(0).GetInt("Int"), 0);
+		return false; 
+	}
+	if (test.GetDynamic("SomeValue").GetInt("Int") != 1)
+	{
+		ReplyToCommand(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x2");
+		ReplyToCommand(client, "> %d should equal %d", test.GetDynamic("SomeValue").GetInt("Int"), 1);
+		return false; 
+	}
+	if (test.GetDynamicByIndex(2).GetInt("Int") != 2)
+	{
+		ReplyToCommand(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x3");
+		ReplyToCommand(client, "> %d should equal %d", test.GetDynamicByIndex(2).GetInt("Int"), 2);
+		return false; 
+	}
+	
+	// Ensure file contents match after an additional write
+	test.Reset();
+	test.ReadKeyValues("test.txt");
+	test.WriteKeyValues("test1.txt", "BaseKeyName");
+	File stream1 = OpenFile("test.txt", "r");
+	File stream2 = OpenFile("test1.txt", "r");
+	char buffer1[1024];
+	char buffer2[1024];
+	while(stream1.ReadLine(buffer1, sizeof(buffer1)))
+	{
+		if (!stream2.ReadLine(buffer2, sizeof(buffer2)))
+		{
+			ReplyToCommand(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x4");
+			ReplyToCommand(client, "> 0 should equal 1");
+			delete stream1; delete stream2;
+			return false;
+		}
+		else if (!StrEqual(buffer1, buffer2))
+		{
+			ReplyToCommand(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x5");
+			ReplyToCommand(client, "> '%s' should equal '%s'", buffer1, buffer2);
+			delete stream1; delete stream2;
+			return false;
+		}
+	}
+	if (stream2.ReadLine(buffer2, sizeof(buffer2)))
+	{
+		ReplyToCommand(client, "Dynamic_KeyValuesTest test failed: ErrorCode 9x6");
+		ReplyToCommand(client, "> 1 should equal 0");
+		delete stream1; delete stream2;
+		return false;
+	}
+	
+	delete stream1;
+	delete stream2;
+	
+	DeleteFile("test.txt");
+	DeleteFile("test1.txt");
+	
 	return true;
 }
 
@@ -1067,4 +1241,14 @@ stock bool _Dynamic_CompareVectors(const float value1[3], const float value2[3])
 	if (value1[2] != value2[2])
 		return false;
 	return true;
+}
+
+stock int _Dynamic_HashFile(const char[] path)
+{
+	File stream = OpenFile(path, "r");
+	
+	
+	
+	
+	delete stream;
 }
