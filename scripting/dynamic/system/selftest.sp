@@ -436,6 +436,15 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		return false;
 	}
 	
+	// String by offset test
+	test.SetStringByOffset(offset, "strval");
+	if (test.GetStringByOffset(offset, buffer, sizeof(buffer)) && !StrEqual("strval", buffer))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x2b");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "strval");
+		return false;
+	}
+	
 	// Int test
 	int ivalue = GetRandomInt(0, 32000);
 	IntToString(ivalue, value, sizeof(value));

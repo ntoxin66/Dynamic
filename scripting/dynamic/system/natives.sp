@@ -377,10 +377,12 @@ public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 	DynamicObject dynamic = GetNativeCell(1);
 	DynamicOffset offset = GetNativeCell(2);
 	int length = GetNativeCell(4);
-	char[] value = new char[length];
-	GetNativeString(3, value, length);
 	int valuelength;
 	GetNativeStringLength(3, valuelength);
+	if (valuelength > length)
+		length = valuelength + 1; // include null terminater space
+	char[] value = new char[length];
+	GetNativeString(3, value, length);
 	return _Dynamic_SetStringByOffset(dynamic, offset, value, length, valuelength);
 }
 
