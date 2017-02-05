@@ -26,6 +26,7 @@ stock void RegisterCommands()
 {
 	RegAdminCmd("sm_dynamic_selftest", OnDynamicSelfTestCommand, ADMFLAG_RCON, "performs a Dynamic SelfTest to verify Dynamic is running properly");
 	RegAdminCmd("sm_dynamic_handles", OnDynamicHandlesCommand, ADMFLAG_RCON, "displays a Dynamic Handle usage report per plugin");
+	RegAdminCmd("sm_dynamic_collectgarbage", OnDynamicCollectGarbageCommand, ADMFLAG_RCON, "runs Dynamic's garbage collector");
 }
 
 public Action OnDynamicSelfTestCommand(int client, int args)
@@ -39,5 +40,12 @@ public Action OnDynamicHandlesCommand(int client, int args)
 {
 	PrintToConsole(client, "Dynamic is running a HandleUsage report...");
 	RequestFrame(_Dynamic_HandleUsage, (client > 0 ? GetClientUserId(client) : 0));
+	return Plugin_Handled;
+}
+
+public Action OnDynamicCollectGarbageCommand(int client, int args)
+{
+	PrintToConsole(client, "Dynamic is starting it's garbage collector...");
+	_Dynamic_CollectGarbage();
 	return Plugin_Handled;
 }
