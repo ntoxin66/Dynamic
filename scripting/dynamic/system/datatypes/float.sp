@@ -115,7 +115,7 @@ stock bool _Dynamic_SetFloatByOffset(DynamicObject dynamic, DynamicOffset offset
 	if (!dynamic.IsValid(true))
 		return false;
 	
-	Dynamic_MemberType type = _SetFloat(dynamic.Data, dynamic.Index, offset.Cell, dynamic.BlockSize, value);
+	Dynamic_MemberType type = _SetFloat(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, value);
 	_Dynamic_CallOnChangedForwardByOffset(dynamic, offset, type);
 	return true;
 }
