@@ -451,4 +451,20 @@ methodmap Dynamic
 	{
 		return Dynamic_FindByMemberValue(this, params);
 	}
+	
+	public void CloseHandleByOffset(DynamicOffset offset)
+	{
+		Handle handle = this.GetHandleByOffset(offset);
+		delete handle;
+		this.SetHandleByOffset(offset, null);
+	}
+	
+	public void CloseHandle(const char[] membername)
+	{
+		DynamicOffset offset = this.GetMemberOffset(membername);
+		if (offset == INVALID_DYNAMIC_OFFSET)
+			return;
+			
+		this.CloseHandleByOffset(offset);		
+	}
 }
