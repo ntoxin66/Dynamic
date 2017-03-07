@@ -606,6 +606,7 @@ public int Native_Dynamic_SetVectorByOffset(Handle plugin, int params)
 	DynamicObject dynamic = GetNativeCell(1);
 	DynamicOffset offset = GetNativeCell(2);
 	float value[3];
+	GetNativeArray(3, value, sizeof(value));
 	return _Dynamic_SetVectorByOffset(dynamic, offset, value);
 }
 
