@@ -307,6 +307,17 @@ stock bool _Dynamic_IntTest(int client, Dynamic test)
 	// Handle not supported - no test required
 	// Vector not supported - no test required
 	
+	// Set/Get by Offset test
+	value = GetRandomInt(0, 32000);
+	offset = test.GetMemberOffset("val");
+	test.SetIntByOffset(offset, value);
+	if (test.GetIntByOffset(offset) != value)
+	{
+		ReplyToCommand(client, "DynamicType_Int test failed: ErrorCode 0x12");
+		ReplyToCommand(client, "> %d should equal %d", test.GetIntByOffset(offset), value);
+		return false;
+	}
+	
 	return true;
 }
 
@@ -406,6 +417,17 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 	
 	// Handle not supported - no test required
 	// Vector not supported - no test required
+	
+	// Set/Get by Offset test
+	value = GetRandomFloat(0.0, 32000.0);
+	offset = test.GetMemberOffset("val");
+	test.SetFloatByOffset(offset, value);
+	if (test.GetFloatByOffset(offset) != value)
+	{
+		ReplyToCommand(client, "DynamicType_Float test failed: ErrorCode 1x12");
+		ReplyToCommand(client, "> %f should equal %f", test.GetFloatByOffset(offset), value);
+		return false;
+	}
 	
 	return true;
 }
@@ -587,6 +609,17 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		return false;
 	}
 	
+	// Set/Get by Offset test
+	offset = test.GetMemberOffset("stringval");
+	test.SetStringByOffset(offset, value);
+	test.GetStringByOffset(offset, buffer, sizeof(buffer));
+	if (!StrEqual(value, buffer))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x20");
+		ReplyToCommand(client, "> %s should equal %s", value, buffer);
+		return false;
+	}
+	
 	return true;
 }
 
@@ -657,6 +690,17 @@ stock bool _Dynamic_BoolTest(int client, Dynamic test)
 	// Dynamic not supported - no test required
 	// Handle not supported - no test required
 	// Vector not supported - no test required
+	
+	// Set/Get by Offset test
+	value = view_as<bool>(GetRandomInt(0, 1));
+	offset = test.GetMemberOffset("val");
+	test.SetBoolByOffset(offset, value);
+	if (test.GetBoolByOffset(offset) != value)
+	{
+		ReplyToCommand(client, "DynamicType_Bool test failed: ErrorCode 3x8");
+		ReplyToCommand(client, "> %f should equal %f", test.GetBoolByOffset(offset), value);
+		return false;
+	}
 	
 	return true;
 }
@@ -756,6 +800,19 @@ stock bool _Dynamic_DynamicTest(int client, Dynamic test)
 	// Handle not supported - no test required
 	// Vector not supported - no test required
 	
+	// Set/Get by Offset test
+	value = Dynamic();
+	offset = test.GetMemberOffset("val");
+	test.SetDynamicByOffset(offset, value);
+	if (test.GetDynamicByOffset(offset) != value)
+	{
+		value.Dispose();
+		ReplyToCommand(client, "DynamicType_Dynamic test failed: ErrorCode 4x11");
+		ReplyToCommand(client, "> %d should equal %d", test.GetDynamicByOffset(offset), value);
+		return false;
+	}
+	value.Dispose();
+	
 	return true;
 }
 
@@ -805,6 +862,17 @@ stock bool _Dynamic_HandleTest(int client, Dynamic test)
 	// Boolean not supported - no test required
 	// Dynamic not supported - no test required
 	// Vector not supported - no test required
+	
+	// Set/Get by Offset test
+	value = new ArrayList();
+	offset = test.GetMemberOffset("val");
+	test.SetHandleByOffset(offset, value);
+	if (test.GetHandleByOffset(offset) != value)
+	{
+		ReplyToCommand(client, "DynamicType_Handle test failed: ErrorCode 5x4");
+		ReplyToCommand(client, "> %d should equal %d", test.GetHandleByOffset(offset), value);
+		return false;
+	}
 	
 	return true;
 }
@@ -876,6 +944,17 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 	// Boolean not supported - no test required
 	// Dynamic not supported - no test required
 	// Vector not supported - no test required
+	
+	// Set/Get by Offset test
+	offset = test.GetMemberOffset("val");
+	test.SetVectorByOffset(offset, value);
+	test.GetVectorByOffset(offset, vector);
+	if (!_Dynamic_CompareVectors(vector, value))
+	{
+		ReplyToCommand(client, "DynamicType_Vector test failed: ErrorCode 6x8");
+		ReplyToCommand(client, "> {%x, %x, %x} should equal {%x, %x, %x}", value[0], value[1], value[2], vector[0], vector[1], vector[2]);
+		return false;
+	}
 	
 	return true;
 }
