@@ -66,7 +66,7 @@ methodmap DynamicObject
 		SetArrayCell(s_Collection, me, INVALID_DYNAMIC_OBJECT, Dynamic_ParentObject);
 		SetArrayCell(s_Collection, me, INVALID_DYNAMIC_OFFSET, Dynamic_ParentOffset);
 		SetArrayCell(s_Collection, me, 0, Dynamic_MemberCount);
-		SetArrayCell(s_Collection, me, plugin, Dynamic_OwnerPlugin);
+		SetArrayCell(s_Collection, me, _Dynamic_Plugins_GetIndex(plugin), Dynamic_OwnerPlugin);
 		SetArrayCell(s_Collection, me, persistent, Dynamic_Persistent);
 	}
 	
@@ -231,15 +231,23 @@ methodmap DynamicObject
 		}
 	}
 	
-	property Handle OwnerPlugin
+	property int OwnerPlugin
 	{
 		public get()
 		{
 			return GetArrayCell(s_Collection, me, Dynamic_OwnerPlugin);
 		}
-		public set(Handle value)
+		public set(int value)
 		{
-			SetArrayCell(s_Collection, me, value, Dynamic_Persistent);
+			SetArrayCell(s_Collection, me, value, Dynamic_OwnerPlugin);
+		}
+	}
+	
+	property Handle OwnerPluginHandle
+	{
+		public get()
+		{
+			return _Dynamic_Plugins_GetHandleFromIndex(GetArrayCell(s_Collection, me, Dynamic_OwnerPlugin));
 		}
 	}
 	

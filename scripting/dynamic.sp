@@ -30,6 +30,7 @@ Handle s_FreeIndicies = null;
 StringMap s_tObjectNames = null;
 Handle g_sRegex_Vector = null;
 int g_iDynamic_MemberLookup_Offset;
+ArrayList g_aPlugins = null;
 
 // Dynamics internal methodmaps
 #include "dynamic/system/methodmaps/dynamicobject.sp"
@@ -50,6 +51,7 @@ int g_iDynamic_MemberLookup_Offset;
 #include "dynamic/system/hooks.sp"
 #include "dynamic/system/keyvalues.sp"
 #include "dynamic/system/natives.sp"
+#include "dynamic/system/plugins.sp"
 #include "dynamic/system/selftest.sp"
 
 public Plugin myinfo =
@@ -81,6 +83,7 @@ public void OnPluginStart()
 	s_FreeIndicies = CreateStack();
 	s_tObjectNames = new StringMap();
 	g_iDynamic_MemberLookup_Offset = ByteCountToCells(DYNAMIC_MEMBERNAME_MAXLEN)+1;
+	g_aPlugins = CreateArray(2);
 	
 	// Reserve first object index for global settings
 	DynamicObject settings = DynamicObject();
@@ -243,7 +246,14 @@ stock void _Dynamic_CollectGarbage()
 		if (dynamic.Persistent)
 			continue;
 			
-		switch(GetPluginStatus(dynamic.OwnerPlugin))
+		// Validate owner plugin is still loaded
+		if (!_Dynamic_Plugins_IsLoaded(dynamic.OwnerPlugin))
+		{
+			dynamic.Dispose(false);
+			continue;
+		}
+			
+		switch(GetPluginStatus(dynamic.OwnerPluginHandle))
 		{
 			case Plugin_Error, Plugin_Failed:
 			{
@@ -269,7 +279,7 @@ stock Handle _Dynamic_GetOwnerPlugin(DynamicObject dynamic)
 	if (!dynamic.IsValid(true))
 		return null;
 	
-	return dynamic.OwnerPlugin;
+	return dynamic.OwnerPluginHandle;
 }
 
 stock bool _Dynamic_SetName(DynamicObject dynamic, const char[] objectname, bool replace)
