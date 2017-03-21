@@ -65,18 +65,6 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	RegPluginLibrary("dynamic");
-	CreateNatives();
-	return APLRes_Success;
-}
-
-public void OnLibraryRemoved(const char[] name)
-{
-	_Dynamic_CollectGarbage();
-}
-
-public void OnPluginStart()
-{
 	// Initialise static plugin data
 	s_Collection = CreateArray(Dynamic_Field_Count);
 	s_CollectionSize = 0;
@@ -104,8 +92,20 @@ public void OnPluginStart()
 			SetFailState("Serious error encountered assigning player settings indicies!");
 	}
 	
+	// Create natives
+	CreateNatives();
+	
 	// Register commands
 	RegisterCommands();
+	
+	// Register library
+	RegPluginLibrary("dynamic");
+	return APLRes_Success;
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+	_Dynamic_CollectGarbage();
 }
 
 public void OnPluginEnd()
