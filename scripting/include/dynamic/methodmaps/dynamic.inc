@@ -21,15 +21,17 @@ methodmap Dynamic
 {
 #if defined dynamic_persistent
 	public Dynamic(int blocksize=64, int startsize=0, bool persistent=true)
-	{
-		return Dynamic_Initialise(blocksize, startsize, persistent);
-	}
 #else
 	public Dynamic(int blocksize=64, int startsize=0, bool persistent=false)
 	{
 		return Dynamic_Initialise(blocksize, startsize, persistent);
 	}
 #endif
+	
+	public static bool IsLoaded()
+	{
+		return GetFeatureStatus(FeatureType_Native, "Native_Dynamic_Initialise") == FeatureStatus_Available;
+	}
 	
 	property int IsValid
 	{
