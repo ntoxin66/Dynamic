@@ -324,10 +324,50 @@ stock bool _Dynamic_WriteConfig(DynamicObject dynamic, const char[] path)
 	{
 		memberoffset = _Dynamic_GetMemberOffsetByIndex(dynamic, i);
 		_Dynamic_GetMemberNameByIndex(dynamic, i, membername, sizeof(membername));
-		length = _Dynamic_GetStringLengthByOffset(dynamic, memberoffset);
-		char[] membervalue = new char[length];
-		_Dynamic_GetStringByOffset(dynamic, memberoffset, membervalue, length);
-		stream.WriteLine("%s\t\"%s\"", membername, membervalue);
+		
+		switch (_Dynamic_GetMemberTypeByOffset(dynamic, memberoffset))
+		{
+			case DynamicType_Int:
+			{
+				int value = _Dynamic_GetIntByOffset(dynamic, memberoffset);
+				stream.WriteLine("%s\t\"%d\"", membername, value);
+			}
+			case DynamicType_Bool:
+			{
+				bool value = _Dynamic_GetBoolByOffset(dynamic, memberoffset);
+				stream.WriteLine("%s\t\"%d\"", membername, value);
+			}
+			case DynamicType_Float:
+			{
+				float value = _Dynamic_GetFloatByOffset(dynamic, memberoffset);
+				stream.WriteLine("%s\t\"%f\"", membername, value);
+			}
+			case DynamicType_String:
+			{
+				length = _Dynamic_GetStringLengthByOffset(dynamic, memberoffset);
+				char[] value = new char[length];
+				_Dynamic_GetStringByOffset(dynamic, memberoffset, value, length);
+				stream.WriteLine("%s\t\"%s\"", membername, value);
+			}
+			case DynamicType_Object:
+			{
+				LogError("Unable to serialise type Dynamic in flat config!");
+			}
+			case DynamicType_Handle:
+			{
+				LogError("Unable to serialise type Handle in flat config!");
+			}
+			case DynamicType_Vector:
+			{
+				float value[3];
+				_Dynamic_GetVectorByOffset(dynamic, memberoffset, value);
+				stream.WriteLine("%s\t\"{%f, %f, %f}\"", membername, value[0], value[1], value[2]);
+			}
+			default:
+			{
+				LogError("Unable to serialise type Unknown in flat config!");
+			}
+		}
 	}
 	
 	delete stream;

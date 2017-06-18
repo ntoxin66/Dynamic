@@ -59,7 +59,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.26",
+	version = "0.0.27",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
