@@ -112,9 +112,9 @@ methodmap DynamicObject
 		}
 	}
 	
-	public bool IsValid(bool throwerror=false)
+	public bool IsValid(bool throwerror=false, bool fromnative=true)
 	{
-		return _Dynamic_IsValid(me, throwerror);
+		return _Dynamic_IsValid(me, throwerror, fromnative);
 	}
 	
 	public bool GetName(char[] buffer, int length)

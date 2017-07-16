@@ -113,7 +113,7 @@ public void OnPluginEnd()
 	// Dispose of all objects in the collection pool
 	while (s_CollectionSize > 0)
 	{
-		_Dynamic_Dispose(view_as<DynamicObject>(s_CollectionSize - 1), false);
+		_Dynamic_Dispose(view_as<DynamicObject>(s_CollectionSize - 1), false, _, _, false);
 	}
 }
 
@@ -154,7 +154,7 @@ stock int _Dynamic_Initialise(Handle plugin, int blocksize=64, int startsize=0, 
 	return member.Index;
 }
 
-stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reuse=false, int startsize=0)
+stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reuse=false, int startsize=0, bool fromnative=true)
 {
 	if (!dynamic.IsValid(true))
 		return false;
@@ -347,20 +347,30 @@ stock bool _Dynamic_SetPersistence(DynamicObject dynamic, bool value)
 	return true;
 }
 
-stock bool _Dynamic_IsValid(int index, bool throwerror=false)
+stock bool _Dynamic_IsValid(int index, bool throwerror=false, bool fromnative=true)
 {	
 	// Check if object index is valid
 	if (index < 0 || index >= s_CollectionSize)
 	{
 		if (throwerror)
-			ThrowNativeError(SP_ERROR_NATIVE, "Unable to access dynamic handle %d", index);
+		{
+			if (fromnative)
+				ThrowNativeError(SP_ERROR_NATIVE, "Unable to access dynamic handle %d", index);
+			else
+				ThrowError("Unable to access dynamic handle %d", index);
+		}
 		return false;
 	}
 		
 	if (s_Collection.Get(index, Dynamic_Index) == -1)
 	{
 		if (throwerror)
-			ThrowNativeError(SP_ERROR_NATIVE, "Tried to access disposed dynamic handle %d", index);
+		{
+			if (fromnative)
+				ThrowNativeError(SP_ERROR_NATIVE, "Tried to access disposed dynamic handle %d", index);
+			else
+				ThrowError("Tried to access disposed dynamic handle %d", index);
+		}
 		return false;
 	}
 	
