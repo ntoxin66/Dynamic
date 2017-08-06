@@ -37,10 +37,10 @@ stock Function _GetFunction(ArrayList data, int position, int offset, int blocks
 stock Dynamic_MemberType _SetFunction(ArrayList data, int position, int offset, int blocksize, Function value, const char[] membername="")
 {
 	Dynamic_MemberType type = _Dynamic_GetMemberDataType(data, position, offset, blocksize);
-	if (type == DynamicType_Handle)
+	if (type == DynamicType_Function)
 	{
 		_Dynamic_SetMemberDataFunction(data, position, offset, blocksize, value);
-		return DynamicType_Handle;
+		return DynamicType_Function;
 	}
 	else
 	{
