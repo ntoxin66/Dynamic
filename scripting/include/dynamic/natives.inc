@@ -122,6 +122,13 @@ native bool Dynamic_SetVectorByOffset(Dynamic obj, DynamicOffset offset, const f
 native int Dynamic_PushVector(Dynamic obj, const float value[3], const char[] name="");
 native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float value[3]);
 
+native Function Dynamic_GetFunction(Dynamic obj, const char[] membername, Function &value);
+native DynamicOffset Dynamic_SetFunction(Dynamic obj, const char[] membername, Function value);
+native Function Dynamic_GetFunctionByOffset(Dynamic obj, DynamicOffset offset);
+native bool Dynamic_SetFunctionByOffset(Dynamic obj, DynamicOffset offset, Function value);
+native int Dynamic_PushFunction(Dynamic obj, Function value, const char[] name="");
+native Function Dynamic_GetFunctionByIndex(Dynamic obj, int index);
+
 #if !defined REQUIRE_PLUGIN
 public __pl_dynamic_SetNTVOptional()
 {
@@ -186,6 +193,12 @@ public __pl_dynamic_SetNTVOptional()
 	MarkNativeAsOptional("Dynamic_SetVectorByOffset");
 	MarkNativeAsOptional("Dynamic_PushVector");
 	MarkNativeAsOptional("Dynamic_GetVectorByIndex");
+	MarkNativeAsOptional("Dynamic_GetFunction");
+	MarkNativeAsOptional("Dynamic_SetFunction");
+	MarkNativeAsOptional("Dynamic_GetFunctionByOffset");
+	MarkNativeAsOptional("Dynamic_SetFunctionByOffset");
+	MarkNativeAsOptional("Dynamic_PushFunction");
+	MarkNativeAsOptional("Dynamic_GetFunctionByIndex");
 	MarkNativeAsOptional("Dynamic_GetCollectionSize");
 	MarkNativeAsOptional("Dynamic_GetMemberCount");
 	MarkNativeAsOptional("Dynamic_HookChanges");

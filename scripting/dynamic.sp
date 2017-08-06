@@ -43,6 +43,7 @@ ArrayList g_aPlugins = null;
 #include "dynamic/system/datatypes/int.sp"
 #include "dynamic/system/datatypes/string.sp"
 #include "dynamic/system/datatypes/vector.sp"
+#include "dynamic/system/datatypes/function.sp"
 
 // Other features
 #include "dynamic/system/commands.sp"
@@ -59,7 +60,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.27",
+	version = "0.0.28",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 

@@ -111,6 +111,15 @@ public void _Dynamic_SelfTest(any userid)
 	}
 	ReplyToCommand(client, "> DynamicType_Vector test completed");
 	
+	// DynamicType_Function Test
+	test.Reset();
+	if (!_DynamicType_FunctionTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	ReplyToCommand(client, "> DynamicType_Function test completed");
+	
 	// Dynamic.GetMemberNameByIndex(Dynamic params) Test
 	test.Reset();
 	if (!_Dynamic_GetMemberNameByIndexTest(client, test))
@@ -956,6 +965,12 @@ stock bool _Dynamic_VectorTest(int client, Dynamic test)
 		return false;
 	}
 	
+	return true;
+}
+
+stock bool _DynamicType_FunctionTest(int client, Dynamic test)
+{
+	ReplyToCommand(client, "> _DynamicType_FunctionTest not yet implemented!!!!!!!");
 	return true;
 }
 

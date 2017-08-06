@@ -38,7 +38,8 @@ enum Dynamic_MemberType
 	DynamicType_Bool = 4,
 	DynamicType_Handle = 5,
 	DynamicType_Vector = 6,
-	DynamicType_Unknown = 7
+	DynamicType_Function = 7,
+	DynamicType_Unknown = 8
 }
 
 enum Dynamic_Operator
