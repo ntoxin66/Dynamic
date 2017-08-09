@@ -122,7 +122,7 @@ native bool Dynamic_SetVectorByOffset(Dynamic obj, DynamicOffset offset, const f
 native int Dynamic_PushVector(Dynamic obj, const float value[3], const char[] name="");
 native bool Dynamic_GetVectorByIndex(Dynamic obj, int index, float value[3]);
 
-native Function Dynamic_GetFunction(Dynamic obj, const char[] membername, Function &value);
+native Function Dynamic_GetFunction(Dynamic obj, const char[] membername);
 native DynamicOffset Dynamic_SetFunction(Dynamic obj, const char[] membername, Function value);
 native Function Dynamic_GetFunctionByOffset(Dynamic obj, DynamicOffset offset);
 native bool Dynamic_SetFunctionByOffset(Dynamic obj, DynamicOffset offset, Function value);

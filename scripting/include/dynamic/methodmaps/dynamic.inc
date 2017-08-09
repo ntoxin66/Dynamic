@@ -365,9 +365,9 @@ methodmap Dynamic
 		return Dynamic_GetVectorByIndex(this, index, value);
 	}
 	
-	public Function GetFunction(const char[] membername, Function &value)
+	public Function GetFunction(const char[] membername)
 	{
-		return Dynamic_GetFunction(this, membername, value);
+		return Dynamic_GetFunction(this, membername);
 	}
 	
 	public DynamicOffset SetFunction(const char[] membername, Function value)
