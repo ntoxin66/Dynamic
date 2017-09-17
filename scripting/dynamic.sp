@@ -60,7 +60,7 @@ public Plugin myinfo =
 	name = "Dynamic",
 	author = "Neuro Toxin",
 	description = "Shared Dynamic Objects for Sourcepawn",
-	version = "0.0.29",
+	version = "0.0.30",
 	url = "https://forums.alliedmods.net/showthread.php?t=270519"
 }
 
@@ -157,7 +157,7 @@ stock int _Dynamic_Initialise(Handle plugin, int blocksize=64, int startsize=0, 
 
 stock bool _Dynamic_Dispose(DynamicObject dynamic, bool disposemembers, bool reuse=false, int startsize=0, bool fromnative=true)
 {
-	if (!dynamic.IsValid(true))
+	if (!_Dynamic_IsValid(dynamic.Index, false, fromnative))
 		return false;
 	
 	int blocksize = dynamic.BlockSize;
