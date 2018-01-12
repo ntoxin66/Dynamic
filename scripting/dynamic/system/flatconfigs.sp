@@ -193,7 +193,7 @@ stock void AddConfigSetting(DynamicObject dynamic, ArrayList name, int namelengt
 stock Dynamic_MemberType CreateMemberFromString(DynamicObject dynamic, const char[] membername, const char[] value, int maxlength)
 {
 	bool canbeint = true;
-	bool canbefloat = true;
+	bool canbefloat = false;
 	int byte;
 	int val;
 	
@@ -202,13 +202,25 @@ stock Dynamic_MemberType CreateMemberFromString(DynamicObject dynamic, const cha
 		// 48 = `0`, 57 = `9`, 46 = `.`, 45 = `-`
 		if (byte < 48 || byte > 57)
 		{
-			if (byte == 45 && i == 0)
+			// allow negative
+			if (i == 0 && byte == 45)
 				continue;
 			
+			// cant be an int anymore
 			canbeint = false;
 			
-			if (byte != 46)
-				canbefloat = false;
+			// allow floats
+			if (byte == 46)
+			{
+				// dont allow multiple periods
+				if (canbefloat)
+				{
+					canbefloat = false;
+					break;
+				}
+				canbeint = false;
+				canbefloat = true;
+			}
 		}
 		
 		if (!canbeint && !canbefloat)
@@ -219,15 +231,15 @@ stock Dynamic_MemberType CreateMemberFromString(DynamicObject dynamic, const cha
 	{
 		// Longs need to be stored as strings
 		val = StringToInt(value);
-		if (val == -1 && StrEqual(value, "-1"))
-		{
-			_Dynamic_SetInt(dynamic, membername, val);
-			return DynamicType_Int;
-		}
-		else
+		if (val == -1 && !StrEqual(value, "-1"))
 		{
 			_Dynamic_SetString(dynamic, membername, value, maxlength, maxlength);
 			return DynamicType_String;
+		}
+		else
+		{
+			_Dynamic_SetInt(dynamic, membername, val);
+			return DynamicType_Int;
 		}
 	}
 	else if (canbefloat)
