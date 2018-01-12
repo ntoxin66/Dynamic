@@ -146,6 +146,16 @@ stock bool _Dynamic_ReadConfig(DynamicObject dynamic, const char[] path, bool us
 					continue;
 				}
 				
+				// skip double forward slash comments
+				if (byte == 47 && lastchar == 47)
+				{
+					skippingcomment = true;
+					settingnamearray.Clear();
+					settingnamelength = 0;
+					settingvaluelength = 0;
+					continue;
+				}
+				
 				lastchar = byte;
 				if (readingname)
 				{
