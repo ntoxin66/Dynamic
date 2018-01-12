@@ -36,12 +36,14 @@ stock bool _GetBool(ArrayList data, int position, int offset, int blocksize, boo
 		int length = _Dynamic_GetMemberStringLength(data, position, offset, blocksize);
 		char[] buffer = new char[length];
 		_Dynamic_GetMemberDataString(data, position, offset, blocksize, buffer, length);
-		if (StrEqual(buffer, "True"))
-			return true;
-		if (StrEqual(buffer, "true"))
-			return true;
+		if (StrEqual(buffer, "False"))
+			return false;
+		else if (StrEqual(buffer, "false"))
+			return false;
+		else if (StrEqual(buffer, "0"))
+			return false;
 		
-		return false;
+		return true;
 	}
 	else if (type == DynamicType_Dynamic)
 	{
