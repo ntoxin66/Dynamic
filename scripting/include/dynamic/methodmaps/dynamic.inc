@@ -23,10 +23,10 @@ methodmap Dynamic
 	public Dynamic(int blocksize=64, int startsize=0, bool persistent=true)
 #else
 	public Dynamic(int blocksize=64, int startsize=0, bool persistent=false)
+#endif
 	{
 		return Dynamic_Initialise(blocksize, startsize, persistent);
 	}
-#endif
 	
 	public static bool IsLoaded()
 	{
