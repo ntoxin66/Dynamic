@@ -232,8 +232,6 @@ stock bool _Dynamic_CompareStringByOffset(DynamicObject dynamic, DynamicOffset o
 	int length = _Dynamic_GetStringLengthByOffset(dynamic, offset);
 	char[] buffer = new char[length];
 	_Dynamic_GetStringByOffset(dynamic, offset, buffer, length);
-	
-	PrintToServer("> Compare '%s' == '%s'", value, buffer);
 	return StrEqual(value, buffer, casesensitive);	
 }
 
