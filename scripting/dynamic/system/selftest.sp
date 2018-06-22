@@ -147,6 +147,15 @@ public void _Dynamic_SelfTest(any userid)
 	}
 	ReplyToCommand(client, "> Dynamic_KeyValues test completed");
 	
+	// Dynamic_FlatConfigTest
+	test.Reset();
+	if (!_Dynamic_FlatConfigTest(client, test))
+	{
+		test.Dispose();
+		return;
+	}
+	ReplyToCommand(client, "> Dynamic_FlatConfigTest test completed");
+	
 	test.Dispose();
 }
 
@@ -1337,12 +1346,94 @@ stock bool _Dynamic_CompareVectors(const float value1[3], const float value2[3])
 	return true;
 }
 
-stock int _Dynamic_HashFile(const char[] path)
+stock bool _Dynamic_FlatConfigTest(int client, Dynamic test)
 {
-	File stream = OpenFile(path, "r");
+	test.SetBool("boolvalue", true);
+	test.SetInt("intvalue", 666);
+	test.SetFloat("floatvalue", 666.666666);
+	test.SetString("stringvalue", "some string", 64);
 	
+	test.WriteConfig("flatconfigtest.txt");
+	test.Reset();
+	test.ReadConfig("flatconfigtest.txt");
 	
+	if (!test.GetBool("boolvalue"))
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x1");
+		ReplyToCommand(client, "> false should equal true");
+		return false;
+	}
 	
+	if (test.GetInt("intvalue") != 666)
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x2");
+		ReplyToCommand(client, "> %d should equal 666", test.GetInt("intvalue"));
+		return false;
+	}
 	
-	delete stream;
+	if (test.GetFloat("floatvalue") != 666.666666)
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x3");
+		ReplyToCommand(client, "> %f should equal 666.666666", test.GetFloat("floatvalue"));
+		return false;
+	}
+	
+	if (!test.CompareString("stringvalue", "some string"))
+	{
+		char buffer[64];
+		test.GetString("stringvalue", buffer, sizeof(buffer));
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x4");
+		ReplyToCommand(client, "> \"%s\" should equal \"some string\"", buffer);
+		return false;
+	}
+	
+	test.Reset();
+	test.SetBool("boolvalue", false);
+	test.SetInt("intvalue", 555);
+	test.SetFloat("floatvalue", 555.555555);
+	test.SetString("stringvalue", "another string", 64);
+	test.SetInt("newintthatshouldntdissapear", 444);
+	test.ReadConfig("flatconfigtest.txt");
+	
+	if (!test.GetBool("boolvalue"))
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x5");
+		ReplyToCommand(client, "> false should equal true");
+		return false;
+	}
+	
+	if (test.GetInt("intvalue") != 666)
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x6");
+		ReplyToCommand(client, "> %d should equal 666", test.GetInt("intvalue"));
+		return false;
+	}
+	
+	if (test.GetFloat("floatvalue") != 666.666666)
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x7");
+		ReplyToCommand(client, "> %f should equal 666.666666", test.GetFloat("floatvalue"));
+		return false;
+	}
+	
+	if (!test.CompareString("stringvalue", "some string"))
+	{
+		char buffer[64];
+		test.GetString("stringvalue", buffer, sizeof(buffer));
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x8");
+		ReplyToCommand(client, "> \"%s\" should equal \"some string\"", buffer);
+		return false;
+	}
+	
+	if (test.GetInt("newintthatshouldntdissapear") != 444)
+	{
+		ReplyToCommand(client, "Dynamic_FlatConfigTest test failed: ErrorCode 10x9");
+		ReplyToCommand(client, "> %d should equal 444", test.GetInt("newintthatshouldntdissapear"));
+		return false;
+	}
+	
+	test.Reset();
+	
+	DeleteFile("flatconfigtest.txt");
+	return true;
 }
