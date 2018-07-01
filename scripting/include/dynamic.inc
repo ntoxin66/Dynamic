@@ -62,6 +62,7 @@ typeset Dynamic_HookType
 #include <dynamic/methodmaps/dynamic>
 #include <dynamic/methodmaps/collection>
 #include <dynamic/methodmaps/basic>
+#include <dynamic/methodmaps/dbscheme>
 
 public SharedPlugin __pl_dynamic = 
 {
