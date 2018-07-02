@@ -1444,27 +1444,6 @@ stock bool _Dynamic_DBSchemeTest(int client, Dynamic test)
 {
 	PreparedQuery query = PreparedQuery();
 	query.PrepareQuery("UPDATE `table` SET `name_test`=?, `email2`=?, `password`=? WHERE `ID`=?");
-	
-	// expected match results
-	/*
-		Match 1
-		Full match	19-32	``name_test`=?`
-		Group 1.	20-29	`name_test`
-		Group 2.	31-32	`?`
-		Match 2
-		Full match	34-44	``email2`=?`
-		Group 1.	35-41	`email2`
-		Group 2.	43-44	`?`
-		Match 3
-		Full match	46-58	``password`=?`
-		Group 1.	47-55	`password`
-		Group 2.	57-58	`?`
-		Match 4
-		Full match	65-71	``ID`=?`
-		Group 1.	66-68	`ID`
-		Group 2.	70-71	`?`
-	*/
-	
-	
+	query.Dispose();
 	return true;
 }
