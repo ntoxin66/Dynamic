@@ -17,8 +17,8 @@
  *
  */
 #define dynamic_use_local_methodmap 1
-#include <dynamic>
 #include <regex>
+#include <dynamic>
 #undef INVALID_DYNAMIC_OBJECT
 #define INVALID_DYNAMIC_OBJECT			view_as<DynamicObject>(-1)
 #pragma newdecls required
@@ -54,6 +54,7 @@ ArrayList g_aPlugins = null;
 #include "dynamic/system/natives.sp"
 #include "dynamic/system/plugins.sp"
 #include "dynamic/system/selftest.sp"
+#include "dynamic/system/preparedquery.sp"
 
 public Plugin myinfo =
 {
