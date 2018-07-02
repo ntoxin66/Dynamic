@@ -21,42 +21,20 @@
 #endif
 #define _dynamic_class_dbscheme_
 
+public void DBScheme_Objects_MemberChanged(Dynamic obj, DynamicOffset offset, const char[] member, Dynamic_MemberType type)
+{
+	obj.SetBool("DBScheme_UpdateRequired", true);
+}
+
 methodmap DBScheme < Dynamic
 {
-	public DBScheme()
+	public DBScheme(const char[] updatequery, const char[] deletequery)
 	{
 		Dynamic myclass = Dynamic(64, 0);
-		myclass.SetString("Query", "", 5120);
-		myclass.SetObject("Objects", view_as<Dynamic>(INVALID_DYNAMIC_OBJECT));
+		myclass.SetDynamic("Objects", Dynamic());
+		myclass.SetString("UpdateQuery", updatequery);
+		myclass.SetString("DeleteQuery", deletequery);
 		return view_as<DBScheme>(myclass);
-	}
-	
-	public bool GetQuery(char[] buffer, int length)
-	{
-		static DynamicOffset offset = INVALID_DYNAMIC_OFFSET;
-		if (offset == INVALID_DYNAMIC_OFFSET)
-		{
-			offset = this.GetMemberOffset("Query");
-			if (offset == INVALID_DYNAMIC_OFFSET)
-				SetFailState("A serious error occured in Dynamic!");
-		}
-		this.GetStringByOffset(offset, buffer, length);
-		return true;
-	}
-	
-	public void SetQuery(const char[] buffer)
-	{
-		static DynamicOffset offset = INVALID_DYNAMIC_OFFSET;
-		if (offset == INVALID_DYNAMIC_OFFSET)
-		{
-			offset = this.GetMemberOffset("Query");
-			if (offset == INVALID_DYNAMIC_OFFSET)
-			{
-				offset = this.SetString("Query", buffer);
-				return;
-			}
-		}
-		this.SetStringByOffset(offset, buffer);
 	}
 	
 	property Dynamic Objects
@@ -70,77 +48,96 @@ methodmap DBScheme < Dynamic
 				if (offset == INVALID_DYNAMIC_OFFSET)
 					SetFailState("A serious error occured in Dynamic!");
 			}
-			return this.GetObjectByOffset(offset);
+			return this.GetDynamicByOffset(offset);
 		}
-		public set(Dynamic value)
+	}
+	
+	public bool GetUpdateQuery(char[] buffer, int length)
+	{
+		static DynamicOffset offset = INVALID_DYNAMIC_OFFSET;
+		if (offset == INVALID_DYNAMIC_OFFSET)
 		{
-			static DynamicOffset offset = INVALID_DYNAMIC_OFFSET;
+			offset = this.GetMemberOffset("UpdateQuery");
 			if (offset == INVALID_DYNAMIC_OFFSET)
-			{
-				offset = this.GetMemberOffset("Objects");
-				if (offset == INVALID_DYNAMIC_OFFSET)
-				{
-					offset = this.SetObject("Objects", value);
-					return;
-				}
-			}
-			this.SetObjectByOffset(offset, value);
+				SetFailState("A serious error occured in Dynamic!");
 		}
+		this.GetStringByOffset(offset, buffer, length);
+		return true;
 	}
 	
-	public bool AddObject(Dynamic object)
+	public bool GetDeleteQuery(char[] buffer, int length)
 	{
-		// Get Objects from class
-		
-		// Loop members in Objects
+		static DynamicOffset offset = INVALID_DYNAMIC_OFFSET;
+		if (offset == INVALID_DYNAMIC_OFFSET)
 		{
-			// Make sure the member type is Dynamic incase script adds other members
-			
-			// If object parameter matches objects member in loop
-			{
-				// Exit function as this is a duplicate entry
-				// Return false
-			}
-			
-			// Check if the member is not a valid dynamic object (!instance.IsValid)
-			{
-				// Store the free index and resuse it to stop leaking
-			}
+			offset = this.GetMemberOffset("DeleteQuery");
+			if (offset == INVALID_DYNAMIC_OFFSET)
+				SetFailState("A serious error occured in Dynamic!");
 		}
-		
-		// Add DBScheme_UpdateRequired member to object
-		// Note: Hook Changes callback will set this to true to flag an update is required
-		
-		// Hook changes; instance.HookChanges(DBScheme_Objects_MemberChanged);
-		
-		// Add object to Objects list (use .PushObject as we dont have member names)
-		// Note reuse an index if available to stop leaking
-		
-		// Return true
+		this.GetStringByOffset(offset, buffer, length);
+		return true;
 	}
 	
-	public bool RemoveObject(Dynamic object)
+	public bool AddObject(Dynamic obj)
 	{
-		// Get Objects from class
+		Dynamic objects = this.Objects;
+		int count = obj.MemberCount;
+		DynamicOffset offset;
+		Dynamic member;
+		int freeindex = -1;
 		
-		// Loop members in Objects
+		for (int i = 0; i < count; i++)
 		{
-			// Make sure the member type is Dynamic incase script adds other members
+			offset = objects.GetMemberOffsetByIndex(i);
 			
-			// Continue if object parameter doesnt match objects member in loop
+			if (obj.GetMemberType(offset) != DynamicType_Dynamic)
+				continue;
 			
-			// Set value to INVALID_DYNAMIC_OBJECT in objects loop
-			// Note: This stops leaking as .IsValid will return false
-			
-			// Remove hooks
-			
-			// Return true
+			member = objects.GetDynamicByOffset(offset);
+			if (member == obj)
+				return false;
+				
+			if (!member.IsValid && freeindex == -1)
+				freeindex = i;
 		}
 		
-		// Return false
+		obj.SetBool("DBScheme_UpdateRequired", false);
+		obj.HookChanges(DBScheme_Objects_MemberChanged);
+		
+		if (freeindex == -1)
+			objects.SetDynamicByIndex(freeindex, obj);
+		else
+			objects.PushDynamic(obj);
+			
+		return true;
 	}
 	
-	public bool BeginUpdateObject(Dynamic object, SQLQueryCallback callback)
+	public bool RemoveObject(Dynamic obj)
+	{
+		Dynamic objects = this.Objects;
+		int count = obj.MemberCount;
+		DynamicOffset offset;
+		Dynamic member;
+		
+		for (int i = 0; i < count; i++)
+		{
+			offset = objects.GetMemberOffsetByIndex(i);
+			
+			if (obj.GetMemberType(offset) != DynamicType_Dynamic)
+				continue;
+			
+			member = objects.GetDynamicByOffset(offset);
+			if (member != obj)
+				continue;
+				
+			objects.SetDynamicByIndex(i, INVALID_DYNAMIC_OBJECT);
+			member.UnHookChanges(DBScheme_Objects_MemberChanged);
+			return true;
+		}
+		return false;
+	}
+	
+	public bool BeginUpdateObject(Dynamic obj, SQLQueryCallback callback)
 	{
 		// Can probably parse a database name from the database.cfg file
 		
@@ -149,23 +146,25 @@ methodmap DBScheme < Dynamic
 		// Create buffer string to send to db query
 		
 		// Loop object members
-		{
+		
 			// Replace all instances of `membername`=? with `membername`=sql escaped value
 			// Note: We need to check every type to update ? properly
 			//			Eg: String should be in ''
 			//				> String values need to be escaped
 			//				Int/Float should not be in
 			//				Bool needs to be converted to 1 or 0
-		}
+		
 		
 		// Set the DBScheme_UpdateRequired member to false as we are about to send the query to update it
 		
 		// Send the query to the database engine
 		// Note: Parse the callback parameter through
+		return false;
+	}
+	
+	public bool BeginDeleteObject(Dynamic obj, SQLQueryCallback callback)
+	{
+		return false;
 	}
 }
 
-static void DBScheme_Objects_MemberChanged(Dynamic obj, DynamicOffset offset, const char[] member, Dynamic_MemberType type)
-{
-	// Set the DBScheme_UpdateRequired member to true so the DBScheme methodmap knows to .BeginUpdateObject this member
-}
