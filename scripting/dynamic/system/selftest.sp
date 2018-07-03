@@ -616,16 +616,18 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	}
 	
 	// Test string length returns valid length
-	if (test.GetStringLength("stringval") != 17) // Length expands by one to ensure trailing EOS is added
+	test.Reset(true, 64);
+	test.SetString("stringval", "123456789");
+	if (test.GetStringLength("stringval") != 10) // Length expands by one to ensure trailing EOS is added
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x18");
-		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("stringval"), 16);
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("stringval"), 10);
 		return false;
 	}
-	if (test.GetStringLengthByOffset(offset) != 17) // Length expands by one to ensure trailing EOS is added
+	if (test.GetStringLengthByOffset(offset) != 10) // Length expands by one to ensure trailing EOS is added
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x19");
-		ReplyToCommand(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 16);
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 10);
 		return false;
 	}
 	
@@ -1442,17 +1444,16 @@ stock bool _Dynamic_FlatConfigTest(int client, Dynamic test)
 
 stock bool _Dynamic_DBSchemeTest(int client, Dynamic test)
 {
-	PreparedQuery query = PreparedQuery();
-	// `stringtest1`=\"actual string value with \\\" and `\", `stringtest2`='actual value with \\\' and `', 
-	query.CompileQuery("UPDATE `table` SET `stringvalue`=?, `intvalue`=?, `floatvalue`=?, `boolvalue`=? WHERE `ID`=?");
-	
 	test.SetString("stringvalue", "a string value");
 	test.SetInt("intvalue", 666);
 	test.SetFloat("floatvalue", 666.666666666);
 	test.SetBool("boolvalue", true);
 	test.SetString("ID", "STEAMID:XXXXXXXXXXX");
 	
+	PreparedQuery query = PreparedQuery();
+	query.CompileQuery("UPDATE `table` SET `stringvalue`=?, `intvalue`=?, `floatvalue`=?, `boolvalue`=? WHERE `ID`=?");
 	query.SendQuery(test, "default");
 	query.Dispose();
+	
 	return true;
 }
