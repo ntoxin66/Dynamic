@@ -488,6 +488,16 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		return false;
 	}
 	
+	int dlength = test.GetStringLengthByOffset(offset)+1;
+	char[] dbuffer = new char[dlength];
+	test.GetStringByOffset(offset, dbuffer, dlength);
+	if (!StrEqual(dbuffer, "1234567890"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode c2x2");
+		ReplyToCommand(client, "> '%s' should equal '%s' (dlength=%d)", dbuffer, "1234567890", dlength);
+		return false;
+	}
+	
 	test.SetString("string", "12345678901");
 	if (strlen("1234567890") != test.GetStringLength("string"))
 	{
