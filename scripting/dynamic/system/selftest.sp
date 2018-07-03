@@ -1336,7 +1336,7 @@ stock bool _Dynamic_KeyValuesTest(int client, Dynamic test)
 	
 	return true;
 }
-
+ 
 stock bool _Dynamic_CompareVectors(const float value1[3], const float value2[3])
 {
 	if (value1[0] != value2[0])
@@ -1443,7 +1443,16 @@ stock bool _Dynamic_FlatConfigTest(int client, Dynamic test)
 stock bool _Dynamic_DBSchemeTest(int client, Dynamic test)
 {
 	PreparedQuery query = PreparedQuery();
-	query.PrepareQuery("UPDATE `table` SET `name_test`=?, `email2`=?, `password`=? WHERE `ID`=?");
+	// `stringtest1`=\"actual string value with \\\" and `\", `stringtest2`='actual value with \\\' and `', 
+	query.CompileQuery("UPDATE `table` SET `stringvalue`=?, `intvalue`=?, `floatvalue`=?, `boolvalue`=? WHERE `ID`=?");
+	
+	test.SetString("stringvalue", "a string value");
+	test.SetInt("intvalue", 666);
+	test.SetFloat("floatvalue", 666.666666666);
+	test.SetBool("boolvalue", true);
+	test.SetString("ID", "STEAMID:XXXXXXXXXXX");
+	
+	query.SendQuery(test, "default");
 	query.Dispose();
 	return true;
 }
