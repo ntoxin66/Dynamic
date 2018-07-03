@@ -31,11 +31,11 @@ methodmap PreparedQuery < Dynamic
 	
 	public bool CompileQuery(const char[] query)
 	{
-		_Dynamic_PreparedQuery_CompileQuery(query, this);
+		return _Dynamic_PreparedQuery_CompileQuery(query, this);
 	}
 	
 	public bool SendQuery(Dynamic parameters, const char[] database, SQLQueryCallback callback=INVALID_FUNCTION, int buffersize=512)
 	{
-		_Dynamic_PreparedQuery_SendQuery(this, parameters, database, callback, buffersize);
+		return _Dynamic_PreparedQuery_SendQuery(this, parameters, database, callback, buffersize);
 	}
 }
