@@ -240,9 +240,9 @@ methodmap Dynamic
 		return Dynamic_GetStringByOffset(this, offset, buffer, length);
 	}
 	
-	public void SetStringByOffset(const DynamicOffset offset, const char[] value, int length=0)
+	public void SetStringByOffset(const DynamicOffset offset, const char[] value)
 	{
-		Dynamic_SetStringByOffset(this, offset, value, length);
+		Dynamic_SetStringByOffset(this, offset, value);
 	}
 	
 	public int PushString(const char[] value, int length=0, const char[] name="")

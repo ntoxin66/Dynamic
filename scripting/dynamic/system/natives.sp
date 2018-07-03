@@ -356,9 +356,6 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 	char[] value = new char[valuelength];
 	GetNativeString(3, value, valuelength+1);
 	int length = GetNativeCell(4);
-	
-	//PrintToServer("Through Native: %s (length: %d, valuelength: %d)", value, length, valuelength);
-	
 	return view_as<int>(_Dynamic_SetString(dynamic, membername, value, length, valuelength));
 }
 
@@ -374,19 +371,16 @@ public int Native_Dynamic_GetStringByOffset(Handle plugin, int params)
 	return result;
 }
 
-// native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value, int length=0);
+// native bool Dynamic_SetStringByOffset(Dynamic obj, int offset, const char[] value);
 public int Native_Dynamic_SetStringByOffset(Handle plugin, int params)
 {
 	DynamicObject dynamic = GetNativeCell(1);
 	DynamicOffset offset = GetNativeCell(2);
-	int length = GetNativeCell(4);
 	int valuelength;
 	GetNativeStringLength(3, valuelength);
-	if (valuelength > length)
-		length = valuelength + 1; // include null terminater space
-	char[] value = new char[length];
-	GetNativeString(3, value, length);
-	return _Dynamic_SetStringByOffset(dynamic, offset, value, length, valuelength);
+	char[] value = new char[valuelength];
+	GetNativeString(3, value, valuelength+1);
+	return _Dynamic_SetStringByOffset(dynamic, offset, value);
 }
 
 // native int Dynamic_PushString(Dynamic obj, const char[] value, int length=0, const char[] name="");

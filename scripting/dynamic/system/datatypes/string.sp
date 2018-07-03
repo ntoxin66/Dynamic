@@ -158,7 +158,7 @@ stock bool _Dynamic_GetStringByOffset(DynamicObject dynamic, DynamicOffset offse
 	return _GetString(dynamic.Data, offset.Index, offset.Cell, dynamic.BlockSize, buffer, length);
 }
 
-stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, DynamicOffset offset, const char[] value, int length, int valuelength)
+stock bool _Dynamic_SetStringByOffset(DynamicObject dynamic, DynamicOffset offset, const char[] value)
 {
 	if (!dynamic.IsValid(true))
 		return false;
