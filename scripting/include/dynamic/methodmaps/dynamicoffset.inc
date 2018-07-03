@@ -40,6 +40,16 @@ methodmap DynamicOffset
 		}
 	}
 	
+	property bool IsValid
+	{
+		public get()
+		{
+			if (this == INVALID_DYNAMIC_OFFSET)
+				return false;
+			return true;
+		}
+	}
+	
 	public DynamicOffset Clone(int blocksize, int addcells)
 	{
 		if (addcells ==  0)
