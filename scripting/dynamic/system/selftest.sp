@@ -454,9 +454,9 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 
 stock bool _Dynamic_StringTest(int client, Dynamic test)
 {
-	// pulling strings back to basics, once completed all the tests below should have no errors
+	// pulling strings back to basics, once completed all the normal tests should have no errors
 	char buffer[128];
-	test.SetString("string", "1234567890");
+	DynamicOffset offset = test.SetString("string", "1234567890");
 	
 	if (strlen("1234567890") != test.GetStringLength("string"))
 	{
@@ -465,10 +465,25 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		return false;
 	}
 	
+	if (strlen("1234567890") != test.GetStringLengthByOffset(offset))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode b2x1");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("string"), strlen("1234567890"));
+		return false;
+	}
+	
 	test.GetString("string", buffer, sizeof(buffer));
 	if (!StrEqual(buffer, "1234567890"))
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode a2x2");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "1234567890");
+		return false;
+	}
+	
+	test.GetStringByOffset(offset, buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "1234567890"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode b2x2");
 		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "1234567890");
 		return false;
 	}
@@ -498,7 +513,6 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 		return false;
 	}
 	
-	
 	// Test value
 	char value[64];
 	//char buffer[64];
@@ -507,7 +521,7 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	value[63] = '\0';
 	
 	// Offset test
-	DynamicOffset offset = test.SetString("stringval", value);
+	offset = test.SetString("stringval", value);
 	if (offset != test.GetMemberOffset("stringval"))
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x1");
