@@ -235,7 +235,7 @@ methodmap Dynamic
 		return Dynamic_SetString(this, membername, value, length);
 	}
 	
-	public int GetStringByOffset(DynamicOffset offset, char[] buffer, int length)
+	public bool GetStringByOffset(DynamicOffset offset, char[] buffer, int length)
 	{
 		return Dynamic_GetStringByOffset(this, offset, buffer, length);
 	}
