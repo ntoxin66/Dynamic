@@ -1531,7 +1531,7 @@ stock bool _Dynamic_DBSchemeTest(int client, Dynamic test)
 	test.SetInt("intvalue", 666);
 	test.SetFloat("floatvalue", 666.666666666);
 	test.SetBool("boolvalue", true);
-	test.SetString("ID", "STEAMID:XXXXXXXXXXX");
+	test.SetString("ID", "STEAMID:1234567890");
 	
 	PreparedQuery query = PreparedQuery();
 	query.CompileQuery("UPDATE `table` SET `stringvalue`=?, `intvalue`=?, `floatvalue`=?, `boolvalue`=? WHERE `ID`=?");

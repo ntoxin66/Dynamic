@@ -23,7 +23,7 @@ public bool _Dynamic_PreparedQuery_CompileQuery(const char[] query, Dynamic obj)
 	int i=0;
 	char byte;
 	
-	char[] buffer = new char[strlen(query)];
+	char[] buffer = new char[strlen(query)+1];
 	int bufferpos=0;
 	
 	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
@@ -75,10 +75,6 @@ public bool _Dynamic_PreparedQuery_CompileQuery(const char[] query, Dynamic obj)
 		else if (byte==63) // ?
 		{
 			buffer[bufferpos++]='\0';
-			
-			PrintToServer("> Section: %s", buffer);
-			PrintToServer("> Member: %s", membername);
-			
 			obj.PushString(buffer);
 			obj.PushString(membername);
 			buffer[0]='\0';
@@ -103,21 +99,74 @@ public bool _Dynamic_PreparedQuery_SendQuery(Dynamic query, Dynamic parameters, 
 	bool issection=true;
 	DynamicOffset offset;
 	int length;
+	char membername[DYNAMIC_MEMBERNAME_MAXLEN];
+	char valuebuffer[64];
 	for (int i=0; i<count; i++)
 	{
-		offset = query.GetMemberOffsetByIndex(i);
 		if (issection)
 		{
-			length=query.GetStringLengthByOffset(offset);
-			
+			offset = query.GetMemberOffsetByIndex(i);
+			length = query.GetStringLengthByOffset(offset);
+			if (length+bufferpos > buffersize)
+			{
+				LogError("Buffer is to small for Dynamic.PreparedQuery instance.");
+				return false;
+			}
+			query.GetStringByOffset(offset, buffer[bufferpos], length);
+			bufferpos+=length-2;
 		}
 		else
 		{
+			query.GetStringByIndex(i, membername, sizeof(membername));
+			offset = parameters.GetMemberOffset(membername);
 			
+			if (!offset.IsValid)
+			{
+				LogError("Member `%s` not found in PreparedQuery.SendQuery().", membername);
+				return false;
+			}
 			
+			switch (parameters.GetMemberType(offset))
+			{
+				case DynamicType_Int, DynamicType_Float, DynamicType_Bool:
+				{
+					parameters.GetStringByOffset(offset, valuebuffer, sizeof(valuebuffer));
+					length = strlen(valuebuffer);
+					if (length+bufferpos > buffersize)
+					{
+						LogError("Buffer is to small for Dynamic.PreparedQuery instance.");
+						return false;
+					}
+					for (int x=0; x<length; x++)
+						buffer[bufferpos++]=valuebuffer[x];
+				}
+				case DynamicType_String:
+				{
+					// STRINGS NEED TO ESCAPED WITH DRIVER
+					// > This has not yet been coded
+					length = parameters.GetStringLengthByOffset(offset)+1;
+					char[] strbuffer = new char[length];
+					parameters.GetStringByOffset(offset, strbuffer, length);
+					if (length+bufferpos+2 > buffersize)
+					{
+						LogError("Buffer is to small for Dynamic.PreparedQuery instance.");
+						return false;
+					}
+					buffer[bufferpos++] = 39;
+					parameters.GetStringByOffset(offset, buffer[bufferpos], length);
+					bufferpos+=length-1;
+					buffer[bufferpos++] = 39;
+				}
+				default:
+				{
+					LogError("MemberType %d is not supported by PreparedQuery.SendQuery().", parameters.GetMemberType(offset));
+					return false;
+				}
+			}
 		}
 		issection=!issection;
 	}
 	
-	
+	PrintToServer("Prepared Query: %s", buffer);
+	return true;
 }
