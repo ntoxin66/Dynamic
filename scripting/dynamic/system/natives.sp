@@ -353,9 +353,12 @@ public int Native_Dynamic_SetString(Handle plugin, int params)
 	GetNativeString(2, membername, DYNAMIC_MEMBERNAME_MAXLEN);
 	int valuelength;
 	GetNativeStringLength(3, valuelength);
-	char[] value = new char[++valuelength];
-	GetNativeString(3, value, valuelength);
+	char[] value = new char[valuelength];
+	GetNativeString(3, value, valuelength+1);
 	int length = GetNativeCell(4);
+	
+	//PrintToServer("Through Native: %s (length: %d, valuelength: %d)", value, length, valuelength);
+	
 	return view_as<int>(_Dynamic_SetString(dynamic, membername, value, length, valuelength));
 }
 

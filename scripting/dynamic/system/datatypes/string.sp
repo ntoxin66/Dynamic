@@ -136,7 +136,7 @@ stock DynamicOffset _Dynamic_SetString(DynamicObject dynamic, const char[] membe
 		return INVALID_DYNAMIC_OFFSET;
 	
 	if (length == 0)
-		length = ++valuelength;
+		length = valuelength;
 	
 	DynamicOffset offset;
 	if (!_Dynamic_GetMemberDataOffset(dynamic, membername, true, offset, DynamicType_String, length))
@@ -288,10 +288,6 @@ stock void _Dynamic_SetMemberDataString(ArrayList data, int position, int offset
 		_Dynamic_RecalculateOffset(position, offset, blocksize, true);
 	}
 	
-	// Move back one offset once string is written to internal data array
-	offset--;
-	_Dynamic_RecalculateOffset(position, offset, blocksize, true);
-	
 	// Set null terminator
 	SetArrayCell(data, position, 0, offset, true);
 }
@@ -319,7 +315,4 @@ stock void _Dynamic_GetMemberDataString(ArrayList data, int position, int offset
 		offset++;
 		_Dynamic_RecalculateOffset(position, offset, blocksize, true);
 	}
-	
-	// Add null terminator to end of string
-	buffer[i-1] = '0';
 }

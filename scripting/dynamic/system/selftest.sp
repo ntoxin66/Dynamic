@@ -454,9 +454,54 @@ stock bool _Dynamic_FloatTest(int client, Dynamic test)
 
 stock bool _Dynamic_StringTest(int client, Dynamic test)
 {
+	// pulling strings back to basics, once completed all the tests below should have no errors
+	char buffer[128];
+	test.SetString("string", "1234567890");
+	
+	if (strlen("1234567890") != test.GetStringLength("string"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode a2x1");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("string"), strlen("1234567890"));
+		return false;
+	}
+	
+	test.GetString("string", buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "1234567890"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode a2x2");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "1234567890");
+		return false;
+	}
+	
+	test.SetString("string", "12345678901");
+	if (strlen("1234567890") != test.GetStringLength("string"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode a2x3");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("string"), strlen("1234567890"));
+		return false;
+	}
+	
+	test.GetString("string", buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "1234567890"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode a2x4");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "1234567890");
+		return false;
+	}
+	
+	test.SetString("string", "1234");
+	test.GetString("string", buffer, sizeof(buffer));
+	if (!StrEqual(buffer, "1234"))
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode a2x5");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "1234");
+		return false;
+	}
+	
+	
 	// Test value
 	char value[64];
-	char buffer[64];
+	//char buffer[64];
 	for (int i=0; i<sizeof(value); i++)
 		value[i] = GetRandomInt(65, 122);
 	value[63] = '\0';
@@ -511,14 +556,14 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	test.SetString("stringval", value);
 	if (test.GetFloat("stringval") != fvalue)
 	{
-		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x3");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x5");
 		ReplyToCommand(client, "> %f should equal %f", test.GetFloat("stringval"), fvalue);
 		return false;
 	}
 	test.SetFloat("stringval", fvalue);
 	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual(value, buffer))
 	{
-		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x4");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x6");
 		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, value);
 		return false;
 	}
@@ -595,10 +640,10 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	// Test setting string length > maxlength
 	test.Reset(); // set blocksize to 16
 	test.SetString("stringval", "1234567890", 6); // include eos space
-	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("12345", buffer))
+	if (test.GetString("stringval", buffer, sizeof(buffer)) && !StrEqual("123456", buffer))
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x16");
-		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "12345");
+		ReplyToCommand(client, "> '%s' should equal '%s'", buffer, "123456");
 		return false;
 	}
 	
@@ -618,16 +663,30 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	// Test string length returns valid length
 	test.Reset(true, 64);
 	test.SetString("stringval", "123456789");
-	if (test.GetStringLength("stringval") != 10) // Length expands by one to ensure trailing EOS is added
+	if (test.GetStringLength("stringval") != 9) // Length expands by one to ensure trailing EOS is added
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x18");
-		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("stringval"), 10);
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("stringval"), 9);
 		return false;
 	}
-	if (test.GetStringLengthByOffset(offset) != 10) // Length expands by one to ensure trailing EOS is added
+	if (test.GetStringLengthByOffset(offset) != 9) // Length expands by one to ensure trailing EOS is added
 	{
 		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x19");
-		ReplyToCommand(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 10);
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 9);
+		return false;
+	}
+	test.Reset(true, 64);
+	test.SetString("stringval", "123456789", 128);
+	if (test.GetStringLength("stringval") != 128) // Length expands by one to ensure trailing EOS is added
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x20");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLength("stringval"), 128);
+		return false;
+	}
+	if (test.GetStringLengthByOffset(offset) != 128) // Length expands by one to ensure trailing EOS is added
+	{
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x21");
+		ReplyToCommand(client, "> %d should equal %d", test.GetStringLengthByOffset(offset), 128);
 		return false;
 	}
 	
@@ -637,7 +696,7 @@ stock bool _Dynamic_StringTest(int client, Dynamic test)
 	test.GetStringByOffset(offset, buffer, sizeof(buffer));
 	if (!StrEqual(value, buffer))
 	{
-		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x20");
+		ReplyToCommand(client, "DynamicType_String test failed: ErrorCode 2x22");
 		ReplyToCommand(client, "> %s should equal %s", value, buffer);
 		return false;
 	}
