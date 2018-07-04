@@ -1527,16 +1527,21 @@ stock bool _Dynamic_FlatConfigTest(int client, Dynamic test)
 
 stock bool _Dynamic_DBSchemeTest(int client, Dynamic test)
 {
-	test.SetString("stringvalue", "a string value");
+	char error[128];
+	Database db = SQLite_UseDatabase("dynamictest", error, sizeof(error));
+	
+	test.SetString("stringvalue", "a string value 'which needs to be escaped'.", 64);
 	test.SetInt("intvalue", 666);
 	test.SetFloat("floatvalue", 666.666666666);
 	test.SetBool("boolvalue", true);
-	test.SetString("ID", "STEAMID:1234567890");
+	test.SetString("ID", "STEAMID:1234567890", 24);
 	
 	PreparedQuery query = PreparedQuery();
-	query.CompileQuery("UPDATE `table` SET `stringvalue`=?, `intvalue`=?, `floatvalue`=?, `boolvalue`=? WHERE `ID`=?");
-	query.SendQuery(test, "default");
+	query.Compile("UPDATE `table` SET `stringvalue`=?, `intvalue`=?, `floatvalue`=?, `boolvalue`=? WHERE `ID`=?");
+	query.Execute(db, test);
 	query.Dispose();
 	
+	
+	db = null;
 	return true;
 }

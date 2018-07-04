@@ -29,13 +29,18 @@ methodmap PreparedQuery < Dynamic
 		return view_as<PreparedQuery>(myclass);
 	}
 	
-	public bool CompileQuery(const char[] query)
+	public bool Compile(const char[] query)
 	{
-		return _Dynamic_PreparedQuery_CompileQuery(query, this);
+		return _Dynamic_PreparedQuery_Compile(query, this);
 	}
 	
-	public bool SendQuery(Dynamic parameters, const char[] database, SQLQueryCallback callback=INVALID_FUNCTION, int buffersize=512)
+	public bool Prepare(Database db, Dynamic parameters, char[] buffer, int buffersize)
 	{
-		return _Dynamic_PreparedQuery_SendQuery(this, parameters, database, callback, buffersize);
+		return _Dynamic_PreparedQuery_Prepare(this, db, parameters, buffer, buffersize);
+	}
+	
+	public bool Execute(Database db, Dynamic parameters, SQLQueryCallback callback=INVALID_FUNCTION, any data=0, int buffersize=512)
+	{
+		return _Dynamic_PreparedQuery_Execute(this, db, parameters, callback, data, buffersize);
 	}
 }

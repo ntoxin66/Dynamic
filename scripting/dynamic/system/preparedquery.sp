@@ -17,7 +17,7 @@
  *
  */
 
-public bool _Dynamic_PreparedQuery_CompileQuery(const char[] query, Dynamic obj)
+public bool _Dynamic_PreparedQuery_Compile(const char[] query, Dynamic obj)
 {
 	PrintToServer("query: %s", query);
 	int i=0;
@@ -91,9 +91,8 @@ public bool _Dynamic_PreparedQuery_CompileQuery(const char[] query, Dynamic obj)
 	return true;
 }
 
-public bool _Dynamic_PreparedQuery_SendQuery(Dynamic query, Dynamic parameters, const char[] database, SQLQueryCallback callback, int buffersize)
+public bool _Dynamic_PreparedQuery_Prepare(Dynamic query, Database db, Dynamic parameters, char[] buffer, int buffersize)
 {
-	char[] buffer = new char[buffersize];
 	int bufferpos = 0;
 	int count = query.MemberCount;
 	bool issection=true;
@@ -109,7 +108,7 @@ public bool _Dynamic_PreparedQuery_SendQuery(Dynamic query, Dynamic parameters, 
 			length = query.GetStringLengthByOffset(offset);
 			if (length+bufferpos > buffersize)
 			{
-				LogError("Buffer is to small for Dynamic.PreparedQuery instance.");
+				LogError("Buffer is to small for Dynamic.PreparedQuery() instance.");
 				return false;
 			}
 			query.GetStringByOffset(offset, buffer[bufferpos], length);
@@ -134,7 +133,7 @@ public bool _Dynamic_PreparedQuery_SendQuery(Dynamic query, Dynamic parameters, 
 					length = strlen(valuebuffer);
 					if (length+bufferpos > buffersize)
 					{
-						LogError("Buffer is to small for Dynamic.PreparedQuery instance.");
+						LogError("Buffer is to small for Dynamic.PreparedQuery() instance.");
 						return false;
 					}
 					for (int x=0; x<length; x++)
@@ -142,18 +141,24 @@ public bool _Dynamic_PreparedQuery_SendQuery(Dynamic query, Dynamic parameters, 
 				}
 				case DynamicType_String:
 				{
-					// STRINGS NEED TO ESCAPED WITH DRIVER
-					// > This has not yet been coded
 					length = parameters.GetStringLengthByOffset(offset)+1;
+					char[] strvalue = new char[length];
+					parameters.GetStringByOffset(offset, strvalue, length);
+					length = (strlen(strvalue)*2)+1;
 					char[] strbuffer = new char[length];
-					parameters.GetStringByOffset(offset, strbuffer, length);
-					if (length+bufferpos+2 > buffersize)
+					if (!db.Escape(strvalue, strbuffer, length, length))
 					{
-						LogError("Buffer is to small for Dynamic.PreparedQuery instance.");
+						LogError("Database.Escape() failed in Dynamic.PreparedQuery().");
+						return false;
+					}
+					
+					if ((length)+bufferpos+2 > buffersize)
+					{
+						LogError("Buffer is to small for Dynamic.PreparedQuery() instance.");
 						return false;
 					}
 					buffer[bufferpos++] = 39;
-					parameters.GetStringByOffset(offset, buffer[bufferpos], length);
+					strcopy(buffer[bufferpos], length, strbuffer);
 					bufferpos+=length-1;
 					buffer[bufferpos++] = 39;
 				}
@@ -169,4 +174,23 @@ public bool _Dynamic_PreparedQuery_SendQuery(Dynamic query, Dynamic parameters, 
 	
 	PrintToServer("Prepared Query: %s", buffer);
 	return true;
+}
+
+public bool _Dynamic_PreparedQuery_Execute(Dynamic query, Database db, Dynamic parameters, SQLQueryCallback callback, any data, int buffersize)
+{
+	char[] buffer = new char[buffersize];
+	if (!_Dynamic_PreparedQuery_Prepare(query, db, parameters, buffer, buffersize))
+		return false;
+		
+	if (callback == INVALID_FUNCTION)
+		callback = _Dynamic_PreparedQuery_Callback;
+		
+	db.Query(callback, buffer, data);
+	return true;
+}
+
+public void _Dynamic_PreparedQuery_Callback(Database db, DBResultSet results, const char[] error, any data)
+{
+	if (results == null)
+		LogError("Database error: %s", error);
 }
