@@ -107,4 +107,4 @@ methodmap Collection < ArrayList
 	{
 		this.Erase(index);
 	}
-}
+};
