@@ -132,4 +132,4 @@ methodmap Basic < StringMap
 	{
 		this.SetArray(membername, value, sizeof(value));
 	}
-}
+};
