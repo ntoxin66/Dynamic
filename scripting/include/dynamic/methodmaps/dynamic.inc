@@ -460,4 +460,4 @@ methodmap Dynamic
 			
 		this.CloseHandleByOffset(offset);		
 	}
-}
+};

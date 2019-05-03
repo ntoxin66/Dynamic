@@ -262,4 +262,4 @@ methodmap DynamicObject
 			SetArrayCell(s_Collection, me, value, Dynamic_Persistent);
 		}
 	}
-}
+};

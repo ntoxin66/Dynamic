@@ -68,4 +68,4 @@ methodmap DynamicOffset
 		
 		return DynamicOffset(index, cell);
 	}
-}
+};
